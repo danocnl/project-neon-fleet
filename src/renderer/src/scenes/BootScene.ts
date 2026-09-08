@@ -31,7 +31,7 @@ export class BootScene extends Phaser.Scene {
       fontSize: '12px', color: '#333333', fontFamily: 'monospace'
     }).setOrigin(0.5)
 
-    this.time.delayedCall(3000, () => this.scene.start('PhysicsScene'))
+    this.time.delayedCall(3000, () => this.scene.start('SelectionScene'))
   }
 
   private runSystemCheck(): string[] {
