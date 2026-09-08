@@ -81,5 +81,16 @@
   { "category": "LOGIC", "subCategory": "SPATIAL_TRIGGER", "tag": "PROXIMITY", "description": "Triggers based on closeness to nearest entity." },
   { "category": "LOGIC", "subCategory": "TEAM_TRIGGER", "tag": "ALLY_LOW_HP", "description": "Triggers when a teammate drops below a HP threshold." },
   { "category": "LOGIC", "subCategory": "TEAM_TRIGGER", "tag": "ALLY_TARGETED", "description": "Triggers when an ally is locked on by enemies." },
-  { "category": "LOGIC", "subCategory": "TEAM_TRIGGER", "tag": "TEAM_CLUSTER", "description": "Triggers when all player ships are grouped closely." }
+  { "category": "LOGIC", "subCategory": "TEAM_TRIGGER", "tag": "TEAM_CLUSTER", "description": "Triggers when all player ships are grouped closely." },
+
+  { "category": "SPECIALIZATION", "subCategory": "CHRONO", "tag": "TEMPORAL_ECHO", "description": "Duplicates a triggered effect once via a time loop. Unique to Chrono Architect." },
+  { "category": "SPECIALIZATION", "subCategory": "SPATIAL", "tag": "COMPRESSION", "description": "Holds clustered enemies in a dense formation after a pull. Unique to Graviton Weaver." },
+  { "category": "SPECIALIZATION", "subCategory": "CO-OP", "tag": "CHAIN", "description": "Propagates damage or status effects along active tether links. Unique to Quantum Entangler." },
+  { "category": "SPECIALIZATION", "subCategory": "EXOTIC", "tag": "INFESTATION", "description": "Spreads active nanite effects from a dying enemy to nearby targets. Unique to Nanite Swarm Controller." },
+  { "category": "SPECIALIZATION", "subCategory": "EXOTIC", "tag": "BLINK", "description": "Short-range positional teleport distinct from the PHASE invulnerability state. Unique to Phase Weaver." },
+  { "category": "SPECIALIZATION", "subCategory": "CONDUCTOR", "tag": "VOLTAGE", "description": "Raw electrical damage type. EMP disables systems; VOLTAGE deals direct energy damage. Unique to Hyper-Conductor." },
+  { "category": "SPECIALIZATION", "subCategory": "CONDUCTOR", "tag": "OVERCLOCK", "description": "Temporary stat burst fuelled by burning energy reserves. Unique to Hyper-Conductor." },
+  { "category": "SPECIALIZATION", "subCategory": "RESONANCE", "tag": "HARMONIC", "description": "Stacking resonance mechanic — each stack amplifies all other stacks. Unique to Resonance Bard." },
+  { "category": "SPECIALIZATION", "subCategory": "SALVAGE", "tag": "DEBRIS_FIELD", "description": "Deploys collected wreckage as a persistent area hazard or barrier. Unique to Scrap Salvager." },
+  { "category": "SPECIALIZATION", "subCategory": "VECTOR", "tag": "PRISM", "description": "Splits a single beam into multiple diverging beams. MIRROR bounces; PRISM splits. Unique to Vector Specialist." }
 ]

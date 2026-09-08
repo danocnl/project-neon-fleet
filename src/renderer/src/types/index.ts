@@ -42,8 +42,9 @@ export interface ClassSpecialization {
   name: string
   roleCategory: string
   description: string
-  primaryTags: string[]
-  secondaryTags: string[]
+  primaryTags: string[]    // Unique tags belonging only to this class
+  secondaryTags: string[]  // Shared tags (max 3 classes per tag)
+  tagWeighting: Record<string, number>  // Draft probability weights (1 low → 5 core)
   coopSynergyMechanism: string
   recursiveDraftFocus: string
   recommendedShips: string[]
