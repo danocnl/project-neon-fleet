@@ -530,7 +530,7 @@ export class SelectionScene extends Phaser.Scene {
     const geo = getGeometry(this.selectedShipId)
     if (!geo) return
 
-    const scale = 2.8
+    const scale = 2.0
     const cos   = Math.cos(this.previewAngle)
     const sin   = Math.sin(this.previewAngle)
     const rot   = (x: number, y: number) => ({
@@ -539,17 +539,9 @@ export class SelectionScene extends Phaser.Scene {
     })
 
     const clsColor = CLASS_COLORS[this.selectedClassId] ?? ACCENT
-    // Apply geo.scale so light ships appear smaller than heavy in the preview
-    const baseScale = 2.2
-    const rs = scale * geo.scale
-
     const pts = geo.outline.map(([x, y]) => rot(x * geo.scale, y * geo.scale))
 
-    // Soft aura ring behind ship
-    gfx.lineStyle(40, clsColor, 0.025); gfx.strokeCircle(R_CX, R_MID, 90)
-    gfx.lineStyle(20, clsColor, 0.05);  gfx.strokeCircle(R_CX, R_MID, 70)
-
-    // 4-layer neon glow in class colour
+    // 4-layer neon glow — no circular aura so the ship silhouette reads clearly
     gfx.lineStyle(12, clsColor, 0.04); gfx.strokePoints(pts, true)
     gfx.lineStyle(6,  clsColor, 0.15); gfx.strokePoints(pts, true)
     gfx.lineStyle(2.5,clsColor, 0.55); gfx.strokePoints(pts, true)
@@ -561,7 +553,6 @@ export class SelectionScene extends Phaser.Scene {
       gfx.lineStyle(1, clsColor, 0.45)
       gfx.lineBetween(p1.x, p1.y, p2.x, p2.y)
     }
-    void rs; void baseScale
   }
 
   // ─── Launch ────────────────────────────────────────────────────────────────
