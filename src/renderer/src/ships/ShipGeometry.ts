@@ -1,11 +1,17 @@
 // Ship outlines — [x, y] relative to centre, nose pointing toward -Y (up).
-// DESIGN RULES:
-//   - Wide ships must have W:H ratio >= 1.8:1 so they read as ships not circles
-//   - Use long FLAT edges (same X or same Y across multiple points) not gradual curves
-//   - Nose must be clearly narrower than the widest section
-//   - Exhausts/engines should be distinct at the tail
+//
+// DESIGN FORMULA (applied to every ship):
+//   1. Narrow pointed nose
+//   2. Body widens (fuselage / wings)
+//   3. CONCAVE WAIST — outline goes IN between body and engines
+//   4. Engine pods flare out
+//   5. Exhaust nozzles taper to a close
+//
+// Heavy ships can be wide; light ships are elongated.
+// All ships must clearly read as "spacecraft" not "blob".
+//
 // `scale`: 0.75 = light, 1.0 = medium, 1.35 = heavy (applied at render time)
-// `color`: UI list accent only — rendered wireframe uses class colour
+// `color`: UI list labels only — wireframe uses class colour
 
 export interface ShipGeometry {
   id: string
@@ -20,81 +26,62 @@ const GEOMETRIES: ShipGeometry[] = [
   // ── LIGHT ─────────────────────────────────────────────────────────────────
 
   {
-    // Narrow dart — long and thin, swept wings, instantly reads as fast
+    // Narrow dart — elongated, swept wings, deep concave waist. Keep as-is.
     id: 'sidewinder',
     color: 0x00ffff,
     scale: 0.75,
     outline: [
-      [0, -32],
-      [4, -22],
-      [6, -10],
-      [20, 4],
-      [14, 12],
-      [8, 10],
-      [10, 22],
-      [4, 26],
-      [0, 24],
-      [-4, 26],
-      [-10, 22],
-      [-8, 10],
-      [-14, 12],
-      [-20, 4],
-      [-6, -10],
-      [-4, -22],
+      [0, -32], [4, -22], [6, -10],
+      [20, 4],  [14, 12], [8, 10],   // wing → waist concave (8 < 14)
+      [10, 22], [4, 26],  [0, 24],
+      [-4, 26], [-10, 22],
+      [-8, 10], [-14, 12], [-20, 4], // waist → wing
+      [-6, -10], [-4, -22],
     ],
     details: [[-4, -16, 4, -16]],
   },
 
   {
-    // Wide swept chevron — broad wingspan, clearly wider than it is long
-    // W:H ≈ 2.2:1  (58 wide × 26 tall)
+    // Wide chevron — swept wings with deep concave waist before engine pods
     id: 'cobra',
     color: 0xaaffaa,
     scale: 0.75,
     outline: [
-      [0, -20],          // pointed nose
-      [6, -14],          // right cockpit edge
-      [29, -2],          // right wing sweep — starts flat section
-      [29, 8],           // right wing flat edge (same X = straight side)
-      [20, 16],          // right wing trailing
-      [10, 20],          // right engine pod
-      [0, 18],           // centre tail
-      [-10, 20],
-      [-20, 16],
-      [-29, 8],          // left wing flat edge
-      [-29, -2],
-      [-6, -14],
+      [0, -24],             // sharp nose
+      [4, -18],             // right narrows near nose
+      [6, -6],              // right — fuselage begins widening
+      [22, 4],              // right wing tip (swept back)
+      [18, 12],             // right wing trailing edge
+      [10, 8],              // right WAIST — concave (10 vs 22, goes far in)
+      [12, 20],             // right engine pod
+      [5, 24],              // right exhaust
+      [0, 22],
+      [-5, 24],
+      [-12, 20],            // left engine pod
+      [-10, 8],             // left WAIST
+      [-18, 12],
+      [-22, 4],             // left wing tip
+      [-6, -6],
+      [-4, -18],
     ],
     details: [
-      [-4, -14, 4, -14],
-      // engine pod detail lines
-      [-10, 16, -10, 22],
-      [10, 16, 10, 22],
+      [-4, -16, 4, -16],
+      [-10, 16, -10, 22], [10, 16, 10, 22],
     ],
   },
 
   {
-    // Dragster — longest & narrowest, almost no width at the front
+    // Pure dragster — stays narrow the whole way, deep engine flare at tail
     id: 'mamba',
     color: 0x00ff88,
     scale: 0.75,
     outline: [
-      [0, -34],
-      [3, -24],
-      [4, -10],
-      [10, 4],
-      [8, 12],
-      [5, 10],
-      [8, 24],
-      [3, 28],
-      [0, 26],
-      [-3, 28],
-      [-8, 24],
-      [-5, 10],
-      [-8, 12],
-      [-10, 4],
-      [-4, -10],
-      [-3, -24],
+      [0, -34], [3, -24], [4, -10],
+      [10, 4],  [8, 12],  [5, 10],   // deep concave waist (5 vs 10)
+      [8, 24],  [3, 28],  [0, 26],
+      [-3, 28], [-8, 24],
+      [-5, 10], [-8, 12], [-10, 4],  // waist
+      [-4, -10], [-3, -24],
     ],
     details: [[-3, -20, 3, -20]],
   },
@@ -102,90 +89,92 @@ const GEOMETRIES: ShipGeometry[] = [
   // ── MEDIUM ────────────────────────────────────────────────────────────────
 
   {
-    // Delta-wing carrier — very narrow at nose, wide swept delta body
-    // W:H ≈ 1.9:1  (58 wide × 52 tall from tip to exhaust)
+    // Delta fighter-carrier — very narrow nose opening to wide delta wings,
+    // concave waist pulls in hard before engine pods
     id: 'krait',
     color: 0x88aaff,
     scale: 1.0,
     outline: [
-      [0, -30],          // sharp nose tip
-      [4, -22],          // right — stays narrow near nose
-      [28, -2],          // right delta sweep (big jump outward)
-      [26, 10],          // right wingtip
-      [18, 22],          // right trailing edge
-      [8, 25],           // right exhaust
-      [0, 23],
-      [-8, 25],
-      [-18, 22],
-      [-26, 10],
-      [-28, -2],
-      [-4, -22],
+      [0, -30],             // razor nose tip
+      [2, -22],             // right — stays almost needle-thin
+      [6, -8],              // right — fuselage starts widening
+      [24, 6],              // right delta wing tip (big jump out)
+      [20, 16],             // right trailing edge
+      [12, 12],             // right WAIST — concave (12 vs 24)
+      [14, 24],             // right engine pod
+      [6, 28],              // right exhaust
+      [0, 26],
+      [-6, 28],
+      [-14, 24],            // left engine pod
+      [-12, 12],            // left WAIST
+      [-20, 16],
+      [-24, 6],             // left wing tip
+      [-6, -8],
+      [-2, -22],
     ],
     details: [
-      // drone bay doors (vertical lines on each side)
-      [22, -2, 22, 14],
-      [-22, -2, -22, 14],
-      // cockpit
-      [-4, -22, 4, -22],
+      [20, -2, 20, 14], [-20, -2, -20, 14],  // drone bay doors
+      [-4, -22, 4, -22],                       // cockpit slit
     ],
   },
 
   {
-    // Armoured brawler — wide angular brick, FLAT sides, hard corners
-    // W:H ≈ 2:1  (66 wide × 50 tall)
-    // Key feature: long flat sides and wide flat tail between engine pods
+    // Armoured brawler — blunter nose (tank, not dart), wide armour plates,
+    // still has concave waist before heavy engine blocks
     id: 'chieftain',
     color: 0xff00ff,
     scale: 1.0,
     outline: [
-      [0, -25],          // nose tip
-      [14, -18],         // right shoulder — sharp angle break
-      [33, -8],          // right plate top — starts FLAT SIDE
-      [33, 10],          // right plate bottom (same X — FLAT)
-      [24, 22],          // right rear angle
-      [10, 26],          // right engine
-      [-10, 26],         // left engine — FLAT rear between pods
-      [-24, 22],
-      [-33, 10],         // left plate bottom
-      [-33, -8],         // left plate top (same X — FLAT)
-      [-14, -18],
+      [0, -26],             // nose (less sharp than light ships — it's armoured)
+      [10, -18],            // right shoulder
+      [26, -6],             // right armour plate (flat face)
+      [28, 6],              // right max
+      [24, 18],             // right lower plate
+      [14, 14],             // right WAIST — concave (14 vs 28)
+      [16, 26],             // right engine block
+      [6, 30],              // right exhaust
+      [0, 28],
+      [-6, 30],
+      [-16, 26],            // left engine block
+      [-14, 14],            // left WAIST
+      [-24, 18],
+      [-28, 6],
+      [-26, -6],            // left armour plate
+      [-10, -18],
     ],
     details: [
-      // armour bolt lines across the flat sides
-      [33, 2, 14, 2],
-      [-33, 2, -14, 2],
-      // cockpit slit
-      [-5, -18, 5, -18],
+      [26, 0, 8, 0], [-26, 0, -8, 0],   // armour bolt lines
+      [-5, -18, 5, -18],                  // cockpit slit
     ],
   },
 
   {
-    // Maximum hardpoints — wide with long flat sides and weapon stubs
-    // W:H ≈ 2.1:1  (72 wide × 56 tall)
+    // Heavy gunship — wide flat sides with weapon stubs, concave waist
+    // before twin engine pods
     id: 'python',
     color: 0xff8800,
     scale: 1.0,
     outline: [
-      [0, -28],          // nose
-      [10, -22],         // right front
-      [36, -10],         // right outer — begins FLAT SIDE
-      [36, 8],           // right outer bottom (same X — long flat side)
-      [26, 20],          // right rear angle
-      [12, 26],          // right engine pod
+      [0, -28],             // nose
+      [8, -20],             // right front
+      [28, -8],             // right leading
+      [32, 4],              // right max — FLAT SIDE starts
+      [30, 14],             // right lower flat
+      [18, 12],             // right WAIST — concave (18 vs 32)
+      [20, 26],             // right engine pod
+      [8, 30],              // right exhaust
       [0, 28],
-      [-12, 26],
-      [-26, 20],
-      [-36, 8],          // left flat side
-      [-36, -10],
-      [-10, -22],
+      [-8, 30],
+      [-20, 26],            // left engine pod
+      [-18, 12],            // left WAIST
+      [-30, 14],
+      [-32, 4],             // left max
+      [-28, -8],
+      [-8, -20],
     ],
     details: [
-      // weapon hardpoint stubs — clearly extend beyond hull
-      [36, -6,  50, -10],
-      [36, 4,   50,  8],
-      [-36, -6, -50, -10],
-      [-36, 4,  -50,  8],
-      // cockpit
+      [32, 0, 46, -4], [32, 10, 46, 14],          // right weapon stubs
+      [-32, 0, -46, -4], [-32, 10, -46, 14],       // left weapon stubs
       [-6, -20, 6, -20],
     ],
   },
@@ -193,107 +182,100 @@ const GEOMETRIES: ShipGeometry[] = [
   // ── HEAVY ─────────────────────────────────────────────────────────────────
 
   {
-    // Flying fortress — capital ship width, very wide relative to depth
-    // W:H ≈ 2.5:1  (96 wide × 44 tall)  — clearly reads as a large warship
+    // Flying fortress — huge wingspan, dramatic concave waist before
+    // twin engine clusters, clearly a capital ship
     id: 'anaconda',
     color: 0xffcc00,
     scale: 1.35,
     outline: [
-      [0, -20],          // nose
-      [16, -16],         // right front face
-      [46, -6],          // right outer — huge wingspan
-      [48, 4],           // right max point
-      [40, 16],          // right rear-outer
-      [24, 24],          // right engine block
-      [8, 26],           // right exhaust
-      [0, 24],
-      [-8, 26],
-      [-24, 24],
-      [-40, 16],
-      [-48, 4],
-      [-46, -6],
-      [-16, -16],
+      [0, -24],             // nose
+      [10, -18],            // right front
+      [38, -4],             // right outer (massive span)
+      [40, 8],              // right max
+      [32, 20],             // right rear outer
+      [20, 16],             // right WAIST — concave (20 vs 40)
+      [22, 30],             // right engine cluster
+      [8, 32],              // right exhaust
+      [0, 30],
+      [-8, 32],
+      [-22, 30],            // left engine cluster
+      [-20, 16],            // left WAIST
+      [-32, 20],
+      [-40, 8],             // left max
+      [-38, -4],
+      [-10, -18],
     ],
     details: [
-      // forward gun emplacements — extend well beyond hull
-      [46, -6,  58, -12],
-      [-46, -6, -58, -12],
-      // aft guns
-      [40, 16,  52, 12],
-      [-40, 16, -52, 12],
-      // bridge
-      [-8, -14, 8, -14],
+      [38, -4, 50, -10], [-38, -4, -50, -10],  // forward guns
+      [32, 20, 44, 16],  [-32, 20, -44, 16],   // aft guns
+      [-8, -16, 8, -16],                         // bridge
     ],
   },
 
   {
-    // Shield dreadnought — widest ship, front-heavy wedge not an oval
-    // W:H ≈ 2:1  (84 wide × 60 tall) — wider at front than rear
+    // Shield dreadnought — wide front-heavy wedge (widest at front),
+    // concave pull before large engine blocks
     id: 'cutter',
     color: 0x00ccff,
     scale: 1.35,
     outline: [
-      [0, -30],          // nose tip
-      [10, -26],         // right nose splay
-      [36, -14],         // right forward face
-      [42, -2],          // right MAX — widest at front
-      [38, 14],          // right mid
-      [26, 26],          // right rear
-      [10, 32],          // right engine
-      [0, 30],
-      [-10, 32],
-      [-26, 26],
-      [-38, 14],
-      [-42, -2],         // left max
-      [-36, -14],
-      [-10, -26],
+      [0, -34],             // nose
+      [8, -28],             // right nose
+      [32, -14],            // right forward face
+      [38, 0],              // right MAX — widest at the FRONT (shield wall)
+      [34, 14],             // right mid (already narrowing)
+      [22, 10],             // right WAIST — concave (22 vs 38)
+      [24, 28],             // right engine block
+      [10, 34],             // right exhaust
+      [0, 32],
+      [-10, 34],
+      [-24, 28],            // left engine block
+      [-22, 10],            // left WAIST
+      [-34, 14],
+      [-38, 0],             // left max
+      [-32, -14],
+      [-8, -28],
     ],
     details: [
-      // shield emitter cross-bars (horizontal internal structure)
-      [-34, -10, 34, -10],
-      [-36,   4, 36,   4],
-      // bridge
-      [-8, -22, 8, -22],
+      [-30, -10, 30, -10],  // shield emitter bar (front)
+      [-32,   4, 32,   4],  // shield emitter bar (mid)
+      [-8, -24, 8, -24],    // bridge
     ],
   },
 
   {
-    // Ordnance array — near-rectangular, flat sides, turrets on all faces
-    // W:H ≈ 1.5:1  (84 wide × 66 tall) — most square but with FLAT SIDES
+    // Ordnance array — most rectangular (slow, armoured), flat sides with
+    // turret stubs, concave waist before quad engine banks
     id: 'type_10',
     color: 0xff4444,
     scale: 1.35,
     outline: [
-      [0, -33],          // forward centre
-      [18, -28],         // right front inner
-      [40, -18],         // right front outer
-      [42, -4],          // right max — begins LONG FLAT SIDE
-      [42, 14],          // right max bottom (same X — flat side)
-      [36, 28],          // right rear outer
-      [16, 34],          // right rear
-      [0, 36],           // aft centre
-      [-16, 34],
-      [-36, 28],
-      [-42, 14],         // left flat side bottom
-      [-42, -4],         // left flat side top
-      [-40, -18],
-      [-18, -28],
+      [0, -34],             // front centre
+      [16, -28],            // right front inner
+      [38, -18],            // right front plate
+      [42, -4],             // right MAX — FLAT SIDE begins
+      [42, 12],             // right max lower — FLAT SIDE (same X)
+      [34, 26],             // right rear plate
+      [18, 34],             // right rear
+      [6, 36],              // right engine bank
+      [0, 34],
+      [-6, 36],
+      [-18, 34],            // left engine bank
+      [-34, 26],
+      [-42, 12],            // left flat side
+      [-42, -4],            // left flat side
+      [-38, -18],
+      [-16, -28],
     ],
     details: [
       // fore/aft centreline turrets
-      [0, -33, 0, -46],
-      [0,  36, 0,  48],
-      // starboard turrets (perpendicular to flat side)
-      [42, -4,  54, -8],
-      [42, 5,   54,  5],
-      [42, 14,  54, 18],
+      [0, -34, 0, -46], [0, 36, 0, 48],
+      // starboard turrets (perpendicular from flat side)
+      [42, -4,  54, -8], [42,  4, 54,  4], [42, 12, 54, 16],
       // port turrets
-      [-42, -4,  -54, -8],
-      [-42, 5,   -54,  5],
-      [-42, 14,  -54, 18],
-      // internal deck plating (horizontal cross-braces)
-      [-38, -2, 38, -2],
-      [-38, 12, 38, 12],
+      [-42, -4, -54, -8], [-42, 4, -54, 4], [-42, 12, -54, 16],
+      // internal deck brace
+      [-38, 4, 38, 4],
     ],
   },
 ]
