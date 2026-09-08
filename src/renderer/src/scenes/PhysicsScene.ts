@@ -4,6 +4,7 @@ import { createBody, stepPhysics, wrapBounds, type PhysicsBody } from '../physic
 import { orbit } from '../physics/NavBehaviors'
 import { DataLoader } from '../systems/DataLoader'
 import { LoadoutManager } from '../systems/LoadoutManager'
+import type { PlayerState } from '../systems/LoadoutManager'
 import { CLASS_COLORS } from '../ships/ClassIcons'
 import { CombatState } from '../combat/CombatState'
 import { EventDispatcher } from '../combat/EventDispatcher'
@@ -27,14 +28,8 @@ interface ShipActor {
   orbitSpeed:  number
 }
 
-// Cards with logic triggers used for the Phase 4 demonstration
-const DEMO_TRIGGER_CARD_IDS = [
-  'emergency_phase_protocol',  // ON_SHIELD_DROP → PHASE
-  'combat_triage',             // ON_KILL → restore 300 HP
-  'heat_flush',                // ON_OVERHEAT → cool + fire rate boost
-]
-
-const LOG_MAX = 6   // max entries in the trigger log
+const KILLS_PER_LEVEL = 3
+const LOG_MAX = 6
 
 export class PhysicsScene extends Phaser.Scene {
   private actor!:    ShipActor
@@ -50,7 +45,17 @@ export class PhysicsScene extends Phaser.Scene {
   private evaluator!:      TriggerEvaluator
   private executor!:       ActionExecutor
   private simulator!:      CombatSimulator
+  private playerState!:    PlayerState
   private draftedCards:    UpgradeCard[] = []
+  private readonly mgr = new LoadoutManager()
+
+  // Progression
+  private killCount  = 0
+  private level      = 1
+  private drafting   = false
+  private killCounterText!: Phaser.GameObjects.Text
+  private levelText!:       Phaser.GameObjects.Text
+  private modulesContainer!: Phaser.GameObjects.Container
 
   // HUD elements
   private hullBar!:    Phaser.GameObjects.Graphics
@@ -142,19 +147,17 @@ export class PhysicsScene extends Phaser.Scene {
   private buildCombatSystems(): void {
     const ship = DataLoader.getShip(this.runData.shipId)!
 
-    // State
+    // Build player state (tag aggregator, computed stats)
+    this.playerState  = this.mgr.build(this.runData.shipId, this.runData.classId)!
+    this.draftedCards = this.playerState.draftedCards
+
+    // Combat state from ship base stats
     this.combatState = new CombatState(ship, this.runData.classId)
 
     // Systems
     this.dispatcher = new EventDispatcher()
     this.evaluator  = new TriggerEvaluator()
     this.executor   = new ActionExecutor()
-
-    // Pre-draft demo cards (logic triggers relevant to Phase 4)
-    const allCards  = DataLoader.getAllUpgrades()
-    this.draftedCards = DEMO_TRIGGER_CARD_IDS
-      .map(id => allCards.find(c => c.id === id))
-      .filter(Boolean) as UpgradeCard[]
 
     // Wire dispatcher → evaluator → executor → log
     const eventTypes: Array<Parameters<EventDispatcher['on']>[0]> =
@@ -169,12 +172,63 @@ export class PhysicsScene extends Phaser.Scene {
           const result = this.executor.execute(trigger, this.combatState)
           if (result.applied) this.logTrigger(trigger.cardName, event.type)
         }
+
+        // Kill → progression
+        if (event.type === 'ON_KILL') {
+          this.killCount++
+          this.updateKillCounter()
+          if (this.killCount % KILLS_PER_LEVEL === 0 && !this.drafting) {
+            this.triggerDraft()
+          }
+        }
       })
     }
 
     // Simulator
     this.simulator = new CombatSimulator(this, this.combatState, this.dispatcher)
     this.simulator.start()
+  }
+
+  private triggerDraft(): void {
+    this.drafting = true
+    this.level++
+    const offer = this.mgr.getDraftOffer(this.playerState, 4)
+
+    this.scene.launch('DraftScene', {
+      cards:       offer,
+      rerollsFn:   () => this.mgr.getDraftOffer(this.playerState, 4),
+      onPick:      (card: UpgradeCard) => this.applyDraftedCard(card),
+      onSkip:      () => { this.drafting = false },
+      rerollsLeft: 2,
+      level:       this.level,
+      classId:     this.runData.classId,
+    })
+    this.scene.pause('PhysicsScene')
+  }
+
+  private applyDraftedCard(card: UpgradeCard): void {
+    // Update player state (tags, computed stats)
+    this.playerState  = this.mgr.applyUpgrade(this.playerState, card)
+    this.draftedCards = this.playerState.draftedCards
+
+    // Apply stat modifiers to live combat state
+    for (const mod of card.statModifiers) {
+      if (mod.stat === 'HULL' && mod.type === 'flat') {
+        this.combatState.maxHull += mod.value
+        this.combatState.restoreHull(mod.value)
+      } else if (mod.stat === 'SHIELD_MAX' && mod.type === 'flat') {
+        this.combatState.maxShield += mod.value
+        this.combatState.restoreShield(mod.value)
+      } else if (mod.stat === 'SHIELD_MAX' && mod.type === 'percent' && mod.value === -100) {
+        // Zero-Shield Fortress converter
+        this.combatState.maxShield = 0
+        this.combatState.currentShield = 0
+      }
+    }
+
+    this.updateModulesDisplay()
+    this.logTrigger(`Drafted: ${card.name}`, 'UPGRADE')
+    this.drafting = false
   }
 
   // ─── HUD ─────────────────────────────────────────────────────────────────
@@ -230,17 +284,22 @@ export class PhysicsScene extends Phaser.Scene {
       }))
     }
 
-    // Pre-drafted cards display
+    // Kill counter + level (top-right)
     const { width } = this.cameras.main
-    this.add.text(width - 14, 14, 'ACTIVE MODULES', {
+    this.levelText = this.add.text(width - 14, 14, 'LV 1', {
+      fontSize: '13px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
+    }).setOrigin(1, 0)
+
+    this.killCounterText = this.add.text(width - 14, 32, `KILLS  0 / ${KILLS_PER_LEVEL}`, {
+      fontSize: '10px', color: '#335544', fontFamily: 'monospace',
+    }).setOrigin(1, 0)
+
+    this.add.text(width - 14, 56, 'ACTIVE MODULES', {
       fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 3,
     }).setOrigin(1, 0)
 
-    this.draftedCards.forEach((card, i) => {
-      this.add.text(width - 14, 30 + i * 16, `[T${card.tier}] ${card.name}`, {
-        fontSize: '10px', color: '#335544', fontFamily: 'monospace',
-      }).setOrigin(1, 0)
-    })
+    this.modulesContainer = this.add.container(width, 72)
+    this.updateModulesDisplay()
   }
 
   private updateHUD(): void {
@@ -274,9 +333,34 @@ export class PhysicsScene extends Phaser.Scene {
     this.effectText.setText(effects.join('  '))
   }
 
+  private updateKillCounter(): void {
+    const progress = this.killCount % KILLS_PER_LEVEL
+    this.killCounterText?.setText(`KILLS  ${progress} / ${KILLS_PER_LEVEL}`)
+    this.levelText?.setText(`LV ${this.level}`)
+  }
+
+  private updateModulesDisplay(): void {
+    if (!this.modulesContainer) return
+    this.modulesContainer.removeAll(true)
+    const cards = this.playerState?.draftedCards ?? []
+    if (cards.length === 0) {
+      const t = this.add.text(-14, 0, 'none drafted yet', {
+        fontSize: '9px', color: '#223333', fontFamily: 'monospace',
+      }).setOrigin(1, 0)
+      this.modulesContainer.add(t)
+      return
+    }
+    cards.forEach((card, i) => {
+      const t = this.add.text(-14, i * 16, `[T${card.tier}] ${card.name}`, {
+        fontSize: '9px', color: '#335544', fontFamily: 'monospace',
+      }).setOrigin(1, 0)
+      this.modulesContainer.add(t)
+    })
+  }
+
   private logBuffer: string[] = []
 
-  private logTrigger(cardName: string, eventType: string): void {
+  private logTrigger(cardName: string, eventType: string | 'UPGRADE'): void {
     const ts  = new Date().toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
     const msg = `${ts}  ${eventType}  →  ${cardName}`
     this.logBuffer.unshift(msg)
