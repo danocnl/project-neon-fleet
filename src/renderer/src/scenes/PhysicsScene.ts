@@ -3,7 +3,14 @@ import { getGeometry, type ShipGeometry } from '../ships/ShipGeometry'
 import { createBody, stepPhysics, wrapBounds, type PhysicsBody } from '../physics/PhysicsBody'
 import { orbit } from '../physics/NavBehaviors'
 import { DataLoader } from '../systems/DataLoader'
+import { LoadoutManager } from '../systems/LoadoutManager'
 import { CLASS_COLORS } from '../ships/ClassIcons'
+import { CombatState } from '../combat/CombatState'
+import { EventDispatcher } from '../combat/EventDispatcher'
+import { TriggerEvaluator } from '../combat/TriggerEvaluator'
+import { ActionExecutor } from '../combat/ActionExecutor'
+import { CombatSimulator } from '../combat/CombatSimulator'
+import type { UpgradeCard } from '../types'
 
 interface RunData {
   pilot:   string
@@ -20,16 +27,42 @@ interface ShipActor {
   orbitSpeed:  number
 }
 
+// Cards with logic triggers used for the Phase 4 demonstration
+const DEMO_TRIGGER_CARD_IDS = [
+  'emergency_phase_protocol',  // ON_SHIELD_DROP → PHASE
+  'combat_triage',             // ON_KILL → restore 300 HP
+  'heat_flush',                // ON_OVERHEAT → cool + fire rate boost
+]
+
+const LOG_MAX = 6   // max entries in the trigger log
+
 export class PhysicsScene extends Phaser.Scene {
-  private actor!: ShipActor
-  private gridGfx!: Phaser.GameObjects.Graphics
+  private actor!:    ShipActor
+  private gridGfx!:  Phaser.GameObjects.Graphics
+  private flashGfx!: Phaser.GameObjects.Graphics
   private cx = 0
   private cy = 0
   private runData!: RunData
 
-  constructor() {
-    super({ key: 'PhysicsScene' })
-  }
+  // Combat systems
+  private combatState!:    CombatState
+  private dispatcher!:     EventDispatcher
+  private evaluator!:      TriggerEvaluator
+  private executor!:       ActionExecutor
+  private simulator!:      CombatSimulator
+  private draftedCards:    UpgradeCard[] = []
+
+  // HUD elements
+  private hullBar!:    Phaser.GameObjects.Graphics
+  private shieldBar!:  Phaser.GameObjects.Graphics
+  private heatBar!:    Phaser.GameObjects.Graphics
+  private effectText!: Phaser.GameObjects.Text
+  private logEntries:  Phaser.GameObjects.Text[] = []
+  private hullText!:   Phaser.GameObjects.Text
+  private shieldText!: Phaser.GameObjects.Text
+  private heatText!:   Phaser.GameObjects.Text
+
+  constructor() { super({ key: 'PhysicsScene' }) }
 
   init(data: RunData): void {
     this.runData = {
@@ -44,31 +77,42 @@ export class PhysicsScene extends Phaser.Scene {
     this.cx = width / 2
     this.cy = height / 2
 
-    this.gridGfx = this.add.graphics()
+    this.gridGfx  = this.add.graphics()
+    this.flashGfx = this.add.graphics()
     this.drawGrid()
+
     this.buildActor()
+    this.buildCombatSystems()
     this.buildHUD()
   }
 
-  update(_time: number, delta: number): void {
+  update(_t: number, delta: number): void {
     const dt = Math.min(delta / 1000, 0.05)
 
+    // Physics
     this.actor.orbitAngle += this.actor.orbitSpeed * dt
     const { fx, fy } = orbit(
-      this.actor.body,
-      this.cx, this.cy,
-      this.actor.orbitRadius,
-      this.actor.orbitAngle
+      this.actor.body, this.cx, this.cy,
+      this.actor.orbitRadius, this.actor.orbitAngle
     )
     stepPhysics(this.actor.body, fx, fy, dt)
     wrapBounds(this.actor.body, this.cameras.main.width, this.cameras.main.height)
 
+    // Combat tick (shield regen etc.)
+    const ship = DataLoader.getShip(this.runData.shipId)!
+    const shieldRegenPerMs = ship.baseStats.SHIELD_REGEN / 1000
+    this.combatState.tick(delta, shieldRegenPerMs)
+
+    // Redraw ship
     this.actor.gfx.clear()
-    const shipColor = CLASS_COLORS[this.runData.classId] ?? 0x00ffff
-    drawNeonShip(this.actor.gfx, this.actor.body, this.actor.geometry, shipColor)
+    const clsColor = CLASS_COLORS[this.runData.classId] ?? 0x00ffff
+    const phaseAlpha = this.combatState.isPhased ? 0.3 : 1
+    drawNeonShip(this.actor.gfx, this.actor.body, this.actor.geometry, clsColor, phaseAlpha)
+
+    this.updateHUD()
   }
 
-  // ─── Build ─────────────────────────────────────────────────────────────────
+  // ─── Build ───────────────────────────────────────────────────────────────
 
   private buildActor(): void {
     const { shipId } = this.runData
@@ -82,66 +126,202 @@ export class PhysicsScene extends Phaser.Scene {
     const drag     = remap(mass, 1, 12, 0.82, 0.94)
 
     const orbitRadius = 180
-    const startAngle  = 0
-    const startX = this.cx + Math.sin(startAngle) * orbitRadius
-    const startY = this.cy - Math.cos(startAngle) * orbitRadius
-
-    const body = createBody(startX, startY, maxSpeed, accel, mass, drag)
-    const gfx  = this.add.graphics()
+    const body = createBody(
+      this.cx + Math.sin(0) * orbitRadius,
+      this.cy - Math.cos(0) * orbitRadius,
+      maxSpeed, accel, mass, drag
+    )
 
     this.actor = {
-      geometry:    geo,
-      body,
-      gfx,
-      orbitAngle:  startAngle,
-      orbitRadius,
-      orbitSpeed:  0.9,
+      geometry: geo, body,
+      gfx: this.add.graphics(),
+      orbitAngle: 0, orbitRadius, orbitSpeed: 0.9,
     }
   }
 
+  private buildCombatSystems(): void {
+    const ship = DataLoader.getShip(this.runData.shipId)!
+
+    // State
+    this.combatState = new CombatState(ship, this.runData.classId)
+
+    // Systems
+    this.dispatcher = new EventDispatcher()
+    this.evaluator  = new TriggerEvaluator()
+    this.executor   = new ActionExecutor()
+
+    // Pre-draft demo cards (logic triggers relevant to Phase 4)
+    const allCards  = DataLoader.getAllUpgrades()
+    this.draftedCards = DEMO_TRIGGER_CARD_IDS
+      .map(id => allCards.find(c => c.id === id))
+      .filter(Boolean) as UpgradeCard[]
+
+    // Wire dispatcher → evaluator → executor → log
+    const eventTypes: Array<Parameters<EventDispatcher['on']>[0]> =
+      ['ON_HIT', 'ON_CRIT', 'ON_KILL', 'ON_SHIELD_DROP', 'ON_OVERHEAT']
+
+    for (const type of eventTypes) {
+      this.dispatcher.on(type, event => {
+        const fired = this.evaluator.evaluate(
+          event, this.draftedCards, this.combatState, performance.now()
+        )
+        for (const trigger of fired) {
+          const result = this.executor.execute(trigger, this.combatState)
+          if (result.applied) this.logTrigger(trigger.cardName, event.type)
+        }
+      })
+    }
+
+    // Simulator
+    this.simulator = new CombatSimulator(this, this.combatState, this.dispatcher)
+    this.simulator.start()
+  }
+
+  // ─── HUD ─────────────────────────────────────────────────────────────────
+
   private buildHUD(): void {
-    const ship = DataLoader.getShip(this.runData.shipId)
-    const cls  = DataLoader.getClass(this.runData.classId)
-    if (!ship || !cls) return
+    const ship = DataLoader.getShip(this.runData.shipId)!
+    const cls  = DataLoader.getClass(this.runData.classId)!
+    const geo  = getGeometry(this.runData.shipId)
+    const clsColor  = CLASS_COLORS[this.runData.classId] ?? 0x00ffff
+    const shipHex   = geo  ? `#${geo.color.toString(16).padStart(6, '0')}` : '#ffffff'
+    const clsHex    = `#${clsColor.toString(16).padStart(6, '0')}`
 
-    const geo = getGeometry(this.runData.shipId)
-    const shipHex  = geo  ? `#${geo.color.toString(16).padStart(6, '0')}` : '#00ffff'
-    const classColor = CLASS_COLORS[this.runData.classId] ?? 0xff00ff
-    const classHex = `#${classColor.toString(16).padStart(6, '0')}`
-
-    // Pilot callsign
+    // Pilot / ship / class info
     this.add.text(14, 14, this.runData.pilot, {
       fontSize: '13px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
     })
-
-    // Ship name
-    this.add.text(14, 32, ship.name.replace(' Frame', '').toUpperCase(), {
+    this.add.text(14, 30, ship.name.replace(' Frame', '').toUpperCase(), {
       fontSize: '11px', color: shipHex, fontFamily: 'monospace',
     })
+    this.add.text(14, 46, cls.name, {
+      fontSize: '11px', color: clsHex, fontFamily: 'monospace',
+    })
 
-    // Class name
-    this.add.text(14, 48, cls.name, {
-      fontSize: '11px', color: classHex, fontFamily: 'monospace',
+    // Bar labels
+    const barLabelStyle = { fontSize: '9px', color: '#224433', fontFamily: 'monospace' }
+    this.add.text(14, 72, 'HULL', barLabelStyle)
+    this.add.text(14, 92, 'SHIELD', barLabelStyle)
+    this.add.text(14, 112, 'HEAT', barLabelStyle)
+
+    // Bar graphics
+    this.hullBar   = this.add.graphics()
+    this.shieldBar = this.add.graphics()
+    this.heatBar   = this.add.graphics()
+
+    // Bar value texts
+    this.hullText   = this.add.text(220, 70, '', { fontSize: '9px', color: '#336644', fontFamily: 'monospace' })
+    this.shieldText = this.add.text(220, 90, '', { fontSize: '9px', color: '#334466', fontFamily: 'monospace' })
+    this.heatText   = this.add.text(220, 110, '', { fontSize: '9px', color: '#664433', fontFamily: 'monospace' })
+
+    // Active effects
+    this.effectText = this.add.text(14, 134, '', {
+      fontSize: '10px', color: '#ffcc00', fontFamily: 'monospace',
+    })
+
+    // Trigger log (bottom-left)
+    const { height } = this.cameras.main
+    this.add.text(14, height - LOG_MAX * 18 - 30, 'TRIGGER LOG', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 3,
+    })
+    for (let i = 0; i < LOG_MAX; i++) {
+      this.logEntries.push(this.add.text(14, height - (LOG_MAX - i) * 18 - 10, '', {
+        fontSize: '10px', color: '#335544', fontFamily: 'monospace',
+      }))
+    }
+
+    // Pre-drafted cards display
+    const { width } = this.cameras.main
+    this.add.text(width - 14, 14, 'ACTIVE MODULES', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 3,
+    }).setOrigin(1, 0)
+
+    this.draftedCards.forEach((card, i) => {
+      this.add.text(width - 14, 30 + i * 16, `[T${card.tier}] ${card.name}`, {
+        fontSize: '10px', color: '#335544', fontFamily: 'monospace',
+      }).setOrigin(1, 0)
     })
   }
+
+  private updateHUD(): void {
+    const cs  = this.combatState
+    const BAR_X = 46
+    const BAR_W = 170
+    const BAR_H = 8
+
+    const drawBar = (gfx: Phaser.GameObjects.Graphics, y: number, ratio: number, color: number) => {
+      gfx.clear()
+      gfx.fillStyle(0x111111, 0.8)
+      gfx.fillRect(BAR_X, y, BAR_W, BAR_H)
+      gfx.fillStyle(color, 1)
+      gfx.fillRect(BAR_X, y, BAR_W * Math.max(0, Math.min(1, ratio)), BAR_H)
+      gfx.lineStyle(1, color, 0.3)
+      gfx.strokeRect(BAR_X, y, BAR_W, BAR_H)
+    }
+
+    drawBar(this.hullBar,   72,  cs.currentHull   / cs.maxHull,   0x00cc44)
+    drawBar(this.shieldBar, 92,  cs.currentShield / cs.maxShield,  0x4488ff)
+    drawBar(this.heatBar,   112, cs.currentHeat   / cs.maxHeat,    cs.isOverheated ? 0xff2200 : 0xff8800)
+
+    this.hullText.setText(`${Math.round(cs.currentHull)} / ${cs.maxHull}`)
+    this.shieldText.setText(`${Math.round(cs.currentShield)} / ${cs.maxShield}`)
+    this.heatText.setText(`${Math.round(cs.currentHeat)}%${cs.isOverheated ? ' OVERHEAT' : ''}`)
+
+    // Active effects
+    const effects = cs.activeEffects.map(e =>
+      `${e.type.replace('_', ' ')} ${(e.remainingMs / 1000).toFixed(1)}s`
+    )
+    this.effectText.setText(effects.join('  '))
+  }
+
+  private logBuffer: string[] = []
+
+  private logTrigger(cardName: string, eventType: string): void {
+    const ts  = new Date().toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    const msg = `${ts}  ${eventType}  →  ${cardName}`
+    this.logBuffer.unshift(msg)
+    if (this.logBuffer.length > LOG_MAX) this.logBuffer.pop()
+
+    this.logEntries.forEach((t, i) => {
+      t.setText(this.logBuffer[i] ?? '')
+      t.setColor(i === 0 ? '#00ff88' : '#335544')
+    })
+
+    // Brief flash on ship
+    this.flashShip()
+  }
+
+  private flashShip(): void {
+    const clsColor = CLASS_COLORS[this.runData.classId] ?? 0x00ffff
+    this.flashGfx.clear()
+    this.flashGfx.fillStyle(clsColor, 0.25)
+    this.flashGfx.fillCircle(this.actor.body.x, this.actor.body.y, 60)
+    this.tweens.add({
+      targets: this.flashGfx,
+      alpha: { from: 1, to: 0 },
+      duration: 400,
+      onComplete: () => { this.flashGfx.setAlpha(1); this.flashGfx.clear() },
+    })
+  }
+
+  // ─── Grid ────────────────────────────────────────────────────────────────
 
   private drawGrid(): void {
     const { width, height } = this.cameras.main
-    this.gridGfx.clear()
     this.gridGfx.lineStyle(1, 0x003366, 0.3)
-    const size = 60
-    for (let x = 0; x <= width;  x += size) this.gridGfx.lineBetween(x, 0, x, height)
-    for (let y = 0; y <= height; y += size) this.gridGfx.lineBetween(0, y, width, y)
+    for (let x = 0; x <= width;  x += 60) this.gridGfx.lineBetween(x, 0, x, height)
+    for (let y = 0; y <= height; y += 60) this.gridGfx.lineBetween(0, y, width, y)
   }
 }
 
-// ─── Rendering ─────────────────────────────────────────────────────────────
+// ─── Rendering ───────────────────────────────────────────────────────────────
 
 function drawNeonShip(
   gfx: Phaser.GameObjects.Graphics,
   body: PhysicsBody,
   geo: ShipGeometry,
-  color: number
+  color: number,
+  alpha = 1
 ): void {
   const cos = Math.cos(body.heading)
   const sin = Math.sin(body.heading)
@@ -154,16 +334,14 @@ function drawNeonShip(
 
   const pts = geo.outline.map(([x, y]) => rot(x, y))
 
-  // 4-layer neon glow in class colour
-  gfx.lineStyle(10, color, 0.04); gfx.strokePoints(pts, true)
-  gfx.lineStyle(5,  color, 0.15); gfx.strokePoints(pts, true)
-  gfx.lineStyle(2.5,color, 0.55); gfx.strokePoints(pts, true)
-  gfx.lineStyle(1.5,color, 1.0);  gfx.strokePoints(pts, true)
+  gfx.lineStyle(10, color, 0.04 * alpha); gfx.strokePoints(pts, true)
+  gfx.lineStyle(5,  color, 0.15 * alpha); gfx.strokePoints(pts, true)
+  gfx.lineStyle(2.5,color, 0.55 * alpha); gfx.strokePoints(pts, true)
+  gfx.lineStyle(1.5,color, 1.0  * alpha); gfx.strokePoints(pts, true)
 
   for (const [x1, y1, x2, y2] of geo.details) {
-    const p1 = rot(x1, y1)
-    const p2 = rot(x2, y2)
-    gfx.lineStyle(1, color, 0.45)
+    const p1 = rot(x1, y1); const p2 = rot(x2, y2)
+    gfx.lineStyle(1, color, 0.45 * alpha)
     gfx.lineBetween(p1.x, p1.y, p2.x, p2.y)
   }
 }
