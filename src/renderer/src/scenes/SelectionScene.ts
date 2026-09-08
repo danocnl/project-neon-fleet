@@ -175,7 +175,7 @@ export class SelectionScene extends Phaser.Scene {
     })
 
     const btn = addButton(this, W / 2 - 110, cy + 54, 220, 44, 'CONFIRM  →', ACCENT, () => {
-      if (this.username.length > 0) this.showStep(2)
+      if (this.step === 1 && this.username.length > 0) this.showStep(2)
     })
     this.reg(btn.gfx, 1)
     this.reg(btn.text, 1)
@@ -236,9 +236,9 @@ export class SelectionScene extends Phaser.Scene {
       const zone = this.reg(
         this.add.zone(0, y, L, ITEM_H).setOrigin(0, 0).setInteractive(), 2
       ) as Phaser.GameObjects.Zone
-      zone.on('pointerover', () => { if (this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, true)  })
-      zone.on('pointerout',  () => { if (this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, false) })
-      zone.on('pointerdown', () => this.selectClass(cls.id))
+      zone.on('pointerover', () => { if (this.step === 2 && this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, true)  })
+      zone.on('pointerout',  () => { if (this.step === 2 && this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, false) })
+      zone.on('pointerdown', () => { if (this.step === 2) this.selectClass(cls.id) })
     })
 
     // Right panel — class detail
@@ -273,14 +273,14 @@ export class SelectionScene extends Phaser.Scene {
     }), 2) as Phaser.GameObjects.Text
 
     // Bottom bar
-    const back2 = addButton(this, 14, BTM_Y + 14, 160, 40, '← BACK', 0x334455, () => this.showStep(1))
+    const back2 = addButton(this, 14, BTM_Y + 14, 160, 40, '← BACK', 0x334455, () => { if (this.step === 2) this.showStep(1) })
     this.reg(back2.gfx, 2); this.reg(back2.text, 2)
 
     this.reg(this.add.text(W / 2, BTM_Y + 34, '● ●', {
       fontSize: '10px', color: '#224433', fontFamily: 'monospace', letterSpacing: 8,
     }).setOrigin(0.5), 2)
 
-    const next2 = addButton(this, W - 220, BTM_Y + 14, 206, 40, '03 · SELECT SHIP  →', ACCENT, () => this.showStep(3))
+    const next2 = addButton(this, W - 220, BTM_Y + 14, 206, 40, '03 · SELECT SHIP  →', ACCENT, () => { if (this.step === 2) this.showStep(3) })
     this.reg(next2.gfx, 2); this.reg(next2.text, 2)
   }
 
@@ -381,9 +381,9 @@ export class SelectionScene extends Phaser.Scene {
         const zone = this.reg(
           this.add.zone(0, y, L, 36).setOrigin(0, 0).setInteractive(), 3
         ) as Phaser.GameObjects.Zone
-        zone.on('pointerover', () => { if (this.selectedShipId !== id) this.hoverShipItem(id, true)  })
-        zone.on('pointerout',  () => { if (this.selectedShipId !== id) this.hoverShipItem(id, false) })
-        zone.on('pointerdown', () => this.selectShip(id))
+        zone.on('pointerover', () => { if (this.step === 3 && this.selectedShipId !== id) this.hoverShipItem(id, true)  })
+        zone.on('pointerout',  () => { if (this.step === 3 && this.selectedShipId !== id) this.hoverShipItem(id, false) })
+        zone.on('pointerdown', () => { if (this.step === 3) this.selectShip(id) })
 
         y += 40
       }
@@ -426,14 +426,14 @@ export class SelectionScene extends Phaser.Scene {
     this.s_tagRow = this.reg(this.add.container(R_X + 30, R_MID + 302), 3) as Phaser.GameObjects.Container
 
     // Bottom bar
-    const back3 = addButton(this, 14, BTM_Y + 14, 160, 40, '← BACK', 0x334455, () => this.showStep(2))
+    const back3 = addButton(this, 14, BTM_Y + 14, 160, 40, '← BACK', 0x334455, () => { if (this.step === 3) this.showStep(2) })
     this.reg(back3.gfx, 3); this.reg(back3.text, 3)
 
     this.reg(this.add.text(W / 2, BTM_Y + 34, '● ● ●', {
       fontSize: '10px', color: '#224433', fontFamily: 'monospace', letterSpacing: 8,
     }).setOrigin(0.5), 3)
 
-    const launch = addButton(this, W - 220, BTM_Y + 14, 206, 40, 'LAUNCH SECTOR RUN', ACCENT, () => this.launch())
+    const launch = addButton(this, W - 220, BTM_Y + 14, 206, 40, 'LAUNCH SECTOR RUN', ACCENT, () => { if (this.step === 3) this.launch() })
     this.reg(launch.gfx, 3); this.reg(launch.text, 3)
   }
 
@@ -518,8 +518,8 @@ export class SelectionScene extends Phaser.Scene {
     const cos   = Math.cos(this.previewAngle)
     const sin   = Math.sin(this.previewAngle)
     const rot   = (x: number, y: number) => ({
-      x: R_CX + (x * sin + y * cos) * scale,
-      y: R_MID + (-x * cos + y * sin) * scale,
+      x: R_CX + (x * cos - y * sin) * scale,
+      y: R_MID + (x * sin + y * cos) * scale,
     })
 
     const pts = geo.outline.map(([x, y]) => rot(x, y))

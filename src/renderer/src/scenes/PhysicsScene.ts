@@ -154,8 +154,8 @@ function drawNeonShip(
   const sin = Math.sin(body.heading)
 
   const rot = (x: number, y: number): Phaser.Types.Math.Vector2Like => ({
-    x: body.x + x * sin + y * cos,
-    y: body.y - x * cos + y * sin,
+    x: body.x + x * cos - y * sin,
+    y: body.y + x * sin + y * cos,
   })
 
   const pts = geo.outline.map(([x, y]) => rot(x, y))
