@@ -570,7 +570,14 @@ export class SelectionScene extends Phaser.Scene {
     ov.fillStyle(0x00ffff, 0).fillRect(0, 0, W, H)
     this.tweens.add({
       targets: ov, alpha: { from: 0, to: 0.15 }, duration: 200, yoyo: true,
-      onComplete: () => { ov.destroy(); this.scene.start('PhysicsScene') },
+      onComplete: () => {
+        ov.destroy()
+        this.scene.start('PhysicsScene', {
+          pilot:   this.username,
+          shipId:  this.selectedShipId,
+          classId: this.selectedClassId,
+        })
+      },
     })
   }
 }
