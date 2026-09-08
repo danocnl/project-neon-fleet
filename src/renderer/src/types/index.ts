@@ -50,11 +50,18 @@ export interface ClassSpecialization {
   recommendedShips: string[]
 }
 
+export interface TagInteraction {
+  tag: string
+  effect: string
+}
+
 export interface Tag {
   category: TagCategory
   subCategory: string
   tag: string
   description: string
+  mechanic: string           // Effect of each individual tag instance
+  interactions: TagInteraction[]
 }
 
 export interface UpgradeCard {

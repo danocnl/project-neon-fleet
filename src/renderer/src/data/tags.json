@@ -1,96 +1,1106 @@
 [
-  { "category": "SHIP", "subCategory": "DEFENSE", "tag": "HULL", "description": "Raw physical hit points of the vessel." },
-  { "category": "SHIP", "subCategory": "DEFENSE", "tag": "ARMOR", "description": "Flat or percentage reduction to incoming physical/kinetic damage." },
-  { "category": "SHIP", "subCategory": "DEFENSE", "tag": "SHIELD_MAX", "description": "Maximum energy shield capacity." },
-  { "category": "SHIP", "subCategory": "DEFENSE", "tag": "SHIELD_REGEN", "description": "Rate at which shields restore when not taking damage." },
-  { "category": "SHIP", "subCategory": "DEFENSE", "tag": "SHIELD_DELAY", "description": "Time delay before shield regeneration begins." },
-  { "category": "SHIP", "subCategory": "MOBILITY", "tag": "TOP_SPEED", "description": "Maximum forward velocity." },
-  { "category": "SHIP", "subCategory": "MOBILITY", "tag": "ACCELERATION", "description": "Rate at which top speed is reached." },
-  { "category": "SHIP", "subCategory": "MOBILITY", "tag": "TURN_SPEED", "description": "Angular handling and rotation speed." },
-  { "category": "SHIP", "subCategory": "MOBILITY", "tag": "EVASION", "description": "Percentage chance to completely dodge an incoming attack." },
-  { "category": "SHIP", "subCategory": "MOBILITY", "tag": "MASS", "description": "Affects momentum drift and collision physics." },
-  { "category": "SHIP", "subCategory": "CAPACITY", "tag": "SLOT_SMALL", "description": "Capacity limit for small weapon/module hardpoints." },
-  { "category": "SHIP", "subCategory": "CAPACITY", "tag": "SLOT_MEDIUM", "description": "Capacity limit for medium weapon/module hardpoints." },
-  { "category": "SHIP", "subCategory": "CAPACITY", "tag": "SLOT_LARGE", "description": "Capacity limit for large weapon/module hardpoints." },
-  { "category": "SHIP", "subCategory": "CAPACITY", "tag": "SLOT_XL", "description": "Capacity limit for XL/Heavy weapon hardpoints." },
-  { "category": "SHIP", "subCategory": "CAPACITY", "tag": "CARGO_CAPACITY", "description": "Resource and currency storage limit during a run." },
-  { "category": "SHIP", "subCategory": "UTILITY", "tag": "HEAT_DISSIPATION", "description": "Rate at which weapon/engine heat cools down." },
-  { "category": "SHIP", "subCategory": "UTILITY", "tag": "ENERGY_GRID", "description": "Power capacity to run active modules and weapons." },
-  { "category": "SHIP", "subCategory": "UTILITY", "tag": "REPAIR_RATE", "description": "Speed of passive or active hull restoration." },
-  { "category": "WEAPON", "subCategory": "TYPE", "tag": "ENERGY", "description": "Laser and plasma weapon attributes." },
-  { "category": "WEAPON", "subCategory": "TYPE", "tag": "KINETIC", "description": "Ballistic and railgun attributes." },
-  { "category": "WEAPON", "subCategory": "TYPE", "tag": "EXPLOSIVE", "description": "Missile and AoE blast attributes." },
-  { "category": "WEAPON", "subCategory": "TYPE", "tag": "PSIONIC", "description": "Direct bypass and status-based damage attributes." },
-  { "category": "WEAPON", "subCategory": "TYPE", "tag": "BIOLOGICAL", "description": "Nanite and corrosion damage attributes." },
-  { "category": "WEAPON", "subCategory": "TYPE", "tag": "CORROSIVE", "description": "Armor-stripping damage attributes." },
-  { "category": "WEAPON", "subCategory": "STATS", "tag": "RATE_OF_FIRE", "description": "Firing frequency and cadence." },
-  { "category": "WEAPON", "subCategory": "STATS", "tag": "RELOAD_SPEED", "description": "Time required to replenish ammo/charge." },
-  { "category": "WEAPON", "subCategory": "STATS", "tag": "AMMO_CAPACITY", "description": "Mag/salvo size before needing a reload." },
-  { "category": "WEAPON", "subCategory": "STATS", "tag": "ENERGY_COST", "description": "Power drawn per shot from the energy grid." },
-  { "category": "WEAPON", "subCategory": "STATS", "tag": "HEAT_GEN", "description": "Heat generated per shot." },
-  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "VELOCITY", "description": "Speed of launched projectiles." },
-  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "ACCURACY", "description": "Spread angle and precision." },
-  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "RANGE", "description": "Maximum distance projectiles travel before expiring." },
-  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "BLAST_RADIUS", "description": "Area of effect diameter for splash damage." },
-  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "PIERCE", "description": "Number of enemy ships a shot can pass through." },
-  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "RICOCHET", "description": "Number of times a projectile bounces off targets/prisms." },
-  { "category": "WEAPON", "subCategory": "STATUS", "tag": "BURN", "description": "Continuous thermal damage over time." },
-  { "category": "WEAPON", "subCategory": "STATUS", "tag": "FREEZE", "description": "Slows enemy movement and attack speeds." },
-  { "category": "WEAPON", "subCategory": "STATUS", "tag": "EMP", "description": "Disables enemy shields or automated routines." },
-  { "category": "WEAPON", "subCategory": "STATUS", "tag": "CRITICAL_CHANCE", "description": "Probability of dealing bonus multiplier damage." },
-  { "category": "WEAPON", "subCategory": "STATUS", "tag": "DOT_DURATION", "description": "Length of time status effects persist on target." },
-  { "category": "CONSTRUCT", "subCategory": "SPECS", "tag": "DRONE_COUNT", "description": "Maximum active drones/minions allowed." },
-  { "category": "CONSTRUCT", "subCategory": "SPECS", "tag": "DRONE_HULL", "description": "Health pool of deployed constructs." },
-  { "category": "CONSTRUCT", "subCategory": "SPECS", "tag": "DRONE_SPEED", "description": "Movement and tracking velocity of constructs." },
-  { "category": "CONSTRUCT", "subCategory": "SPECS", "tag": "DRONE_DAMAGE", "description": "Offensive output of deployables." },
-  { "category": "CONSTRUCT", "subCategory": "SPECS", "tag": "RESPAWN_RATE", "description": "Cooldown time to rebuild destroyed drones." },
-  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "ORBITAL", "description": "Constructs that rotate around the parent vessel." },
-  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "KAMIKAZE", "description": "Constructs that detonate on contact." },
-  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "POINT_DEFENSE", "description": "Constructs prioritizing incoming enemy missiles/shots." },
-  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "REPAIR_SWARM", "description": "Constructs prioritizing team hull repairs." },
-  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "TARGETING_BEACON", "description": "Constructs marking high-priority targets for allies." },
-  { "category": "SPECIALIZATION", "subCategory": "SPATIAL", "tag": "GRAVITY", "description": "Gravitational pull and force fields." },
-  { "category": "SPECIALIZATION", "subCategory": "SPATIAL", "tag": "SINGULARITY", "description": "Black hole creation mechanics." },
-  { "category": "SPECIALIZATION", "subCategory": "SPATIAL", "tag": "PULL_FORCE", "description": "Strength of spatial suction effects." },
-  { "category": "SPECIALIZATION", "subCategory": "SPATIAL", "tag": "DISPLACEMENT", "description": "Knockback and force vectors." },
-  { "category": "SPECIALIZATION", "subCategory": "SPATIAL", "tag": "IMPACT", "description": "Collision damage scaling." },
-  { "category": "SPECIALIZATION", "subCategory": "CHRONO", "tag": "CHRONO", "description": "Time distortion mechanics." },
-  { "category": "SPECIALIZATION", "subCategory": "CHRONO", "tag": "COOLDOWN", "description": "Flat reduction to ability cooldowns." },
-  { "category": "SPECIALIZATION", "subCategory": "CHRONO", "tag": "EXECUTION_SPEED", "description": "Frequency scaling for automated loops." },
-  { "category": "SPECIALIZATION", "subCategory": "CHRONO", "tag": "FREQUENCY", "description": "Tick rate of recurring auras and pulses." },
-  { "category": "SPECIALIZATION", "subCategory": "CHRONO", "tag": "AURA_RADIUS", "description": "Effective size of spatial aura fields." },
-  { "category": "SPECIALIZATION", "subCategory": "CO-OP", "tag": "TETHER", "description": "Connecting force lines between ships/enemies." },
-  { "category": "SPECIALIZATION", "subCategory": "CO-OP", "tag": "DAMAGE_SHARE", "description": "Splitting damage taken or dealt across linked targets." },
-  { "category": "SPECIALIZATION", "subCategory": "CO-OP", "tag": "BROADCAST", "description": "Sharing a local buff/stat with all allies." },
-  { "category": "SPECIALIZATION", "subCategory": "CO-OP", "tag": "RESOURCE_FEED", "description": "Transferring heat or energy directly to teammates." },
-  { "category": "SPECIALIZATION", "subCategory": "CO-OP", "tag": "AMPLIFICATION", "description": "Multiplier applied to allies' actions within range." },
-  { "category": "SPECIALIZATION", "subCategory": "EXOTIC", "tag": "PHASE", "description": "Dimensional shifting (invulnerability/bypassing objects)." },
-  { "category": "SPECIALIZATION", "subCategory": "EXOTIC", "tag": "INVULNERABILITY", "description": "Temporary complete immunity to damage." },
-  { "category": "SPECIALIZATION", "subCategory": "EXOTIC", "tag": "NANITE", "description": "Self-replicating bug swarms." },
-  { "category": "SPECIALIZATION", "subCategory": "EXOTIC", "tag": "SALVAGE", "description": "Converting enemy debris into resources or barriers." },
-  { "category": "SPECIALIZATION", "subCategory": "EXOTIC", "tag": "REFLECTION", "description": "Bouncing incoming shots back at attackers." },
-  { "category": "SPECIALIZATION", "subCategory": "EXOTIC", "tag": "MIRROR", "description": "Prism mirror mechanics for multiplying beams." },
-  { "category": "LOGIC", "subCategory": "CONDITIONAL", "tag": "ON_HIT", "description": "Triggers when dealing or receiving a hit." },
-  { "category": "LOGIC", "subCategory": "CONDITIONAL", "tag": "ON_CRIT", "description": "Triggers when landing a critical strike." },
-  { "category": "LOGIC", "subCategory": "CONDITIONAL", "tag": "ON_KILL", "description": "Triggers when an enemy ship is destroyed." },
-  { "category": "LOGIC", "subCategory": "CONDITIONAL", "tag": "ON_SHIELD_DROP", "description": "Triggers when shields reach 0%." },
-  { "category": "LOGIC", "subCategory": "CONDITIONAL", "tag": "ON_OVERHEAT", "description": "Triggers when heat reaches 100%." },
-  { "category": "LOGIC", "subCategory": "SPATIAL_TRIGGER", "tag": "IN_RANGE", "description": "Triggers when a target enters a defined radius." },
-  { "category": "LOGIC", "subCategory": "SPATIAL_TRIGGER", "tag": "BEHIND_ALLY", "description": "Triggers when positioned behind a teammate." },
-  { "category": "LOGIC", "subCategory": "SPATIAL_TRIGGER", "tag": "FRONTAL_ARC", "description": "Triggers when an event happens in the front 90° cone." },
-  { "category": "LOGIC", "subCategory": "SPATIAL_TRIGGER", "tag": "PROXIMITY", "description": "Triggers based on closeness to nearest entity." },
-  { "category": "LOGIC", "subCategory": "TEAM_TRIGGER", "tag": "ALLY_LOW_HP", "description": "Triggers when a teammate drops below a HP threshold." },
-  { "category": "LOGIC", "subCategory": "TEAM_TRIGGER", "tag": "ALLY_TARGETED", "description": "Triggers when an ally is locked on by enemies." },
-  { "category": "LOGIC", "subCategory": "TEAM_TRIGGER", "tag": "TEAM_CLUSTER", "description": "Triggers when all player ships are grouped closely." },
-
-  { "category": "SPECIALIZATION", "subCategory": "CHRONO", "tag": "TEMPORAL_ECHO", "description": "Duplicates a triggered effect once via a time loop. Unique to Chrono Architect." },
-  { "category": "SPECIALIZATION", "subCategory": "SPATIAL", "tag": "COMPRESSION", "description": "Holds clustered enemies in a dense formation after a pull. Unique to Graviton Weaver." },
-  { "category": "SPECIALIZATION", "subCategory": "CO-OP", "tag": "CHAIN", "description": "Propagates damage or status effects along active tether links. Unique to Quantum Entangler." },
-  { "category": "SPECIALIZATION", "subCategory": "EXOTIC", "tag": "INFESTATION", "description": "Spreads active nanite effects from a dying enemy to nearby targets. Unique to Nanite Swarm Controller." },
-  { "category": "SPECIALIZATION", "subCategory": "EXOTIC", "tag": "BLINK", "description": "Short-range positional teleport distinct from the PHASE invulnerability state. Unique to Phase Weaver." },
-  { "category": "SPECIALIZATION", "subCategory": "CONDUCTOR", "tag": "VOLTAGE", "description": "Raw electrical damage type. EMP disables systems; VOLTAGE deals direct energy damage. Unique to Hyper-Conductor." },
-  { "category": "SPECIALIZATION", "subCategory": "CONDUCTOR", "tag": "OVERCLOCK", "description": "Temporary stat burst fuelled by burning energy reserves. Unique to Hyper-Conductor." },
-  { "category": "SPECIALIZATION", "subCategory": "RESONANCE", "tag": "HARMONIC", "description": "Stacking resonance mechanic — each stack amplifies all other stacks. Unique to Resonance Bard." },
-  { "category": "SPECIALIZATION", "subCategory": "SALVAGE", "tag": "DEBRIS_FIELD", "description": "Deploys collected wreckage as a persistent area hazard or barrier. Unique to Scrap Salvager." },
-  { "category": "SPECIALIZATION", "subCategory": "VECTOR", "tag": "PRISM", "description": "Splits a single beam into multiple diverging beams. MIRROR bounces; PRISM splits. Unique to Vector Specialist." }
+  {
+    "category": "SHIP",
+    "subCategory": "DEFENSE",
+    "tag": "HULL",
+    "description": "Raw physical hit points of the vessel.",
+    "mechanic": "Each tag adds +500 HP to base hull. Hull damage is applied after armor reduction.",
+    "interactions": [
+      { "tag": "ARMOR", "effect": "Armor reduces incoming damage before it reaches hull, making each HP point more effective." },
+      { "tag": "REPAIR_RATE", "effect": "Passive repair restores hull over time; higher hull pools benefit more from sustained repair." },
+      { "tag": "NANITE", "effect": "Nanite swarms target hull for restoration; larger hull pools absorb more nanite repair." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "DEFENSE",
+    "tag": "ARMOR",
+    "description": "Flat percentage reduction to incoming physical and kinetic damage.",
+    "mechanic": "Each tag adds +4% damage reduction, applied multiplicatively. Hard cap at 60%.",
+    "interactions": [
+      { "tag": "HULL", "effect": "Armor amplifies the effective value of every hull point by reducing damage taken." },
+      { "tag": "CORROSIVE", "effect": "Corrosive attacks reduce armor % temporarily, lowering this tag's effectiveness." },
+      { "tag": "COMPRESSION", "effect": "Compressed enemy clusters deal collision damage; armor reduces this incoming impact." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "DEFENSE",
+    "tag": "SHIELD_MAX",
+    "description": "Maximum energy shield capacity.",
+    "mechanic": "Each tag adds +300 SP to base shield pool. Shields absorb damage before hull.",
+    "interactions": [
+      { "tag": "SHIELD_REGEN", "effect": "Larger shield pools take longer to refill; regen rate must scale with shield max." },
+      { "tag": "SHIELD_DELAY", "effect": "A high shield max is wasted if delay prevents regen from starting promptly." },
+      { "tag": "VOLTAGE", "effect": "Hyper-Conductor converts shield pressure into voltage output — larger pools generate more power under fire." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "DEFENSE",
+    "tag": "SHIELD_REGEN",
+    "description": "Rate at which shields restore when not taking damage.",
+    "mechanic": "Each tag adds +20 SP/s to shield regeneration rate.",
+    "interactions": [
+      { "tag": "SHIELD_DELAY", "effect": "Regen rate is irrelevant until delay expires; reduce delay to get value from high regen." },
+      { "tag": "COOLDOWN", "effect": "Cooldown reduction on shield-triggered abilities pairs with fast regen for rapid recovery cycles." },
+      { "tag": "ON_SHIELD_DROP", "effect": "Fast regen means ON_SHIELD_DROP triggers fire more frequently, enabling reactive builds." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "DEFENSE",
+    "tag": "SHIELD_DELAY",
+    "description": "Time delay before shield regeneration begins after taking damage.",
+    "mechanic": "Each tag reduces delay by 0.3s. Minimum delay is 0.5s.",
+    "interactions": [
+      { "tag": "SHIELD_REGEN", "effect": "Lowering delay unlocks the value of high regen — both tags synergise for fast shield cycling." },
+      { "tag": "PHASE", "effect": "Phase state prevents incoming damage, resetting delay and allowing shields to begin regen sooner." },
+      { "tag": "EVASION", "effect": "Dodging incoming hits avoids triggering delay, keeping regen active longer." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "MOBILITY",
+    "tag": "TOP_SPEED",
+    "description": "Maximum forward velocity.",
+    "mechanic": "Each tag adds +30 u/s to maximum speed.",
+    "interactions": [
+      { "tag": "ACCELERATION", "effect": "Higher top speed is only usable if acceleration can reach it before the next engagement." },
+      { "tag": "MASS", "effect": "Higher mass increases momentum at top speed, amplifying collision damage with IMPACT_DRIVE." },
+      { "tag": "EVASION", "effect": "Speed and evasion together make a ship hard to hit; each reinforces the other defensively." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "MOBILITY",
+    "tag": "ACCELERATION",
+    "description": "Rate at which top speed is reached.",
+    "mechanic": "Each tag adds +25 u/s² to acceleration.",
+    "interactions": [
+      { "tag": "TOP_SPEED", "effect": "Acceleration determines how quickly top speed is reached and how responsive direction changes feel." },
+      { "tag": "BLINK", "effect": "High acceleration lets the ship exploit a blink repositioning immediately without losing momentum." },
+      { "tag": "MASS", "effect": "Higher mass reduces acceleration's effectiveness; heavy ships need more tags to feel responsive." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "MOBILITY",
+    "tag": "TURN_SPEED",
+    "description": "Angular handling and rotation speed.",
+    "mechanic": "Each tag adds +20 °/s to rotation rate.",
+    "interactions": [
+      { "tag": "EVASION", "effect": "Turn speed and evasion together let a ship dodge by steering as well as by RNG — complementary defensive layers." },
+      { "tag": "FRONTAL_ARC", "effect": "Higher turn speed makes frontal-arc weapons easier to aim at fast-moving targets." },
+      { "tag": "MASS", "effect": "High mass penalises turn speed; extra TURN_SPEED tags help compensate on heavier hulls." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "MOBILITY",
+    "tag": "EVASION",
+    "description": "Percentage chance to completely dodge an incoming attack.",
+    "mechanic": "Each tag adds +3% dodge chance. Hard cap at 45%. A successful dodge prevents all damage from that hit.",
+    "interactions": [
+      { "tag": "PHASE", "effect": "Evasion tags count toward unlocking phase-linked upgrades; high evasion enables phase keystone paths." },
+      { "tag": "ON_SHIELD_DROP", "effect": "Evasion reduces the frequency of shield-drop events, making ON_SHIELD_DROP triggers more deliberate." },
+      { "tag": "BLINK", "effect": "A dodge that would have been lethal can be followed immediately by a blink to reposition." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "MOBILITY",
+    "tag": "MASS",
+    "description": "Vessel mass affecting momentum drift and collision physics.",
+    "mechanic": "Each tag adds +1 mass unit. Higher mass increases collision damage dealt and momentum carry, but reduces turn responsiveness.",
+    "interactions": [
+      { "tag": "TOP_SPEED", "effect": "Mass × velocity at impact determines collision damage output with IMPACT_DRIVE." },
+      { "tag": "COMPRESSION", "effect": "Graviton Weaver compression pulls enemies into the flight path; more mass means higher impact damage." },
+      { "tag": "TURN_SPEED", "effect": "Each mass tag slightly reduces effective turn speed; offset with TURN_SPEED tags for brawler builds." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "CAPACITY",
+    "tag": "SLOT_SMALL",
+    "description": "Capacity limit for small weapon and module hardpoints.",
+    "mechanic": "Each tag adds +1 small hardpoint slot.",
+    "interactions": [
+      { "tag": "RATE_OF_FIRE", "effect": "Small slots often host rapid-fire weapons; RATE_OF_FIRE tags multiply their output." },
+      { "tag": "DRONE_COUNT", "effect": "Small slots can house drone launchers; more slots let a ship run multiple drone types simultaneously." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "CAPACITY",
+    "tag": "SLOT_MEDIUM",
+    "description": "Capacity limit for medium weapon and module hardpoints.",
+    "mechanic": "Each tag adds +1 medium hardpoint slot.",
+    "interactions": [
+      { "tag": "ENERGY_GRID", "effect": "Medium weapons draw moderate energy; more medium slots require a larger energy grid to sustain." },
+      { "tag": "HEAT_GEN", "effect": "Running multiple medium weapons generates significant heat; manage with HEAT_DISSIPATION." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "CAPACITY",
+    "tag": "SLOT_LARGE",
+    "description": "Capacity limit for large weapon and module hardpoints.",
+    "mechanic": "Each tag adds +1 large hardpoint slot.",
+    "interactions": [
+      { "tag": "ENERGY_GRID", "effect": "Large weapons are high energy consumers; insufficient grid causes brown-outs reducing fire rate." },
+      { "tag": "BLAST_RADIUS", "effect": "Large slots typically host explosive weapons; BLAST_RADIUS tags scale their AoE coverage." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "CAPACITY",
+    "tag": "SLOT_XL",
+    "description": "Capacity limit for XL and heavy weapon hardpoints.",
+    "mechanic": "Each tag adds +1 XL hardpoint slot. XL weapons are the highest damage single emplacements in the game.",
+    "interactions": [
+      { "tag": "ENERGY_GRID", "effect": "XL weapons are extreme energy draws; a dedicated energy grid build is required to fire them consistently." },
+      { "tag": "PIERCE", "effect": "XL weapons with pierce tags can cut through entire enemy formations in a single shot." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "CAPACITY",
+    "tag": "CARGO_CAPACITY",
+    "description": "Resource and currency storage limit during a sector run.",
+    "mechanic": "Each tag adds +20 cargo units. Determines how much sector currency and resources can be carried before overflow.",
+    "interactions": [
+      { "tag": "SALVAGE", "effect": "Scrap Salvager generates debris resources that consume cargo; higher capacity prevents early overflow loss." },
+      { "tag": "ON_KILL", "effect": "ON_KILL triggers that grant resources benefit from larger cargo pools." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "UTILITY",
+    "tag": "HEAT_DISSIPATION",
+    "description": "Rate at which weapon and engine heat is cooled down.",
+    "mechanic": "Each tag adds +8 heat/s cooling rate. Prevents overheat lockout on weapons.",
+    "interactions": [
+      { "tag": "HEAT_GEN", "effect": "Net heat = HEAT_GEN minus HEAT_DISSIPATION. Surplus dissipation enables sustained fire without overheat." },
+      { "tag": "VOLTAGE", "effect": "Hyper-Conductor builds deliberately run high heat; HEAT_DISSIPATION controls the conversion rate to VOLTAGE output." },
+      { "tag": "ON_OVERHEAT", "effect": "Lower dissipation makes ON_OVERHEAT triggers fire more frequently — useful in deliberate overheat builds." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "UTILITY",
+    "tag": "ENERGY_GRID",
+    "description": "Total power capacity available to run active modules and weapons.",
+    "mechanic": "Each tag adds +40 energy to the grid pool. Weapons draw from this pool each shot; when empty, fire rate drops.",
+    "interactions": [
+      { "tag": "ENERGY_COST", "effect": "Reducing energy cost per shot lets the same grid sustain far higher fire rates." },
+      { "tag": "OVERCLOCK", "effect": "Overclock burns energy reserves for a stat burst; a larger grid extends overclock uptime." },
+      { "tag": "RESOURCE_FEED", "effect": "RESOURCE_FEED transfers energy to an ally — only useful if your own grid has surplus to share." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "UTILITY",
+    "tag": "REPAIR_RATE",
+    "description": "Speed of passive or active hull restoration.",
+    "mechanic": "Each tag adds +5 HP/s to passive hull repair rate.",
+    "interactions": [
+      { "tag": "HULL", "effect": "Higher hull pools mean repair rate takes longer to fully restore; both must scale together." },
+      { "tag": "NANITE", "effect": "Nanite swarms add burst hull restoration on top of passive repair rate — they stack." },
+      { "tag": "REPAIR_SWARM", "effect": "Repair swarm constructs add additional repair output that stacks with the base REPAIR_RATE." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "TYPE",
+    "tag": "ENERGY",
+    "description": "Laser and plasma weapon damage type.",
+    "mechanic": "Each tag adds +8% damage to all energy-type weapons.",
+    "interactions": [
+      { "tag": "MIRROR", "effect": "Mirror prisms reflect energy beams; reflected shots inherit ENERGY tag bonuses." },
+      { "tag": "PRISM", "effect": "Prism-split beams each carry full ENERGY tag bonuses on their split copies." },
+      { "tag": "EMP", "effect": "Energy weapons can carry EMP payloads; ENERGY tags boost the base damage while EMP tags extend disable duration." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "TYPE",
+    "tag": "KINETIC",
+    "description": "Ballistic and railgun weapon damage type.",
+    "mechanic": "Each tag adds +8% damage to all kinetic-type weapons.",
+    "interactions": [
+      { "tag": "PIERCE", "effect": "Kinetic rounds with pierce tags punch through multiple hulls — common railgun build path." },
+      { "tag": "MASS", "effect": "High-mass ships firing kinetic weapons create recoil effects that can be converted into positioning tools." },
+      { "tag": "ARMOR", "effect": "Kinetic damage is reduced by ARMOR; target armor must be stripped with CORROSIVE first for maximum effect." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "TYPE",
+    "tag": "EXPLOSIVE",
+    "description": "Missile and area-of-effect blast damage type.",
+    "mechanic": "Each tag adds +8% damage to all explosive-type weapons.",
+    "interactions": [
+      { "tag": "BLAST_RADIUS", "effect": "BLAST_RADIUS tags expand AoE coverage — core scaling stat for explosive builds." },
+      { "tag": "COMPRESSION", "effect": "Graviton compression clusters enemies; explosives in a compressed cluster hit all targets simultaneously." },
+      { "tag": "GRAVITY", "effect": "Singularity pulls enemies into the blast zone before detonation — devastating combo." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "TYPE",
+    "tag": "PSIONIC",
+    "description": "Direct bypass and status-based damage that ignores a portion of shields and armor.",
+    "mechanic": "Each tag adds +10% shield and armor bypass — damage deals a fraction directly to hull.",
+    "interactions": [
+      { "tag": "TETHER", "effect": "Psionic damage dealt to one tethered target partially bypasses the targets' defenses via the link." },
+      { "tag": "DAMAGE_SHARE", "effect": "Damage shared along tether links also inherits bypass properties from PSIONIC tags." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "TYPE",
+    "tag": "BIOLOGICAL",
+    "description": "Nanite and corrosion-based damage that spreads over time.",
+    "mechanic": "Each tag adds +6 corrosion DPS stacked on the target.",
+    "interactions": [
+      { "tag": "NANITE", "effect": "Nanite specialization amplifies biological payloads; NANITE tags increase biological DPS on afflicted targets." },
+      { "tag": "INFESTATION", "effect": "Infestation spreads biological effects to nearby enemies from a dying host." },
+      { "tag": "DOT_DURATION", "effect": "Extends the duration of biological DOT stacks, dramatically increasing total damage per application." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "TYPE",
+    "tag": "CORROSIVE",
+    "description": "Armor-stripping damage that reduces target armor rating.",
+    "mechanic": "Each tag applies -3% armor reduction per stack on the target. Maximum 5 stacks (up to -15% armor).",
+    "interactions": [
+      { "tag": "KINETIC", "effect": "CORROSIVE strips armor so kinetic damage bypasses reduction — the standard armor-break combo." },
+      { "tag": "BIOLOGICAL", "effect": "Corrosive stacks and biological DOT both apply from the same hit; they stack independently." },
+      { "tag": "ON_HIT", "effect": "Each corrosive hit applies a stack; ON_HIT triggers can proc off each individual stack application." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "STATS",
+    "tag": "RATE_OF_FIRE",
+    "description": "Firing frequency and attack cadence.",
+    "mechanic": "Each tag adds +12% to fire rate for all equipped weapons.",
+    "interactions": [
+      { "tag": "HEAT_GEN", "effect": "Higher fire rate increases total heat output per second — essential to track in heat-sensitive builds." },
+      { "tag": "ENERGY_COST", "effect": "More shots per second drains the energy grid faster; offset with ENERGY_COST reduction." },
+      { "tag": "ON_HIT", "effect": "More shots means more ON_HIT trigger opportunities per second." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "STATS",
+    "tag": "RELOAD_SPEED",
+    "description": "Time required to replenish ammo or charge between salvos.",
+    "mechanic": "Each tag reduces reload time by 15%.",
+    "interactions": [
+      { "tag": "AMMO_CAPACITY", "effect": "Larger magazines reduce reload frequency; RELOAD_SPEED makes the mandatory reloads faster." },
+      { "tag": "COOLDOWN", "effect": "Chrono Architect COOLDOWN tags reduce ability cooldowns; RELOAD_SPEED covers weapon cycle gaps." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "STATS",
+    "tag": "AMMO_CAPACITY",
+    "description": "Magazine or salvo size before a reload is required.",
+    "mechanic": "Each tag adds +2 shots to the magazine before reload triggers.",
+    "interactions": [
+      { "tag": "RELOAD_SPEED", "effect": "More ammo delays reloads; faster reloads recover the gap — both contribute to sustained DPS." },
+      { "tag": "RATE_OF_FIRE", "effect": "Higher fire rates burn through larger magazines faster; ammo capacity must scale with fire rate." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "STATS",
+    "tag": "ENERGY_COST",
+    "description": "Power drawn from the energy grid per shot fired.",
+    "mechanic": "Each tag reduces energy cost per shot by 8%.",
+    "interactions": [
+      { "tag": "ENERGY_GRID", "effect": "Lower cost per shot and a larger grid together extend sustained fire time significantly." },
+      { "tag": "OVERCLOCK", "effect": "Overclock burns energy as a resource; lower shot costs preserve grid for overclock burst windows." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "STATS",
+    "tag": "HEAT_GEN",
+    "description": "Heat generated per shot fired by the weapon.",
+    "mechanic": "Each tag increases heat output by +15% per shot. Feeds Hyper-Conductor conversion builds.",
+    "interactions": [
+      { "tag": "HEAT_DISSIPATION", "effect": "Net heat balance = HEAT_GEN minus HEAT_DISSIPATION. Excess heat triggers overheat lockout." },
+      { "tag": "VOLTAGE", "effect": "Hyper-Conductor converts accumulated heat directly into VOLTAGE damage output — high HEAT_GEN is intentional in this build." },
+      { "tag": "ON_OVERHEAT", "effect": "Deliberately stacking HEAT_GEN enables more frequent ON_OVERHEAT triggers for reactive builds." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "BEHAVIOR",
+    "tag": "VELOCITY",
+    "description": "Speed of launched projectiles.",
+    "mechanic": "Each tag increases projectile travel speed by +15%.",
+    "interactions": [
+      { "tag": "RANGE", "effect": "Faster projectiles reach maximum range before expiring, effectively extending functional range." },
+      { "tag": "PIERCE", "effect": "Higher velocity piercing shots pass through enemies faster, reducing the window for targets to leave the path." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "BEHAVIOR",
+    "tag": "ACCURACY",
+    "description": "Spread angle and shot precision.",
+    "mechanic": "Each tag reduces spread angle by 20%.",
+    "interactions": [
+      { "tag": "RANGE", "effect": "Higher accuracy at long range ensures shots hit their mark rather than diverging before reaching targets." },
+      { "tag": "RATE_OF_FIRE", "effect": "Rapid fire with high spread creates area coverage; high accuracy focuses damage on single targets." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "BEHAVIOR",
+    "tag": "RANGE",
+    "description": "Maximum distance projectiles travel before expiring.",
+    "mechanic": "Each tag increases weapon range by +15%.",
+    "interactions": [
+      { "tag": "LONG_RANGE_TARGETING", "effect": "Anaconda's special tag adds a base 40% range bonus; RANGE tags multiply on top of this." },
+      { "tag": "GRAVITY", "effect": "Singularity pull range can be extended via RANGE tags on spatial constructs." },
+      { "tag": "REFLECTION", "effect": "Reflected beams inherit the original weapon's range; RANGE tags extend how far reflected shots travel." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "BEHAVIOR",
+    "tag": "BLAST_RADIUS",
+    "description": "Area of effect diameter for explosive and splash damage.",
+    "mechanic": "Each tag increases AoE radius by +20%.",
+    "interactions": [
+      { "tag": "COMPRESSION", "effect": "Compressed enemy clusters caught inside a large blast radius take full damage simultaneously." },
+      { "tag": "GRAVITY", "effect": "Singularity radius scales with BLAST_RADIUS tags — larger pull fields." },
+      { "tag": "EXPLOSIVE", "effect": "EXPLOSIVE type tags boost base damage; BLAST_RADIUS scales how many targets that damage hits." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "BEHAVIOR",
+    "tag": "PIERCE",
+    "description": "Number of enemy ships a projectile passes through before stopping.",
+    "mechanic": "Each tag adds +1 pierce count (enemy ships the shot can pass through).",
+    "interactions": [
+      { "tag": "TETHER", "effect": "A piercing shot can apply a tether to each enemy it passes through in sequence." },
+      { "tag": "CORROSIVE", "effect": "Piercing corrosive shots apply armor-strip stacks to every enemy in the line." },
+      { "tag": "COMPRESSION", "effect": "Compressed clusters maximise pierce value — a single shot through compressed enemies hits all of them." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "BEHAVIOR",
+    "tag": "RICOCHET",
+    "description": "Number of times a projectile bounces off targets, prisms, or debris.",
+    "mechanic": "Each tag adds +1 bounce. Each bounce retains 70% of the previous hit's damage.",
+    "interactions": [
+      { "tag": "MIRROR", "effect": "Mirror prisms redirect ricochets at new angles — ricochet + mirror creates complex multi-target geometry." },
+      { "tag": "DEBRIS_FIELD", "effect": "Scrap Salvager debris fields act as ricochet surfaces, converting barriers into offensive geometry." },
+      { "tag": "PRISM", "effect": "After a prism split, each beam copy can independently ricochet, multiplying total bounce coverage." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "STATUS",
+    "tag": "BURN",
+    "description": "Continuous thermal damage over time applied to a target.",
+    "mechanic": "Each tag adds +12 thermal DPS and +0.5s to burn duration.",
+    "interactions": [
+      { "tag": "HEAT_GEN", "effect": "Burning enemies radiate heat — in close range engagements this feeds Hyper-Conductor conversion." },
+      { "tag": "DOT_DURATION", "effect": "DOT_DURATION tags extend burn duration significantly, multiplying total damage per application." },
+      { "tag": "INFESTATION", "effect": "Nanite infestation spreading through a burning enemy carries the burn status to the next host." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "STATUS",
+    "tag": "FREEZE",
+    "description": "Slows enemy movement and attack speeds.",
+    "mechanic": "Each tag reduces target movement speed by -10% and extends freeze duration by +0.3s.",
+    "interactions": [
+      { "tag": "GRAVITY", "effect": "Frozen enemies cannot drift out of a singularity pull — freeze locks them in place for full duration." },
+      { "tag": "COMPRESSION", "effect": "Freeze slows enemies trying to scatter after compression ends, extending cluster window." },
+      { "tag": "PIERCE", "effect": "A freezing piercing shot can slow an entire column of enemies in one pass." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "STATUS",
+    "tag": "EMP",
+    "description": "Disables enemy shields and automated targeting routines.",
+    "mechanic": "Each tag adds +0.8s to EMP disable duration. Disabled enemies cannot regenerate shields or fire weapons.",
+    "interactions": [
+      { "tag": "VOLTAGE", "effect": "Hyper-Conductor VOLTAGE damage pairs with EMP — EMP drops shields, then VOLTAGE deals direct damage." },
+      { "tag": "TETHER", "effect": "EMP applied to a tethered target propagates the disable along the chain to all linked enemies." },
+      { "tag": "ON_SHIELD_DROP", "effect": "EMP forces shields to zero, reliably triggering ON_SHIELD_DROP logic modules." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "STATUS",
+    "tag": "CRITICAL_CHANCE",
+    "description": "Probability of dealing a bonus damage multiplier on a hit.",
+    "mechanic": "Each tag adds +5% critical hit chance. Crits deal 2× base damage.",
+    "interactions": [
+      { "tag": "ON_CRIT", "effect": "More frequent crits trigger ON_CRIT logic modules more often — reactive crit builds require both." },
+      { "tag": "DAMAGE_SHARE", "effect": "Critical hits that echo via DAMAGE_SHARE also apply the crit multiplier to all linked targets." },
+      { "tag": "TEMPORAL_ECHO", "effect": "A critical hit echoed by TEMPORAL_ECHO duplicates the crit damage burst after a short delay." }
+    ]
+  },
+  {
+    "category": "WEAPON",
+    "subCategory": "STATUS",
+    "tag": "DOT_DURATION",
+    "description": "Length of time all status effects persist on a target.",
+    "mechanic": "Each tag adds +0.5s to the duration of all active status effects (BURN, FREEZE, EMP, BIOLOGICAL, CORROSIVE).",
+    "interactions": [
+      { "tag": "BURN", "effect": "Burn duration extension has the highest DPS return — each extra second multiplies total fire damage." },
+      { "tag": "INFESTATION", "effect": "Longer status durations give infestation more time to spread before the host is destroyed." },
+      { "tag": "CORROSIVE", "effect": "Extended corrosive stacks remain active longer, allowing more subsequent hits to benefit from reduced armor." }
+    ]
+  },
+  {
+    "category": "CONSTRUCT",
+    "subCategory": "SPECS",
+    "tag": "DRONE_COUNT",
+    "description": "Maximum number of active drones or construct minions allowed simultaneously.",
+    "mechanic": "Each tag raises the active drone cap by +1.",
+    "interactions": [
+      { "tag": "DRONE_DAMAGE", "effect": "More drones with higher damage output scales total DPS multiplicatively." },
+      { "tag": "REPAIR_SWARM", "effect": "More drones in repair mode provide higher total HP/s restoration to the team." },
+      { "tag": "NANITE", "effect": "Each active nanite drone delivers payload independently; more drones equals more simultaneous nanite coverage." }
+    ]
+  },
+  {
+    "category": "CONSTRUCT",
+    "subCategory": "SPECS",
+    "tag": "DRONE_HULL",
+    "description": "Health pool of each deployed construct.",
+    "mechanic": "Each tag adds +150 HP to all active drones.",
+    "interactions": [
+      { "tag": "RESPAWN_RATE", "effect": "Tankier drones survive longer, reducing the frequency of respawn cooldowns." },
+      { "tag": "KAMIKAZE", "effect": "Kamikaze drones do not benefit from hull; these tags are mutually exclusive in efficient builds." }
+    ]
+  },
+  {
+    "category": "CONSTRUCT",
+    "subCategory": "SPECS",
+    "tag": "DRONE_SPEED",
+    "description": "Movement and tracking velocity of deployed constructs.",
+    "mechanic": "Each tag increases drone movement speed by +20%.",
+    "interactions": [
+      { "tag": "KAMIKAZE", "effect": "Faster kamikaze drones close distance before targets can evade — speed is primary for this behavior." },
+      { "tag": "REPAIR_SWARM", "effect": "Faster repair drones reach damaged allies sooner, reducing downtime between repairs." }
+    ]
+  },
+  {
+    "category": "CONSTRUCT",
+    "subCategory": "SPECS",
+    "tag": "DRONE_DAMAGE",
+    "description": "Offensive output of deployed constructs.",
+    "mechanic": "Each tag increases drone weapon damage by +15%.",
+    "interactions": [
+      { "tag": "DRONE_COUNT", "effect": "Damage scales per drone; more drones multiply the benefit of each DRONE_DAMAGE tag." },
+      { "tag": "TARGETING_BEACON", "effect": "Beaconed targets receive bonus damage from all sources including drones." }
+    ]
+  },
+  {
+    "category": "CONSTRUCT",
+    "subCategory": "SPECS",
+    "tag": "RESPAWN_RATE",
+    "description": "Cooldown time before a destroyed drone is rebuilt and redeployed.",
+    "mechanic": "Each tag reduces respawn cooldown by 1.5s.",
+    "interactions": [
+      { "tag": "DRONE_COUNT", "effect": "A large drone fleet with fast respawn maintains near-maximum active count even under fire." },
+      { "tag": "ON_KILL", "effect": "ON_KILL triggers can reset respawn cooldowns when slotted with the appropriate logic module." }
+    ]
+  },
+  {
+    "category": "CONSTRUCT",
+    "subCategory": "BEHAVIOR",
+    "tag": "ORBITAL",
+    "description": "Constructs orbit the parent vessel, rotating around it as a defensive layer.",
+    "mechanic": "Each tag increases orbital radius by +10% and collision damage from orbiting constructs by +5%.",
+    "interactions": [
+      { "tag": "MASS", "effect": "Higher ship mass at the orbital center increases the impact force of constructs making contact with enemies." },
+      { "tag": "DEBRIS_FIELD", "effect": "Scrap Salvager debris can orbit the ship, combining ORBITAL behavior with physical barrier properties." }
+    ]
+  },
+  {
+    "category": "CONSTRUCT",
+    "subCategory": "BEHAVIOR",
+    "tag": "KAMIKAZE",
+    "description": "Constructs detonate on contact with an enemy target.",
+    "mechanic": "Each tag increases kamikaze detonation damage by +40%.",
+    "interactions": [
+      { "tag": "DRONE_SPEED", "effect": "Faster kamikaze drones reach targets before they can evade — speed is the primary enabling stat." },
+      { "tag": "BLAST_RADIUS", "effect": "BLAST_RADIUS tags extend kamikaze explosion area, increasing targets hit per detonation." },
+      { "tag": "RESPAWN_RATE", "effect": "Fast respawn maintains kamikaze supply for continuous sacrifice waves." }
+    ]
+  },
+  {
+    "category": "CONSTRUCT",
+    "subCategory": "BEHAVIOR",
+    "tag": "POINT_DEFENSE",
+    "description": "Constructs prioritise intercepting incoming enemy missiles and projectiles.",
+    "mechanic": "Each tag increases interception accuracy by +15%.",
+    "interactions": [
+      { "tag": "DRONE_SPEED", "effect": "Faster point-defense drones intercept faster-moving projectiles reliably." },
+      { "tag": "SHIELD_MAX", "effect": "Point defense reduces incoming damage that would otherwise drain shields — both protect the hull." }
+    ]
+  },
+  {
+    "category": "CONSTRUCT",
+    "subCategory": "BEHAVIOR",
+    "tag": "REPAIR_SWARM",
+    "description": "Constructs prioritise restoring hull HP to damaged allied ships.",
+    "mechanic": "Each tag adds +8 HP/s team repair output from all active repair constructs.",
+    "interactions": [
+      { "tag": "DRONE_COUNT", "effect": "More repair drones means more simultaneous repair beams — output scales with drone count." },
+      { "tag": "REPAIR_RATE", "effect": "REPAIR_SWARM stacks additively with base REPAIR_RATE for total hull restoration." },
+      { "tag": "NANITE", "effect": "Nanite swarms and repair drones together create a stacked restoration layer — burst (nanite) plus sustained (repair)." }
+    ]
+  },
+  {
+    "category": "CONSTRUCT",
+    "subCategory": "BEHAVIOR",
+    "tag": "TARGETING_BEACON",
+    "description": "Constructs mark high-priority targets, granting allies bonus damage against them.",
+    "mechanic": "Each tag adds +10% bonus damage that all allies deal to beaconed targets.",
+    "interactions": [
+      { "tag": "DAMAGE_SHARE", "effect": "Beaconed targets take bonus damage from direct hits; DAMAGE_SHARE echoes that bonus to tethered enemies." },
+      { "tag": "TETHER", "effect": "A tethered, beaconed target creates a focus-fire node where all damage is amplified and echoed." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "SPATIAL",
+    "tag": "GRAVITY",
+    "description": "Gravitational pull and force field mechanics.",
+    "mechanic": "Each tag adds +15% to pull force magnitude and +10% to pull field radius.",
+    "interactions": [
+      { "tag": "COMPRESSION", "effect": "GRAVITY pulls enemies in; COMPRESSION holds them dense. The two tags work sequentially for maximum effect." },
+      { "tag": "SINGULARITY", "effect": "GRAVITY tags amplify singularity pull force and field radius simultaneously." },
+      { "tag": "BLAST_RADIUS", "effect": "Singularity fields scale their radius from BLAST_RADIUS tags — pulls more enemies into the cluster." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "SPATIAL",
+    "tag": "SINGULARITY",
+    "description": "Creates a temporary black hole that pulls all nearby enemies inward.",
+    "mechanic": "Each tag adds +0.8s to singularity duration and +12% to singularity damage.",
+    "interactions": [
+      { "tag": "GRAVITY", "effect": "GRAVITY tags amplify the singularity's pull force and field size." },
+      { "tag": "COMPRESSION", "effect": "Singularity pulls enemies together; COMPRESSION holds them compressed after the singularity expires." },
+      { "tag": "EXPLOSIVE", "effect": "Detonating an explosive inside an active singularity hits all compressed enemies simultaneously." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "SPATIAL",
+    "tag": "PULL_FORCE",
+    "description": "Strength of the gravitational suction effect applied to enemies.",
+    "mechanic": "Each tag adds +20 force units to pull strength, affecting how quickly enemies are drawn in.",
+    "interactions": [
+      { "tag": "MASS", "effect": "Heavier enemies resist pull; higher PULL_FORCE values overcome this resistance." },
+      { "tag": "FREEZE", "effect": "Frozen enemies move slower and resist pull less — FREEZE and PULL_FORCE combine for guaranteed clustering." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "SPATIAL",
+    "tag": "COMPRESSION",
+    "description": "Holds clustered enemies in a dense formation, amplifying area damage.",
+    "mechanic": "Each tag increases compression damage bonus by +15% (the denser the cluster, the more bonus damage it receives).",
+    "interactions": [
+      { "tag": "GRAVITY", "effect": "GRAVITY creates the cluster; COMPRESSION keeps it dense and punishes it." },
+      { "tag": "EXPLOSIVE", "effect": "Explosives inside a compressed cluster hit every target for full blast damage." },
+      { "tag": "PIERCE", "effect": "Piercing shots through a compressed cluster hit every enemy in the line at full damage." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "SPATIAL",
+    "tag": "DISPLACEMENT",
+    "description": "Knockback and force vector applied to enemies or allies.",
+    "mechanic": "Each tag adds +15% to displacement force magnitude.",
+    "interactions": [
+      { "tag": "MASS", "effect": "Higher-mass enemies resist displacement; more DISPLACEMENT tags are needed to move heavy targets." },
+      { "tag": "DEBRIS_FIELD", "effect": "Displaced enemies collide with debris fields, taking impact damage in addition to the displacement force." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CHRONO",
+    "tag": "CHRONO",
+    "description": "Time distortion field affecting the speed of all events within its radius.",
+    "mechanic": "Each tag adds +8% time distortion field strength — allies in range gain proportional speed bonuses to all actions.",
+    "interactions": [
+      { "tag": "EXECUTION_SPEED", "effect": "CHRONO scales field strength; EXECUTION_SPEED specifically targets automation loop tick rates within it." },
+      { "tag": "AURA_RADIUS", "effect": "AURA_RADIUS expands how far the CHRONO distortion field reaches." },
+      { "tag": "FREQUENCY", "effect": "FREQUENCY increases how often the CHRONO field pulses its effect on ally logic loops." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CHRONO",
+    "tag": "COOLDOWN",
+    "description": "Flat reduction applied to ability and module cooldowns.",
+    "mechanic": "Each tag reduces all ability cooldowns by 6%.",
+    "interactions": [
+      { "tag": "PHASE", "effect": "Phase state has a cooldown; COOLDOWN reduction enables more frequent invulnerability windows." },
+      { "tag": "BLINK", "effect": "Faster blink cooldowns enable rapid repositioning in succession." },
+      { "tag": "SINGULARITY", "effect": "Singularity cooldown reduction means gravity clusters can be deployed more aggressively." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CHRONO",
+    "tag": "EXECUTION_SPEED",
+    "description": "Increases the tick rate of automated combat logic loops.",
+    "mechanic": "Each tag increases automation loop frequency by +10% — logic conditions are evaluated and triggered faster.",
+    "interactions": [
+      { "tag": "CHRONO", "effect": "CHRONO field strength amplifies the radius in which EXECUTION_SPEED benefits apply to allies." },
+      { "tag": "FREQUENCY", "effect": "FREQUENCY and EXECUTION_SPEED both accelerate loop timing but affect different systems — they stack." },
+      { "tag": "ON_HIT", "effect": "Faster execution means ON_HIT triggers fire sooner after each hit event, reducing reaction latency." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CHRONO",
+    "tag": "FREQUENCY",
+    "description": "Tick rate of recurring aura pulses and periodic effects.",
+    "mechanic": "Each tag increases the pulse frequency of all periodic effects by +12%.",
+    "interactions": [
+      { "tag": "HARMONIC", "effect": "More frequent resonance pulses stack HARMONIC faster, accelerating the exponential multiplier." },
+      { "tag": "REPAIR_SWARM", "effect": "Higher frequency repair pulses from constructs restore more HP per second." },
+      { "tag": "BROADCAST", "effect": "BROADCAST pulses buffs to allies at the FREQUENCY tick rate — higher frequency means more consistent buff uptime." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CHRONO",
+    "tag": "AURA_RADIUS",
+    "description": "Effective spatial size of aura and field effects.",
+    "mechanic": "Each tag adds +25u to the radius of all aura-based effects.",
+    "interactions": [
+      { "tag": "CHRONO", "effect": "AURA_RADIUS expands the zone where CHRONO distortion benefits apply to allies." },
+      { "tag": "BROADCAST", "effect": "BROADCAST range scales with AURA_RADIUS — larger radius reaches more allies." },
+      { "tag": "DEBRIS_FIELD", "effect": "Scrap Salvager debris fields have an effective radius; AURA_RADIUS tags extend their coverage." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CHRONO",
+    "tag": "TEMPORAL_ECHO",
+    "description": "Duplicates a triggered logic effect after a short time delay.",
+    "mechanic": "Each tag adds +12% chance for any triggered effect to be duplicated 0.8s later.",
+    "interactions": [
+      { "tag": "ON_KILL", "effect": "Kill effects duplicated by TEMPORAL_ECHO grant a second proc of any on-kill reward or trigger." },
+      { "tag": "CRITICAL_CHANCE", "effect": "Critical hits echoed by TEMPORAL_ECHO repeat the crit damage burst on the same target." },
+      { "tag": "DAMAGE_SHARE", "effect": "Echoed damage events also trigger DAMAGE_SHARE propagation to tethered targets." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CO-OP",
+    "tag": "TETHER",
+    "description": "Connects two or more targets with a force line that transmits effects.",
+    "mechanic": "Each tag adds +1 simultaneous tether link and +15% tether range.",
+    "interactions": [
+      { "tag": "CHAIN", "effect": "TETHER establishes the link; CHAIN determines how many times effects jump along the connected network." },
+      { "tag": "DAMAGE_SHARE", "effect": "All targets linked by TETHER share damage dealt to any single one of them." },
+      { "tag": "PIERCE", "effect": "A piercing shot can apply a fresh tether link to each enemy it passes through." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CO-OP",
+    "tag": "DAMAGE_SHARE",
+    "description": "Splits damage dealt or received across all tethered targets.",
+    "mechanic": "Each tag causes +8% of damage dealt to one tethered target to echo to every other linked target.",
+    "interactions": [
+      { "tag": "TETHER", "effect": "DAMAGE_SHARE requires active tether links to propagate — more tethers = more echo targets." },
+      { "tag": "CRITICAL_CHANCE", "effect": "A crit's multiplied damage also echoes — DAMAGE_SHARE amplifies the value of every critical hit." },
+      { "tag": "PSIONIC", "effect": "Psionic bypass is inherited by echoed damage — tethered targets take bypass damage even if not hit directly." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CO-OP",
+    "tag": "BROADCAST",
+    "description": "Shares a locally active buff or stat with all allies within broadcast range.",
+    "mechanic": "Each tag adds +20u to broadcast range and enables +1 additional buff type to be shared simultaneously.",
+    "interactions": [
+      { "tag": "AURA_RADIUS", "effect": "AURA_RADIUS and BROADCAST both extend range — they stack for maximum coverage." },
+      { "tag": "AMPLIFICATION", "effect": "AMPLIFICATION multiplies the value of the buff being broadcast — more range plus higher multiplier." },
+      { "tag": "HARMONIC", "effect": "HARMONIC stacks can be broadcast to nearby allies, sharing the exponential multiplier benefit." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CO-OP",
+    "tag": "RESOURCE_FEED",
+    "description": "Transfers heat or energy reserves directly to an allied ship.",
+    "mechanic": "Each tag transfers +12% of excess heat or energy per second to the nearest ally in range.",
+    "interactions": [
+      { "tag": "ENERGY_GRID", "effect": "A large energy grid creates surplus that RESOURCE_FEED can transfer to an ally who needs it." },
+      { "tag": "VOLTAGE", "effect": "Mamba feeding heat to a Hyper-Conductor ally via RESOURCE_FEED directly charges VOLTAGE output." },
+      { "tag": "HEAT_DISSIPATION", "effect": "Ships with excess dissipation can offload heat to a Hyper-Conductor ally to fuel their damage cycle." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CO-OP",
+    "tag": "AMPLIFICATION",
+    "description": "Applies a stat multiplier to allies within aura range.",
+    "mechanic": "Each tag adds +8% to the stat multiplier applied to all allies inside the aura.",
+    "interactions": [
+      { "tag": "BROADCAST", "effect": "BROADCAST range determines who receives the AMPLIFICATION — extend both for maximum team coverage." },
+      { "tag": "HARMONIC", "effect": "HARMONIC stacks multiply the AMPLIFICATION output exponentially at high stack counts." },
+      { "tag": "FREQUENCY", "effect": "The amplification aura pulses at FREQUENCY rate — higher frequency means more consistent uptime." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CO-OP",
+    "tag": "CHAIN",
+    "description": "Propagates damage or status effects along active tether links between targets.",
+    "mechanic": "Each tag adds +1 chain jump and retains +10% more damage per jump (default retention is 60% per jump).",
+    "interactions": [
+      { "tag": "TETHER", "effect": "CHAIN requires active tether links to jump along — more tethers create longer and wider chain paths." },
+      { "tag": "EMP", "effect": "EMP status chaining along tether links disables an entire tethered group simultaneously." },
+      { "tag": "DAMAGE_SHARE", "effect": "CHAIN and DAMAGE_SHARE together create two simultaneous propagation systems — chain jumps and echo splits." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "EXOTIC",
+    "tag": "PHASE",
+    "description": "Shifts the vessel's hitbox into an alternate dimension, making it temporarily immune to physical damage.",
+    "mechanic": "Each tag adds +0.3s to phase duration and reduces phase cooldown by 0.8s.",
+    "interactions": [
+      { "tag": "INVULNERABILITY", "effect": "PHASE provides the hitbox shift; INVULNERABILITY extends the window of complete immunity." },
+      { "tag": "BLINK", "effect": "A blink can be performed during an active phase state — repositioning while untouchable." },
+      { "tag": "EVASION", "effect": "High evasion reduces how often phase is needed defensively, letting it be used more offensively." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "EXOTIC",
+    "tag": "INVULNERABILITY",
+    "description": "Temporary complete immunity to all damage types.",
+    "mechanic": "Each tag adds +0.2s to invulnerability window duration.",
+    "interactions": [
+      { "tag": "PHASE", "effect": "PHASE enables the hitbox shift; INVULNERABILITY ensures no damage source can reach the ship during the window." },
+      { "tag": "COOLDOWN", "effect": "Reducing cooldowns increases how often invulnerability windows can be entered." },
+      { "tag": "ON_SHIELD_DROP", "effect": "Invulnerability triggered by shield drop gives a safe regen window — combine with fast SHIELD_REGEN for cycling." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "EXOTIC",
+    "tag": "NANITE",
+    "description": "Deploys self-replicating metallic nanite bugs that seek targets autonomously.",
+    "mechanic": "Each tag increases nanites deployed per pulse by +2.",
+    "interactions": [
+      { "tag": "INFESTATION", "effect": "NANITE deploys the swarm; INFESTATION determines how many targets the swarm can spread to after a host dies." },
+      { "tag": "BIOLOGICAL", "effect": "Each nanite carries a biological payload — BIOLOGICAL tags increase the damage they deal on contact." },
+      { "tag": "REPAIR_SWARM", "effect": "Nanites in repair mode stack with REPAIR_SWARM constructs for layered hull restoration." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "EXOTIC",
+    "tag": "SALVAGE",
+    "description": "Collects debris from destroyed enemies to be used as a resource or barrier.",
+    "mechanic": "Each tag increases the amount of debris collected per enemy destroyed by +15%.",
+    "interactions": [
+      { "tag": "DEBRIS_FIELD", "effect": "Collected SALVAGE fuels DEBRIS_FIELD deployments — more salvage means more and larger debris barriers." },
+      { "tag": "RICOCHET", "effect": "Deployed debris acts as a ricochet surface; projectiles bounce off barriers and onto new targets." },
+      { "tag": "ORBITAL", "effect": "Salvaged debris can orbit the ship as a rotating protective ring." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "EXOTIC",
+    "tag": "REFLECTION",
+    "description": "Returns a portion of incoming projectile damage back at the attacker.",
+    "mechanic": "Each tag adds +12% reflected damage multiplier.",
+    "interactions": [
+      { "tag": "MIRROR", "effect": "MIRROR prisms redirect reflections at chosen angles; REFLECTION determines their damage multiplier." },
+      { "tag": "SHIELD_MAX", "effect": "Shields absorb incoming shots; REFLECTION returns damage even from shots that were fully shielded." },
+      { "tag": "ENERGY", "effect": "Reflected energy beams inherit ENERGY type bonuses from the defender's build, not the attacker's." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "EXOTIC",
+    "tag": "MIRROR",
+    "description": "Deploys a floating prism that redirects incoming projectiles at a new angle.",
+    "mechanic": "Each tag deploys +1 active mirror prism. Mirrors persist until destroyed or manually repositioned.",
+    "interactions": [
+      { "tag": "PRISM", "effect": "MIRROR bounces beams at a new angle; PRISM splits each bounce into multiple diverging copies." },
+      { "tag": "RICOCHET", "effect": "Projectiles bouncing off mirrors consume one ricochet count, allowing further bounces." },
+      { "tag": "REFLECTION", "effect": "Mirrors amplify reflections by directing returned fire more precisely at attacker positions." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "EXOTIC",
+    "tag": "INFESTATION",
+    "description": "Spreads active nanite effects from a dying host to nearby targets.",
+    "mechanic": "Each tag allows infestation to spread to +1 additional nearby target on host death.",
+    "interactions": [
+      { "tag": "NANITE", "effect": "NANITE determines the swarm payload; INFESTATION determines how far the swarm propagates on host death." },
+      { "tag": "ON_KILL", "effect": "Kill events trigger infestation spread — ON_KILL logic modules can chain with infestation for cascading effects." },
+      { "tag": "BIOLOGICAL", "effect": "Biological status carried by nanites spreads to each new infestation target." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "EXOTIC",
+    "tag": "BLINK",
+    "description": "Short-range positional teleport that repositions the ship instantly.",
+    "mechanic": "Each tag reduces blink cooldown by 0.5s and extends blink range by +20u.",
+    "interactions": [
+      { "tag": "PHASE", "effect": "Blinking during an active phase state allows repositioning while remaining untouchable." },
+      { "tag": "COOLDOWN", "effect": "COOLDOWN tags stack with BLINK's own cooldown reduction for very frequent repositioning." },
+      { "tag": "ACCELERATION", "effect": "High acceleration lets the ship exploit blink repositioning immediately without losing momentum." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "EXOTIC",
+    "tag": "PRISM",
+    "description": "Splits a single beam into multiple diverging beams at point of contact.",
+    "mechanic": "Each tag adds +1 beam split. Each split beam deals 60% of the parent beam's damage.",
+    "interactions": [
+      { "tag": "MIRROR", "effect": "Mirror redirects beams; PRISM splits them. A beam bounced by a mirror can then be split by a prism." },
+      { "tag": "RICOCHET", "effect": "Each split beam copy can independently ricochet, compounding total bounce coverage geometrically." },
+      { "tag": "ENERGY", "effect": "All split beams inherit the parent beam's ENERGY type tags for full damage bonuses." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "EXOTIC",
+    "tag": "DEBRIS_FIELD",
+    "description": "Deploys collected wreckage as persistent area hazards or physical barriers.",
+    "mechanic": "Each tag adds +1 debris piece deployed and +15% to barrier HP.",
+    "interactions": [
+      { "tag": "SALVAGE", "effect": "SALVAGE collection rate determines how much debris is available to deploy as fields." },
+      { "tag": "RICOCHET", "effect": "Projectiles ricochet off deployed debris, turning barriers into offensive geometry." },
+      { "tag": "AURA_RADIUS", "effect": "AURA_RADIUS extends the zone covered by debris field deployments." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CONDUCTOR",
+    "tag": "VOLTAGE",
+    "description": "Raw electrical damage output converted from heat and energy pressure.",
+    "mechanic": "Each tag adds +15% to electrical damage output. Unlike EMP, VOLTAGE deals direct damage rather than disabling systems.",
+    "interactions": [
+      { "tag": "HEAT_GEN", "effect": "Heat generated by weapons is the raw fuel for VOLTAGE — higher heat output equals more electrical damage potential." },
+      { "tag": "EMP", "effect": "EMP disables shields; VOLTAGE then deals direct electrical damage with no shield absorbing it." },
+      { "tag": "OVERCLOCK", "effect": "OVERCLOCK burns energy to temporarily spike VOLTAGE output significantly above baseline." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "CONDUCTOR",
+    "tag": "OVERCLOCK",
+    "description": "Temporary stat burst fuelled by burning energy reserves.",
+    "mechanic": "Each tag increases burst magnitude by +8% and extends overclock duration by +0.3s.",
+    "interactions": [
+      { "tag": "ENERGY_GRID", "effect": "Overclock consumes energy reserves — a larger grid sustains longer and more frequent overclock windows." },
+      { "tag": "VOLTAGE", "effect": "OVERCLOCK primarily spikes VOLTAGE output during the burst window — the two tags define Hyper-Conductor's peak damage." },
+      { "tag": "COOLDOWN", "effect": "Cooldown reduction lets overclock cycles fire more frequently, extending total burst uptime." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "RESONANCE",
+    "tag": "HARMONIC",
+    "description": "Stacking resonance multiplier — each stack amplifies all other stacks exponentially.",
+    "mechanic": "Each tag adds +6% per-stack resonance multiplier. At 5 stacks: 1.06^5 ≈ 1.34× all aura effects. At 10 stacks: 1.06^10 ≈ 1.79×.",
+    "interactions": [
+      { "tag": "FREQUENCY", "effect": "Higher frequency pulses accumulate HARMONIC stacks faster, reaching exponential territory sooner." },
+      { "tag": "AMPLIFICATION", "effect": "HARMONIC stacks multiply the AMPLIFICATION output — stacking both creates compounding team buff value." },
+      { "tag": "BROADCAST", "effect": "Sharing HARMONIC stacks via BROADCAST gives allies the exponential multiplier benefit directly." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "SALVAGE",
+    "tag": "DEBRIS_FIELD",
+    "description": "Deploys collected wreckage as persistent area hazards or physical barriers. (Listed under EXOTIC — mirrored here for subcategory reference.)",
+    "mechanic": "Each tag adds +1 debris piece deployed and +15% barrier HP.",
+    "interactions": [
+      { "tag": "SALVAGE", "effect": "SALVAGE fuels the debris pool; DEBRIS_FIELD spends it on deployments." },
+      { "tag": "ORBITAL", "effect": "Debris fields can orbit the ship as a rotating defensive ring." },
+      { "tag": "RICOCHET", "effect": "Projectiles bounce off debris field barriers onto new targets." }
+    ]
+  },
+  {
+    "category": "SPECIALIZATION",
+    "subCategory": "VECTOR",
+    "tag": "PRISM",
+    "description": "Splits a single beam into multiple diverging beams. (Listed under EXOTIC — mirrored here for subcategory reference.)",
+    "mechanic": "Each tag adds +1 beam split at 60% damage per copy.",
+    "interactions": [
+      { "tag": "MIRROR", "effect": "Mirror and prism chain together — bounce then split or split then bounce." },
+      { "tag": "RICOCHET", "effect": "Each split copy can independently ricochet, multiplying coverage geometrically." },
+      { "tag": "ENERGY", "effect": "All copies inherit ENERGY type damage bonuses from the parent beam." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "CONDITIONAL",
+    "tag": "ON_HIT",
+    "description": "Triggers a logic module when any hit is dealt or received.",
+    "mechanic": "Each tag allows +1 additional logic module to execute simultaneously on this event.",
+    "interactions": [
+      { "tag": "RATE_OF_FIRE", "effect": "Higher fire rate means more ON_HIT events per second, accelerating all attached trigger effects." },
+      { "tag": "CHAIN", "effect": "Chain propagates ON_HIT effects along tether networks — one hit triggers the chain to all linked enemies." },
+      { "tag": "CORROSIVE", "effect": "Each corrosive stack application fires as an individual ON_HIT event." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "CONDITIONAL",
+    "tag": "ON_CRIT",
+    "description": "Triggers a logic module when a critical strike is landed.",
+    "mechanic": "Each tag adds +15% bonus effect magnitude to any module triggered by a critical hit.",
+    "interactions": [
+      { "tag": "CRITICAL_CHANCE", "effect": "More frequent crits means more ON_CRIT trigger opportunities — both tags must scale together." },
+      { "tag": "DAMAGE_SHARE", "effect": "Critical hits echoed via DAMAGE_SHARE also fire ON_CRIT triggers on the echo target." },
+      { "tag": "TEMPORAL_ECHO", "effect": "TEMPORAL_ECHO duplicating a crit event fires ON_CRIT a second time after the delay." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "CONDITIONAL",
+    "tag": "ON_KILL",
+    "description": "Triggers a logic module when an enemy ship is destroyed.",
+    "mechanic": "Each tag allows +1 additional logic module to trigger on kill, and extends kill proc effect duration by +8%.",
+    "interactions": [
+      { "tag": "INFESTATION", "effect": "Kill events trigger infestation spread — ON_KILL and INFESTATION chain for cascading nanite propagation." },
+      { "tag": "SALVAGE", "effect": "ON_KILL is when debris is generated; higher kill rates directly feed Scrap Salvager collection." },
+      { "tag": "TEMPORAL_ECHO", "effect": "A kill effect duplicated by TEMPORAL_ECHO fires twice — once on kill, once 0.8s later." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "CONDITIONAL",
+    "tag": "ON_SHIELD_DROP",
+    "description": "Triggers a logic module when shields reach exactly 0 SP.",
+    "mechanic": "Each tag allows +1 additional logic module to trigger when shields drop.",
+    "interactions": [
+      { "tag": "PHASE", "effect": "Phase Weaver triggering on shield drop creates an invulnerability window exactly when most needed." },
+      { "tag": "EMP", "effect": "EMP reliably forces shields to zero, creating predictable and controllable ON_SHIELD_DROP trigger windows." },
+      { "tag": "SHIELD_REGEN", "effect": "Fast shield regen after a drop resets the condition quickly, enabling repeated trigger cycling." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "CONDITIONAL",
+    "tag": "ON_OVERHEAT",
+    "description": "Triggers a logic module when heat reaches 100% capacity.",
+    "mechanic": "Each tag reduces the cooldown on heat-triggered abilities by 5s.",
+    "interactions": [
+      { "tag": "HEAT_GEN", "effect": "Stacking HEAT_GEN intentionally reaches overheat faster, triggering ON_OVERHEAT more frequently." },
+      { "tag": "VOLTAGE", "effect": "ON_OVERHEAT is the primary discharge trigger for Hyper-Conductor VOLTAGE bursts." },
+      { "tag": "HEAT_DISSIPATION", "effect": "Deliberately limiting dissipation allows overheat to trigger on a controlled schedule." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "SPATIAL_TRIGGER",
+    "tag": "IN_RANGE",
+    "description": "Triggers when a target enters a defined detection radius.",
+    "mechanic": "Each tag adds +20u to the detection radius for IN_RANGE triggers.",
+    "interactions": [
+      { "tag": "AURA_RADIUS", "effect": "AURA_RADIUS and IN_RANGE both define spatial zones — expanding one often benefits the other in aura-trigger builds." },
+      { "tag": "TETHER", "effect": "IN_RANGE can automatically initiate a tether when a target enters the detection zone." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "SPATIAL_TRIGGER",
+    "tag": "BEHIND_ALLY",
+    "description": "Triggers when this ship is positioned in the rear arc of a teammate.",
+    "mechanic": "Each tag adds +12% bonus effect magnitude to modules triggered from the behind-ally position.",
+    "interactions": [
+      { "tag": "RESOURCE_FEED", "effect": "Positioned behind an ally, RESOURCE_FEED transfers heat or energy at higher efficiency." },
+      { "tag": "BROADCAST", "effect": "Broadcast from behind-ally position benefits from positional bonus — coordinated fleet formation matters." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "SPATIAL_TRIGGER",
+    "tag": "FRONTAL_ARC",
+    "description": "Triggers when a target or event occurs within the front 90° cone of the ship.",
+    "mechanic": "Each tag widens the frontal arc by +15° (base 90°, max 180°).",
+    "interactions": [
+      { "tag": "TURN_SPEED", "effect": "Higher turn speed makes it easier to keep targets inside the frontal arc for trigger conditions." },
+      { "tag": "MIRROR", "effect": "Mirror prisms placed in the frontal arc redirect fire into a wide coverage zone." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "SPATIAL_TRIGGER",
+    "tag": "PROXIMITY",
+    "description": "Triggers based on closeness to the nearest enemy or ally entity.",
+    "mechanic": "Each tag adds +15u to the proximity detection radius.",
+    "interactions": [
+      { "tag": "ORBITAL", "effect": "Orbital constructs operate at close range — PROXIMITY triggers align naturally with orbital build conditions." },
+      { "tag": "DEBRIS_FIELD", "effect": "Proximity-triggered debris field deployment creates reactive barrier placement when enemies close in." },
+      { "tag": "COMPRESSION", "effect": "Proximity triggers fire as a compressed cluster forms — useful for detonating area effects at peak density." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "TEAM_TRIGGER",
+    "tag": "ALLY_LOW_HP",
+    "description": "Triggers when a teammate's hull drops below a defined HP threshold.",
+    "mechanic": "Each tag raises the HP threshold at which this trigger fires by +5% of max HP, making it trigger earlier.",
+    "interactions": [
+      { "tag": "REPAIR_SWARM", "effect": "ALLY_LOW_HP triggering a repair swarm dispatch is the primary sustain logic loop in support builds." },
+      { "tag": "PHASE", "effect": "Phase Weaver using ALLY_LOW_HP to trigger a team phase field saves allies from lethal damage." },
+      { "tag": "RESOURCE_FEED", "effect": "RESOURCE_FEED redirected to a low-HP ally in response to ALLY_LOW_HP provides emergency energy for their defenses." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "TEAM_TRIGGER",
+    "tag": "ALLY_TARGETED",
+    "description": "Triggers when an ally is locked on by one or more enemies.",
+    "mechanic": "Each tag allows +1 additional ally to simultaneously trigger this condition.",
+    "interactions": [
+      { "tag": "TETHER", "effect": "When an ally is targeted, auto-tethering attackers redirects damage share back to them." },
+      { "tag": "PHASE", "effect": "Triggering phase when an ally is targeted provides temporary protection before incoming shots land." }
+    ]
+  },
+  {
+    "category": "LOGIC",
+    "subCategory": "TEAM_TRIGGER",
+    "tag": "TEAM_CLUSTER",
+    "description": "Triggers when all player ships are positioned within a close grouping radius.",
+    "mechanic": "Each tag increases the cluster detection radius by +15u — easier to maintain the trigger condition.",
+    "interactions": [
+      { "tag": "HARMONIC", "effect": "HARMONIC stacks accumulate faster when TEAM_CLUSTER is maintained — formation play rewards compound scaling." },
+      { "tag": "BROADCAST", "effect": "BROADCAST range determines who receives buffs; TEAM_CLUSTER confirms both ships are in range." },
+      { "tag": "AMPLIFICATION", "effect": "Clustered ships trigger amplification on each other simultaneously — peak buff output requires tight formation." }
+    ]
+  }
 ]
