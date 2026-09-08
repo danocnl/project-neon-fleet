@@ -109,3 +109,5 @@ export interface GameSession {
   sectorLevel: number
   sessionId: string
 }
+
+export type ComputedStats = ShipBaseStats
