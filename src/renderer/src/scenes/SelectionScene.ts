@@ -64,6 +64,11 @@ export class SelectionScene extends Phaser.Scene {
   private s_tagRow!: Phaser.GameObjects.Container
   private classBadge!: Phaser.GameObjects.Text
 
+  // Zone interactivity — tracked separately from visual objects
+  private s1Zones: Phaser.GameObjects.Zone[] = []
+  private s2Zones: Phaser.GameObjects.Zone[] = []
+  private s3Zones: Phaser.GameObjects.Zone[] = []
+
   private readonly mgr = new LoadoutManager()
 
   constructor() { super({ key: 'SelectionScene' }) }
@@ -124,6 +129,10 @@ export class SelectionScene extends Phaser.Scene {
     this.s1Objects.forEach(o => (o as any).setVisible(n === 1))
     this.s2Objects.forEach(o => (o as any).setVisible(n === 2))
     this.s3Objects.forEach(o => (o as any).setVisible(n === 3))
+    // Enable only the current step's zones — prevents overlapping zones from firing
+    this.s1Zones.forEach(z => n === 1 ? z.setInteractive() : z.disableInteractive())
+    this.s2Zones.forEach(z => n === 2 ? z.setInteractive() : z.disableInteractive())
+    this.s3Zones.forEach(z => n === 3 ? z.setInteractive() : z.disableInteractive())
 
     if (n === 1) {
       this.input.keyboard!.on('keydown', this.onKey, this)
@@ -141,6 +150,12 @@ export class SelectionScene extends Phaser.Scene {
     else if (step === 2) this.s2Objects.push(obj)
     else this.s3Objects.push(obj)
     return obj
+  }
+
+  private regZ(zone: Phaser.GameObjects.Zone, step: 1 | 2 | 3): void {
+    if (step === 1) this.s1Zones.push(zone)
+    else if (step === 2) this.s2Zones.push(zone)
+    else this.s3Zones.push(zone)
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -175,10 +190,11 @@ export class SelectionScene extends Phaser.Scene {
     })
 
     const btn = addButton(this, W / 2 - 110, cy + 54, 220, 44, 'CONFIRM  →', ACCENT, () => {
-      if (this.step === 1 && this.username.length > 0) this.showStep(2)
+      if (this.username.length > 0) this.showStep(2)
     })
     this.reg(btn.gfx, 1)
     this.reg(btn.text, 1)
+    this.regZ(btn.zone, 1)
 
     this.reg(this.add.text(W / 2, cy + 116, 'PRESS ENTER TO CONFIRM', {
       fontSize: '9px', color: '#1a3322', fontFamily: 'monospace', letterSpacing: 4,
@@ -233,12 +249,12 @@ export class SelectionScene extends Phaser.Scene {
 
       this.classItemTexts.set(cls.id, nameT)
 
-      const zone = this.reg(
-        this.add.zone(0, y, L, ITEM_H).setOrigin(0, 0).setInteractive(), 2
-      ) as Phaser.GameObjects.Zone
-      zone.on('pointerover', () => { if (this.step === 2 && this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, true)  })
-      zone.on('pointerout',  () => { if (this.step === 2 && this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, false) })
-      zone.on('pointerdown', () => { if (this.step === 2) this.selectClass(cls.id) })
+      const zone = this.add.zone(0, y, L, ITEM_H).setOrigin(0, 0).setInteractive()
+      this.reg(zone, 2)
+      this.regZ(zone, 2)
+      zone.on('pointerover', () => { if (this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, true)  })
+      zone.on('pointerout',  () => { if (this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, false) })
+      zone.on('pointerdown', () => this.selectClass(cls.id))
     })
 
     // Right panel — class detail
@@ -273,15 +289,15 @@ export class SelectionScene extends Phaser.Scene {
     }), 2) as Phaser.GameObjects.Text
 
     // Bottom bar
-    const back2 = addButton(this, 14, BTM_Y + 14, 160, 40, '← BACK', 0x334455, () => { if (this.step === 2) this.showStep(1) })
-    this.reg(back2.gfx, 2); this.reg(back2.text, 2)
+    const back2 = addButton(this, 14, BTM_Y + 14, 160, 40, '← BACK', 0x334455, () => this.showStep(1))
+    this.reg(back2.gfx, 2); this.reg(back2.text, 2); this.regZ(back2.zone, 2)
 
     this.reg(this.add.text(W / 2, BTM_Y + 34, '● ●', {
       fontSize: '10px', color: '#224433', fontFamily: 'monospace', letterSpacing: 8,
     }).setOrigin(0.5), 2)
 
-    const next2 = addButton(this, W - 220, BTM_Y + 14, 206, 40, '03 · SELECT SHIP  →', ACCENT, () => { if (this.step === 2) this.showStep(3) })
-    this.reg(next2.gfx, 2); this.reg(next2.text, 2)
+    const next2 = addButton(this, W - 220, BTM_Y + 14, 206, 40, '03 · SELECT SHIP  →', ACCENT, () => this.showStep(3))
+    this.reg(next2.gfx, 2); this.reg(next2.text, 2); this.regZ(next2.zone, 2)
   }
 
   private hoverClassItem(id: string, hover: boolean): void {
@@ -378,12 +394,12 @@ export class SelectionScene extends Phaser.Scene {
           fontSize: '9px', color: '#224433', fontFamily: 'monospace',
         }).setAlpha(0.4), 3)
 
-        const zone = this.reg(
-          this.add.zone(0, y, L, 36).setOrigin(0, 0).setInteractive(), 3
-        ) as Phaser.GameObjects.Zone
-        zone.on('pointerover', () => { if (this.step === 3 && this.selectedShipId !== id) this.hoverShipItem(id, true)  })
-        zone.on('pointerout',  () => { if (this.step === 3 && this.selectedShipId !== id) this.hoverShipItem(id, false) })
-        zone.on('pointerdown', () => { if (this.step === 3) this.selectShip(id) })
+        const zone = this.add.zone(0, y, L, 36).setOrigin(0, 0).setInteractive()
+        this.reg(zone, 3)
+        this.regZ(zone, 3)
+        zone.on('pointerover', () => { if (this.selectedShipId !== id) this.hoverShipItem(id, true)  })
+        zone.on('pointerout',  () => { if (this.selectedShipId !== id) this.hoverShipItem(id, false) })
+        zone.on('pointerdown', () => this.selectShip(id))
 
         y += 40
       }
@@ -426,15 +442,15 @@ export class SelectionScene extends Phaser.Scene {
     this.s_tagRow = this.reg(this.add.container(R_X + 30, R_MID + 302), 3) as Phaser.GameObjects.Container
 
     // Bottom bar
-    const back3 = addButton(this, 14, BTM_Y + 14, 160, 40, '← BACK', 0x334455, () => { if (this.step === 3) this.showStep(2) })
-    this.reg(back3.gfx, 3); this.reg(back3.text, 3)
+    const back3 = addButton(this, 14, BTM_Y + 14, 160, 40, '← BACK', 0x334455, () => this.showStep(2))
+    this.reg(back3.gfx, 3); this.reg(back3.text, 3); this.regZ(back3.zone, 3)
 
     this.reg(this.add.text(W / 2, BTM_Y + 34, '● ● ●', {
       fontSize: '10px', color: '#224433', fontFamily: 'monospace', letterSpacing: 8,
     }).setOrigin(0.5), 3)
 
-    const launch = addButton(this, W - 220, BTM_Y + 14, 206, 40, 'LAUNCH SECTOR RUN', ACCENT, () => { if (this.step === 3) this.launch() })
-    this.reg(launch.gfx, 3); this.reg(launch.text, 3)
+    const launch = addButton(this, W - 220, BTM_Y + 14, 206, 40, 'LAUNCH SECTOR RUN', ACCENT, () => this.launch())
+    this.reg(launch.gfx, 3); this.reg(launch.text, 3); this.regZ(launch.zone, 3)
   }
 
   private hoverShipItem(id: string, hover: boolean): void {

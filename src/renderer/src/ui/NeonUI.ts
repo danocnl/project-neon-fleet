@@ -112,7 +112,7 @@ export function addButton(
   label: string,
   color: number,
   onClick: () => void
-): { gfx: Phaser.GameObjects.Graphics; text: Phaser.GameObjects.Text } {
+): { gfx: Phaser.GameObjects.Graphics; text: Phaser.GameObjects.Text; zone: Phaser.GameObjects.Zone } {
   const gfx = scene.add.graphics()
   const hex = `#${color.toString(16).padStart(6, '0')}`
 
@@ -139,5 +139,5 @@ export function addButton(
   zone.on('pointerout',   () => draw(false))
   zone.on('pointerdown',  () => onClick())
 
-  return { gfx, text }
+  return { gfx, text, zone }
 }
