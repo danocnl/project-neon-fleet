@@ -1,0 +1,182 @@
+[
+  {
+    "id": "sidewinder",
+    "name": "Sidewinder Frame",
+    "subtitle": "The Agile Scout",
+    "weightClass": "Light",
+    "primaryFocus": "Evasion & Speed",
+    "strengths": ["MAX_SPEED", "MAX_HANDLING", "EVASION_15_PERCENT"],
+    "weaknesses": ["LOW_HULL", "MIN_SLOTS"],
+    "classSynergies": {
+      "chrono_architect": "S",
+      "quantum_entangler": "A",
+      "hyper_conductor": "C",
+      "graviton_weaver": "A",
+      "nanite_swarm_controller": "B",
+      "phase_weaver": "S",
+      "resonance_bard": "S",
+      "scrap_salvager": "C",
+      "vector_specialist": "S"
+    }
+  },
+  {
+    "id": "cobra",
+    "name": "Cobra Frame",
+    "subtitle": "The Multi-Role Speedster",
+    "weightClass": "Light",
+    "primaryFocus": "Shield/Speed Balance",
+    "strengths": ["BALANCED_SPEED", "HIGH_SHIELDS", "VERSATILE_SLOTS"],
+    "weaknesses": ["MED_ARMOR", "FRAGILE_ENGINES"],
+    "classSynergies": {
+      "chrono_architect": "A",
+      "quantum_entangler": "A",
+      "hyper_conductor": "A",
+      "graviton_weaver": "B",
+      "nanite_swarm_controller": "B",
+      "phase_weaver": "A",
+      "resonance_bard": "A",
+      "scrap_salvager": "B",
+      "vector_specialist": "A"
+    }
+  },
+  {
+    "id": "mamba",
+    "name": "Mamba Frame",
+    "subtitle": "The Dragster Interceptor",
+    "weightClass": "Light",
+    "primaryFocus": "Max Velocity & Heat Dissipation",
+    "strengths": ["MAX_VELOCITY", "HEAT_DISSIPATION", "ENERGY_EFFICIENCY"],
+    "weaknesses": ["LOW_HANDLING", "WEAK_REAR_ARMOR"],
+    "classSynergies": {
+      "chrono_architect": "B",
+      "quantum_entangler": "B",
+      "hyper_conductor": "A",
+      "graviton_weaver": "B",
+      "nanite_swarm_controller": "C",
+      "phase_weaver": "A",
+      "resonance_bard": "S",
+      "scrap_salvager": "C",
+      "vector_specialist": "A"
+    }
+  },
+  {
+    "id": "krait",
+    "name": "Krait Frame",
+    "subtitle": "The Strike Carrier",
+    "weightClass": "Medium",
+    "primaryFocus": "Drone Bays & Firepower",
+    "strengths": ["DUAL_DRONE_BAYS", "FRONT_FIREPOWER", "MED_MOBILITY"],
+    "weaknesses": ["LARGE_HITBOX", "BEAM_VULNERABLE"],
+    "classSynergies": {
+      "chrono_architect": "A",
+      "quantum_entangler": "B",
+      "hyper_conductor": "A",
+      "graviton_weaver": "A",
+      "nanite_swarm_controller": "S",
+      "phase_weaver": "B",
+      "resonance_bard": "A",
+      "scrap_salvager": "S",
+      "vector_specialist": "B"
+    }
+  },
+  {
+    "id": "chieftain",
+    "name": "Chieftain Frame",
+    "subtitle": "The Kinetic Brawler",
+    "weightClass": "Medium",
+    "primaryFocus": "Armor & Maneuverability",
+    "strengths": ["HIGH_HANDLING", "HEAVY_ARMOR", "IMPACT_RESIST"],
+    "weaknesses": ["LOW_SHIELDS", "LASER_VULNERABLE"],
+    "classSynergies": {
+      "chrono_architect": "B",
+      "quantum_entangler": "A",
+      "hyper_conductor": "C",
+      "graviton_weaver": "S",
+      "nanite_swarm_controller": "B",
+      "phase_weaver": "A",
+      "resonance_bard": "B",
+      "scrap_salvager": "S",
+      "vector_specialist": "C"
+    }
+  },
+  {
+    "id": "python",
+    "name": "Python Frame",
+    "subtitle": "The Heavy Gunship",
+    "weightClass": "Medium",
+    "primaryFocus": "Hardpoint Count & Shields",
+    "strengths": ["MAX_HARDPOINTS", "MAX_SLOTS", "THICK_SHIELDS"],
+    "weaknesses": ["SLOW_ACCEL", "HIGH_POWER_DRAW"],
+    "classSynergies": {
+      "chrono_architect": "A",
+      "quantum_entangler": "S",
+      "hyper_conductor": "S",
+      "graviton_weaver": "A",
+      "nanite_swarm_controller": "B",
+      "phase_weaver": "B",
+      "resonance_bard": "B",
+      "scrap_salvager": "A",
+      "vector_specialist": "A"
+    }
+  },
+  {
+    "id": "anaconda",
+    "name": "Anaconda Frame",
+    "subtitle": "The Flying Fortress",
+    "weightClass": "Heavy",
+    "primaryFocus": "Balanced Defense & Range",
+    "strengths": ["MASSIVE_HULL", "MASSIVE_SHIELDS", "LONG_RANGE"],
+    "weaknesses": ["LOW_HANDLING", "HUGE_HITBOX", "HIGH_REPAIR_COST"],
+    "classSynergies": {
+      "chrono_architect": "S",
+      "quantum_entangler": "A",
+      "hyper_conductor": "A",
+      "graviton_weaver": "A",
+      "nanite_swarm_controller": "B",
+      "phase_weaver": "S",
+      "resonance_bard": "S",
+      "scrap_salvager": "A",
+      "vector_specialist": "B"
+    }
+  },
+  {
+    "id": "cutter",
+    "name": "Cutter Frame",
+    "subtitle": "The Shield Dreadnought",
+    "weightClass": "Heavy",
+    "primaryFocus": "Massive Shields & Momentum",
+    "strengths": ["MAX_SHIELDS", "HIGH_MOMENTUM", "FRONT_LINE_PRESENCE"],
+    "weaknesses": ["POOR_DRIFT_CONTROL", "HIGH_REPAIR_COST"],
+    "classSynergies": {
+      "chrono_architect": "A",
+      "quantum_entangler": "B",
+      "hyper_conductor": "S",
+      "graviton_weaver": "B",
+      "nanite_swarm_controller": "C",
+      "phase_weaver": "S",
+      "resonance_bard": "A",
+      "scrap_salvager": "B",
+      "vector_specialist": "A"
+    }
+  },
+  {
+    "id": "type_10",
+    "name": "Type-10 Frame",
+    "subtitle": "The Heavy Ordnance Array",
+    "weightClass": "Heavy",
+    "primaryFocus": "Extreme Armor & 360° Coverage",
+    "strengths": ["MAX_ARMOR", "TURRETS_360", "STATUS_IMMUNITY"],
+    "weaknesses": ["MIN_SPEED", "LOW_DODGE", "HUGE_HITBOX"],
+    "classSynergies": {
+      "chrono_architect": "A",
+      "quantum_entangler": "A",
+      "hyper_conductor": "C",
+      "graviton_weaver": "S",
+      "nanite_swarm_controller": "A",
+      "phase_weaver": "B",
+      "resonance_bard": "A",
+      "scrap_salvager": "S",
+      "vector_specialist": "S"
+    }
+  }
+]

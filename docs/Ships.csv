@@ -1,0 +1,10 @@
+Ship Frame,Weight Class,Primary Focus,Strengths,Weaknesses,Chrono Architect,Quantum Entangler,Hyper-Conductor,Graviton Weaver,Nanite Swarm Controller,Phase Weaver,Resonance Bard,Scrap Salvager,Vector Specialist,Vector Specialist
+Sidewinder Frame (The Agile Scout),Light,Evasion & Speed,"[MAX_SPEED], [MAX_HANDLING], [EVASION_15%]","[LOW_HULL], [MIN_SLOTS]",[S],[A],[C],[A],[B],[S],[S],[C],[S],[S]
+Cobra Frame (The Multi-Role Speedster),Light,Shield/Speed Balance,"[BALANCED_SPEED], [HIGH_SHIELDS], [VERSATILE_SLOTS]","[MED_ARMOR], [FRAGILE_ENGINES]",[A],[A],[A],[B],[B],[A],[A],[B],[A],[A]
+Mamba Frame (The Dragster Interceptor),Light,Max Velocity & Heat Dissipation,"[MAX_VELOCITY], [HEAT_DISSIPATION], [ENERGY_EFFICIENCY]","[LOW_HANDLING], [WEAK_REAR_ARMOR]",[B],[B],[A],[B],[C],[A],[S],[C],[A],[A]
+Krait Frame (The Strike Carrier),Medium,Drone Bays & Firepower,"[DUAL_DRONE_BAYS], [FRONT_FIREPOWER], [MED_MOBILITY]","[LARGE_HITBOX], [BEAM_VULNERABLE]",[A],[B],[A],[A],[S],[B],[A],[S],[B],[B]
+Chieftain Frame (The Kinetic Brawler),Medium,Armor & Maneuverability,"[HIGH_HANDLING], [HEAVY_ARMOR], [IMPACT_RESIST]","[LOW_SHIELDS], [LASER_VULNERABLE]",[B],[A],[C],[S],[B],[A],[B],[S],[C],[C]
+Python Frame (The Heavy Gunship),Medium,Hardpoint Count & Shields,"[MAX_HARDPOINTS], [MAX_SLOTS], [THICK_SHIELDS]","[SLOW_ACCEL], [HIGH_POWER_DRAW]",[A],[S],[S],[A],[B],[B],[B],[A],[A],[A]
+Anaconda Frame (The Flying Fortress),Heavy,Balanced Defense & Range,"[MASSIVE_HULL], [MASSIVE_SHIELDS], [LONG_RANGE]","[LOW_HANDLING], [HUGE_HITBOX], [HIGH_REPAIR_COST]",[S],[A],[A],[A],[B],[S],[S],[A],[B],[B]
+Cutter Frame (The Shield Dreadnought),Heavy,Massive Shields & Momentum,"[MAX_SHIELDS], [HIGH_MOMENTUM], [FRONT_LINE_PRESENCE]","[POOR_DRIFT_CONTROL], [HIGH_REPAIR_COST]",[A],[B],[S],[B],[C],[S],[A],[B],[A],[S]
+Type-10 Frame (The Heavy Ordnance Array),Heavy,Extreme Armor & 360° Coverage,"[MAX_ARMOR], [360_TURRETS], [STATUS_IMMUNITY]","[MIN_SPEED], [LOW_DODGE], [HUGE_HITBOX]",[A],[A],[C],[S],[A],[B],[A],[S],[S],[S]

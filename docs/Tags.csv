@@ -1,0 +1,84 @@
+Category,Sub-Category,Tag,Description / Usage
+[SHIP],[DEFENSE],[HULL],Raw physical hit points of the vessel.
+[SHIP],[DEFENSE],[ARMOR],Flat or percentage reduction to incoming physical/kinetic damage.
+[SHIP],[DEFENSE],[SHIELD_MAX],Maximum energy shield capacity.
+[SHIP],[DEFENSE],[SHIELD_REGEN],Rate at which shields restore when not taking damage.
+[SHIP],[DEFENSE],[SHIELD_DELAY],Time delay before shield regeneration begins.
+[SHIP],[MOBILITY],[TOP_SPEED],Maximum forward velocity.
+[SHIP],[MOBILITY],[ACCELERATION],Rate at which top speed is reached.
+[SHIP],[MOBILITY],[TURN_SPEED],Angular handling and rotation speed.
+[SHIP],[MOBILITY],[EVASION],Percentage chance to completely dodge an incoming attack.
+[SHIP],[MOBILITY],[MASS],Affects momentum drift and collision physics.
+[SHIP],[CAPACITY],[SLOT_SMALL],Capacity limit for small weapon/module hardpoints.
+[SHIP],[CAPACITY],[SLOT_MEDIUM],Capacity limit for medium weapon/module hardpoints.
+[SHIP],[CAPACITY],[SLOT_LARGE],Capacity limit for large weapon/module hardpoints.
+[SHIP],[CAPACITY],[SLOT_XL],Capacity limit for XL/Heavy weapon hardpoints.
+[SHIP],[CAPACITY],[CARGO_CAPACITY],Resource and currency storage limit during a run.
+[SHIP],[UTILITY],[HEAT_DISSIPATION],Rate at which weapon/engine heat cools down.
+[SHIP],[UTILITY],[ENERGY_GRID],Power capacity to run active modules and weapons.
+[SHIP],[UTILITY],[REPAIR_RATE],Speed of passive or active hull restoration.
+[WEAPON],[TYPE],[ENERGY],Laser and plasma weapon attributes.
+[WEAPON],[TYPE],[KINETIC],Ballistic and railgun attributes.
+[WEAPON],[TYPE],[EXPLOSIVE],Missile and AoE blast attributes.
+[WEAPON],[TYPE],[PSIONIC],Direct bypass and status-based damage attributes.
+[WEAPON],[TYPE],[BIOLOGICAL],Nanite and corrosion damage attributes.
+[WEAPON],[TYPE],[CORROSIVE],Armor-stripping damage attributes.
+[WEAPON],[STATS],[RATE_OF_FIRE],Firing frequency and cadence.
+[WEAPON],[STATS],[RELOAD_SPEED],Time required to replenish ammo/charge.
+[WEAPON],[STATS],[AMMO_CAPACITY],Mag/salvo size before needing a reload.
+[WEAPON],[STATS],[ENERGY_COST],Power drawn per shot from the energy grid.
+[WEAPON],[STATS],[HEAT_GEN],Heat generated per shot.
+[WEAPON],[BEHAVIOR],[VELOCITY],Speed of launched projectiles.
+[WEAPON],[BEHAVIOR],[ACCURACY],Spread angle and precision.
+[WEAPON],[BEHAVIOR],[RANGE],Maximum distance projectiles travel before expiring.
+[WEAPON],[BEHAVIOR],[BLAST_RADIUS],Area of effect diameter for splash damage.
+[WEAPON],[BEHAVIOR],[PIERCE],Number of enemy ships a shot can pass through.
+[WEAPON],[BEHAVIOR],[RICOCHET],Number of times a projectile bounces off targets/prisms.
+[WEAPON],[STATUS],[BURN],Continuous thermal damage over time.
+[WEAPON],[STATUS],[FREEZE],Slows enemy movement and attack speeds.
+[WEAPON],[STATUS],[EMP],Disables enemy shields or automated routines.
+[WEAPON],[STATUS],[CRITICAL_CHANCE],Probability of dealing bonus multiplier damage.
+[WEAPON],[STATUS],[DOT_DURATION],Length of time status effects persist on target.
+[CONSTRUCT],[SPECS],[DRONE_COUNT],Maximum active drones/minions allowed.
+[CONSTRUCT],[SPECS],[DRONE_HULL],Health pool of deployed constructs.
+[CONSTRUCT],[SPECS],[DRONE_SPEED],Movement and tracking velocity of constructs.
+[CONSTRUCT],[SPECS],[DRONE_DAMAGE],Offensive output of deployables.
+[CONSTRUCT],[SPECS],[RESPAWN_RATE],Cooldown time to rebuild destroyed drones.
+[CONSTRUCT],[BEHAVIOR],[ORBITAL],Constructs that rotate around the parent vessel.
+[CONSTRUCT],[BEHAVIOR],[KAMIKAZE],Constructs that detonate on contact.
+[CONSTRUCT],[BEHAVIOR],[POINT_DEFENSE],Constructs prioritizing incoming enemy missiles/shots.
+[CONSTRUCT],[BEHAVIOR],[REPAIR_SWARM],Constructs prioritizing team hull repairs.
+[CONSTRUCT],[BEHAVIOR],[TARGETING_BEACON],Constructs marking high-priority targets for allies.
+[SPECIALIZATION],[SPATIAL],[GRAVITY],Gravitational pull and force fields.
+[SPECIALIZATION],[SPATIAL],[SINGULARITY],Black hole creation mechanics.
+[SPECIALIZATION],[SPATIAL],[PULL_FORCE],Strength of spatial suction effects.
+[SPECIALIZATION],[SPATIAL],[DISPLACEMENT],Knockback and force vectors.
+[SPECIALIZATION],[SPATIAL],[IMPACT],Collision damage scaling.
+[SPECIALIZATION],[CHRONO],[CHRONO],Time distortion mechanics.
+[SPECIALIZATION],[CHRONO],[COOLDOWN],Flat reduction to ability cooldowns.
+[SPECIALIZATION],[CHRONO],[EXECUTION_SPEED],Frequency scaling for automated loops.
+[SPECIALIZATION],[CHRONO],[FREQUENCY],Tick rate of recurring auras and pulses.
+[SPECIALIZATION],[CHRONO],[AURA_RADIUS],Effective size of spatial aura fields.
+[SPECIALIZATION],[CO-OP],[TETHER],Connecting force lines between ships/enemies.
+[SPECIALIZATION],[CO-OP],[DAMAGE_SHARE],Splitting damage taken or dealt across linked targets.
+[SPECIALIZATION],[CO-OP],[BROADCAST],Sharing a local buff/stat with all allies.
+[SPECIALIZATION],[CO-OP],[RESOURCE_FEED],Transferring heat or energy directly to teammates.
+[SPECIALIZATION],[CO-OP],[AMPLIFICATION],Multiplier applied to allies' actions within range.
+[SPECIALIZATION],[EXOTIC],[PHASE],Dimensional shifting (invulnerability/bypassing objects).
+[SPECIALIZATION],[EXOTIC],[INVULNERABILITY],Temporary complete immunity to damage.
+[SPECIALIZATION],[EXOTIC],[NANITE],Self-replicating bug swarms.
+[SPECIALIZATION],[EXOTIC],[SALVAGE],Converting enemy debris into resources or barriers.
+[SPECIALIZATION],[EXOTIC],[REFLECTION],Bouncing incoming shots back at attackers.
+[SPECIALIZATION],[EXOTIC],[MIRROR],Prism mirror mechanics for multiplying beams.
+[LOGIC],[CONDITIONAL],[ON_HIT],Triggers when dealing or receiving a hit.
+[LOGIC],[CONDITIONAL],[ON_CRIT],Triggers when landing a critical strike.
+[LOGIC],[CONDITIONAL],[ON_KILL],Triggers when an enemy ship is destroyed.
+[LOGIC],[CONDITIONAL],[ON_SHIELD_DROP],Triggers when shields reach 0%.
+[LOGIC],[CONDITIONAL],[ON_OVERHEAT],Triggers when heat reaches 100%.
+[LOGIC],[SPATIAL_TRIGGER],[IN_RANGE],Triggers when a target enters a defined radius.
+[LOGIC],[SPATIAL_TRIGGER],[BEHIND_ALLY],Triggers when positioned behind a teammate.
+[LOGIC],[SPATIAL_TRIGGER],[FRONTAL_ARC],Triggers when an event happens in the front 90° cone.
+[LOGIC],[SPATIAL_TRIGGER],[PROXIMITY],Triggers based on closeness to nearest entity.
+[LOGIC],[TEAM_TRIGGER],[ALLY_LOW_HP],Triggers when a teammate drops below a HP threshold.
+[LOGIC],[TEAM_TRIGGER],[ALLY_TARGETED],Triggers when an ally is locked on by enemies.
+[LOGIC],[TEAM_TRIGGER],[TEAM_CLUSTER],Triggers when all 3 player ships are grouped closely.
