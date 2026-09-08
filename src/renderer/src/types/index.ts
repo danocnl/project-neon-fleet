@@ -32,7 +32,8 @@ export interface ShipFrame {
   weightClass: WeightClass
   primaryFocus: string
   baseStats: ShipBaseStats
-  hardwareTags: Record<string, number>  // Starting tag counts fed into TagAggregator
+  hardwareTags: Record<string, number>  // Starting tag counts pre-loaded into TagAggregator
+  tagWeighting: Record<string, number>  // Draft bias weights (1 low → 5 core), same scale as ClassSpecialization
   specialTags: string[]                 // Unique innate tags for this hull
   classSynergies: Record<string, SynergyRating>
 }

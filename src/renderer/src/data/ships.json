@@ -30,6 +30,16 @@
       "TOP_SPEED": 2,
       "TURN_SPEED": 2
     },
+    "tagWeighting": {
+      "EVASION": 5,
+      "TOP_SPEED": 5,
+      "TURN_SPEED": 4,
+      "ACCELERATION": 4,
+      "PHASE": 3,
+      "BLINK": 3,
+      "SHIELD_REGEN": 2,
+      "SHIELD_DELAY": 2
+    },
     "specialTags": ["PHASE"],
     "classSynergies": {
       "chrono_architect": "S",
@@ -73,6 +83,16 @@
       "SHIELD_MAX": 2,
       "TOP_SPEED": 1,
       "SLOT_MEDIUM": 1
+    },
+    "tagWeighting": {
+      "SHIELD_MAX": 4,
+      "SHIELD_REGEN": 3,
+      "TOP_SPEED": 3,
+      "ACCELERATION": 3,
+      "TURN_SPEED": 3,
+      "ENERGY_GRID": 2,
+      "HULL": 2,
+      "EVASION": 2
     },
     "specialTags": ["ADAPTIVE_LOADOUT"],
     "classSynergies": {
@@ -118,6 +138,16 @@
       "TOP_SPEED": 2,
       "RESOURCE_FEED": 1
     },
+    "tagWeighting": {
+      "TOP_SPEED": 5,
+      "ACCELERATION": 5,
+      "HEAT_DISSIPATION": 5,
+      "ENERGY_GRID": 4,
+      "HEAT_GEN": 3,
+      "RESOURCE_FEED": 3,
+      "VOLTAGE": 2,
+      "ON_OVERHEAT": 2
+    },
     "specialTags": ["HEAT_VENTING"],
     "classSynergies": {
       "chrono_architect": "B",
@@ -161,6 +191,16 @@
     "hardwareTags": {
       "DRONE_COUNT": 3,
       "DRONE_SPEED": 1
+    },
+    "tagWeighting": {
+      "DRONE_COUNT": 5,
+      "DRONE_DAMAGE": 4,
+      "DRONE_SPEED": 4,
+      "DRONE_HULL": 3,
+      "RESPAWN_RATE": 3,
+      "REPAIR_SWARM": 2,
+      "NANITE": 2,
+      "TARGETING_BEACON": 2
     },
     "specialTags": ["DRONE_COMMAND"],
     "classSynergies": {
@@ -206,6 +246,16 @@
       "IMPACT": 2,
       "MASS": 1
     },
+    "tagWeighting": {
+      "ARMOR": 5,
+      "HULL": 4,
+      "MASS": 4,
+      "IMPACT": 4,
+      "TURN_SPEED": 3,
+      "KINETIC": 3,
+      "REPAIR_RATE": 2,
+      "CORROSIVE": 2
+    },
     "specialTags": ["IMPACT_DRIVE"],
     "classSynergies": {
       "chrono_architect": "B",
@@ -249,6 +299,16 @@
       "SLOT_LARGE": 2,
       "SHIELD_MAX": 1,
       "RATE_OF_FIRE": 1
+    },
+    "tagWeighting": {
+      "SLOT_LARGE": 5,
+      "SLOT_MEDIUM": 4,
+      "SHIELD_MAX": 4,
+      "RATE_OF_FIRE": 4,
+      "ENERGY_GRID": 3,
+      "AMMO_CAPACITY": 3,
+      "PIERCE": 2,
+      "TETHER": 2
     },
     "specialTags": ["WEAPONS_PLATFORM"],
     "classSynergies": {
@@ -294,6 +354,16 @@
       "SHIELD_MAX": 2,
       "RANGE": 1
     },
+    "tagWeighting": {
+      "HULL": 5,
+      "SHIELD_MAX": 5,
+      "REPAIR_RATE": 4,
+      "RANGE": 4,
+      "SHIELD_REGEN": 3,
+      "ENERGY_GRID": 3,
+      "AURA_RADIUS": 2,
+      "BROADCAST": 2
+    },
     "specialTags": ["LONG_RANGE_TARGETING"],
     "classSynergies": {
       "chrono_architect": "S",
@@ -338,6 +408,16 @@
       "MASS": 2,
       "IMPACT": 1
     },
+    "tagWeighting": {
+      "SHIELD_MAX": 5,
+      "SHIELD_REGEN": 5,
+      "MASS": 4,
+      "IMPACT": 3,
+      "ENERGY_GRID": 3,
+      "HULL": 3,
+      "VOLTAGE": 2,
+      "INVULNERABILITY": 2
+    },
     "specialTags": ["MOMENTUM_DRIVE", "SHIELD_WALL"],
     "classSynergies": {
       "chrono_architect": "A",
@@ -381,6 +461,16 @@
       "ARMOR": 3,
       "HULL": 2,
       "STATUS_IMMUNITY": 1
+    },
+    "tagWeighting": {
+      "ARMOR": 5,
+      "HULL": 5,
+      "SLOT_LARGE": 4,
+      "SLOT_XL": 4,
+      "ENERGY_GRID": 3,
+      "REPAIR_RATE": 3,
+      "GRAVITY": 2,
+      "SALVAGE": 2
     },
     "specialTags": ["STATUS_IMMUNE", "TURRET_ARRAY"],
     "classSynergies": {

@@ -1,6 +1,10 @@
 # Ship Frames — Project Neon Fleet
 
-9 ship chassis across 3 weight classes. Each ship has raw base stats, a starting hardware tag pool (upgrade draft bias), unique special tags, and class synergy ratings.
+9 ship chassis across 3 weight classes. Each ship has raw base stats, two tag layers, unique special tags, and class synergy ratings.
+
+**Two tag layers:**
+- **Hardware Tags** — tag counts pre-loaded into the TagAggregator at loadout (affect keystone prerequisites)
+- **Tag Weighting** — draft bias weights (1 low → 5 core); these tags appear more frequently in upgrade card drafts
 
 **Stat units:** HULL/SHIELD in points · ARMOR in % reduction · speeds in units/s or °/s · SHIELD_DELAY in seconds (lower = faster regen) · HEAT_DISSIPATION in heat/s · REPAIR_RATE in HP/s
 
@@ -34,7 +38,19 @@
 | ENERGY_GRID | 120 |
 | REPAIR_RATE | 8 HP/s |
 
-**Starting Tag Pool:** EVASION×2 · TOP_SPEED×2 · TURN_SPEED×2
+**Hardware Tags:** EVASION×2 · TOP_SPEED×2 · TURN_SPEED×2
+
+**Tag Weighting:**
+```
+EVASION      5  (core)
+TOP_SPEED    5  (core)
+TURN_SPEED   4
+ACCELERATION 4
+PHASE        3
+BLINK        3
+SHIELD_REGEN 2
+SHIELD_DELAY 2
+```
 
 **Special Tags:** `PHASE` — innate dimensional shift affinity; unlocks phase-based upgrade paths earlier
 
@@ -78,7 +94,19 @@
 | ENERGY_GRID | 180 |
 | REPAIR_RATE | 14 HP/s |
 
-**Starting Tag Pool:** SHIELD_MAX×2 · TOP_SPEED×1 · SLOT_MEDIUM×1
+**Hardware Tags:** SHIELD_MAX×2 · TOP_SPEED×1 · SLOT_MEDIUM×1
+
+**Tag Weighting:**
+```
+SHIELD_MAX   4  (core)
+SHIELD_REGEN 3
+TOP_SPEED    3
+ACCELERATION 3
+TURN_SPEED   3
+ENERGY_GRID  2
+HULL         2
+EVASION      2
+```
 
 **Special Tags:** `ADAPTIVE_LOADOUT` — no slot-type restrictions on module placement
 
@@ -122,7 +150,19 @@
 | ENERGY_GRID | 260 |
 | REPAIR_RATE | 6 HP/s |
 
-**Starting Tag Pool:** HEAT_DISSIPATION×3 · TOP_SPEED×2 · RESOURCE_FEED×1
+**Hardware Tags:** HEAT_DISSIPATION×3 · TOP_SPEED×2 · RESOURCE_FEED×1
+
+**Tag Weighting:**
+```
+TOP_SPEED        5  (core)
+ACCELERATION     5  (core)
+HEAT_DISSIPATION 5  (core)
+ENERGY_GRID      4
+HEAT_GEN         3
+RESOURCE_FEED    3
+VOLTAGE          2
+ON_OVERHEAT      2
+```
 
 **Special Tags:** `HEAT_VENTING` — automatically purges heat at 80% threshold, triggering a speed burst
 
@@ -169,7 +209,19 @@
 | ENERGY_GRID | 200 |
 | REPAIR_RATE | 18 HP/s |
 
-**Starting Tag Pool:** DRONE_COUNT×3 · DRONE_SPEED×1
+**Hardware Tags:** DRONE_COUNT×3 · DRONE_SPEED×1
+
+**Tag Weighting:**
+```
+DRONE_COUNT      5  (core)
+DRONE_DAMAGE     4
+DRONE_SPEED      4
+DRONE_HULL       3
+RESPAWN_RATE     3
+REPAIR_SWARM     2
+NANITE           2
+TARGETING_BEACON 2
+```
 
 **Special Tags:** `DRONE_COMMAND` — dedicated drone hardpoints that do not consume standard weapon slots
 
@@ -213,7 +265,19 @@
 | ENERGY_GRID | 160 |
 | REPAIR_RATE | 22 HP/s |
 
-**Starting Tag Pool:** ARMOR×2 · IMPACT×2 · MASS×1
+**Hardware Tags:** ARMOR×2 · IMPACT×2 · MASS×1
+
+**Tag Weighting:**
+```
+ARMOR       5  (core)
+HULL        4
+MASS        4
+IMPACT      4
+TURN_SPEED  3
+KINETIC     3
+REPAIR_RATE 2
+CORROSIVE   2
+```
 
 **Special Tags:** `IMPACT_DRIVE` — collision damage scales with current velocity × mass
 
@@ -257,7 +321,19 @@
 | ENERGY_GRID | 160 |
 | REPAIR_RATE | 15 HP/s |
 
-**Starting Tag Pool:** SLOT_LARGE×2 · SHIELD_MAX×1 · RATE_OF_FIRE×1
+**Hardware Tags:** SLOT_LARGE×2 · SHIELD_MAX×1 · RATE_OF_FIRE×1
+
+**Tag Weighting:**
+```
+SLOT_LARGE    5  (core)
+SLOT_MEDIUM   4
+SHIELD_MAX    4
+RATE_OF_FIRE  4
+ENERGY_GRID   3
+AMMO_CAPACITY 3
+PIERCE        2
+TETHER        2
+```
 
 **Special Tags:** `WEAPONS_PLATFORM` — bonus damage when 3+ weapons fire simultaneously in the same tick
 
@@ -303,7 +379,19 @@
 | ENERGY_GRID | 280 |
 | REPAIR_RATE | 30 HP/s |
 
-**Starting Tag Pool:** HULL×2 · SHIELD_MAX×2 · RANGE×1
+**Hardware Tags:** HULL×2 · SHIELD_MAX×2 · RANGE×1
+
+**Tag Weighting:**
+```
+HULL         5  (core)
+SHIELD_MAX   5  (core)
+REPAIR_RATE  4
+RANGE        4
+SHIELD_REGEN 3
+ENERGY_GRID  3
+AURA_RADIUS  2
+BROADCAST    2
+```
 
 **Special Tags:** `LONG_RANGE_TARGETING` — all weapon range values increased by 40%
 
@@ -347,7 +435,19 @@
 | ENERGY_GRID | 300 |
 | REPAIR_RATE | 22 HP/s |
 
-**Starting Tag Pool:** SHIELD_MAX×3 · MASS×2 · IMPACT×1
+**Hardware Tags:** SHIELD_MAX×3 · MASS×2 · IMPACT×1
+
+**Tag Weighting:**
+```
+SHIELD_MAX   5  (core)
+SHIELD_REGEN 5  (core)
+MASS         4
+IMPACT       3
+ENERGY_GRID  3
+HULL         3
+VOLTAGE      2
+INVULNERABILITY 2
+```
 
 **Special Tags:** `MOMENTUM_DRIVE` — ramming damage scales with mass × velocity · `SHIELD_WALL` — front-arc incoming damage reduced by an additional 15%
 
@@ -391,7 +491,19 @@
 | ENERGY_GRID | 320 |
 | REPAIR_RATE | 35 HP/s |
 
-**Starting Tag Pool:** ARMOR×3 · HULL×2 · STATUS_IMMUNITY×1
+**Hardware Tags:** ARMOR×3 · HULL×2 · STATUS_IMMUNITY×1
+
+**Tag Weighting:**
+```
+ARMOR       5  (core)
+HULL        5  (core)
+SLOT_LARGE  4
+SLOT_XL     4
+ENERGY_GRID 3
+REPAIR_RATE 3
+GRAVITY     2
+SALVAGE     2
+```
 
 **Special Tags:** `STATUS_IMMUNE` — immune to FREEZE, BURN, and EMP debuffs · `TURRET_ARRAY` — all equipped weapons gain 360° targeting arc
 
