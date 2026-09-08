@@ -1,5 +1,9 @@
 import Phaser from 'phaser'
 import { BootScene } from './scenes/BootScene'
+import { PhysicsScene } from './scenes/PhysicsScene'
+import { DataLoader } from './systems/DataLoader'
+
+DataLoader.init()
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -7,7 +11,7 @@ const config: Phaser.Types.Core.GameConfig = {
   height: 720,
   parent: 'game',
   backgroundColor: '#000000',
-  scene: [BootScene]
+  scene: [BootScene, PhysicsScene]
 }
 
 new Phaser.Game(config)

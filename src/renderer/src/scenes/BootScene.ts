@@ -25,13 +25,19 @@ export class BootScene extends Phaser.Scene {
     // Run system validation
     const results = this.runSystemCheck()
     this.renderResults(results)
+
+    // Transition to physics sandbox after 3 seconds
+    this.add.text(width / 2, height - 22, '→ Physics Sandbox loading in 3s', {
+      fontSize: '12px', color: '#333333', fontFamily: 'monospace'
+    }).setOrigin(0.5)
+
+    this.time.delayedCall(3000, () => this.scene.start('PhysicsScene'))
   }
 
   private runSystemCheck(): string[] {
     const lines: string[] = []
 
-    // 1. DataLoader
-    DataLoader.init()
+    // 1. DataLoader (initialised in main.ts)
     const ships   = DataLoader.getAllShips()
     const classes = DataLoader.getAllClasses()
     const upgrades = DataLoader.getAllUpgrades()
