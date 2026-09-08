@@ -65,15 +65,35 @@ export interface Tag {
   interactions: TagInteraction[]
 }
 
+export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary'
+export type UpgradeArchetype = 'StatMutator' | 'LogicTrigger' | 'Converter' | 'Resonance' | 'Keystone'
+
+export interface StatModifier {
+  stat: string
+  type: 'flat' | 'percent'
+  value: number
+}
+
+export interface LogicTriggerDef {
+  condition: string   // e.g. ON_SHIELD_DROP
+  action: string      // human-readable description of what fires
+  cooldown: number    // seconds between trigger firings
+}
+
 export interface UpgradeCard {
   id: string
   name: string
   tier: UpgradeTier
-  prerequisiteTags: string[]
-  grantedTags: string[]
-  statModifiers: Record<string, number>
-  logicTrigger?: string
+  rarity: Rarity
+  archetype: UpgradeArchetype
+  associatedTags: string[]                   // Tags that make this card appear in the draft
+  prerequisiteTags: Record<string, number>   // Tag counts needed in aggregator to unlock
+  grantedTags: Record<string, number>        // Tags added to aggregator when drafted
+  statModifiers: StatModifier[]
+  tradeOff: string | null                    // Downside text, null if none
   description: string
+  logicTrigger: LogicTriggerDef | null
+  classRestriction: string | null            // Class ID for Keystones, null otherwise
 }
 
 export interface FleetLoadout {
