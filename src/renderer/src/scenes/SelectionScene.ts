@@ -3,105 +3,101 @@ import { DataLoader } from '../systems/DataLoader'
 import { LoadoutManager } from '../systems/LoadoutManager'
 import { getGeometry } from '../ships/ShipGeometry'
 import { drawClassIcon, CLASS_COLORS } from '../ships/ClassIcons'
-import { addTagChip, addListItem, addButton, synergyColor, synergyLabel } from '../ui/NeonUI'
-import type { ClassSpecialization } from '../types'
+import { addTagChip, addButton, synergyColor, synergyLabel } from '../ui/NeonUI'
 
 // ─── Layout ────────────────────────────────────────────────────────────────
-const W = 1280
-const H = 720
-const HEADER_H = 50
+const W      = 1280
+const H      = 720
+const HDR_H  = 50
+const BTM_H  = 70
+const MAIN_H = H - HDR_H - BTM_H   // 600
+const BTM_Y  = H - BTM_H           // 650
 
+const L     = 360                   // left panel width
+const DIV_X = L
+const R_X   = L + 1
+const R_W   = W - L
+const R_CX  = R_X + R_W / 2        // 820
+const R_MID = HDR_H + MAIN_H / 2   // vertical centre of main area
+
+const ITEM_H = 56                   // class list item height
 const DIM    = 0x002244
 const ACCENT = 0x00ffff
 
-// ─── Step 1 grid ───────────────────────────────────────────────────────────
-const CARD_W = 240
-const CARD_H = 126
-const CARD_COLS = 3
-const CARD_ROWS = 3
-const GRID_X = 28
-const GRID_Y = HEADER_H + 20
-const CARD_GAP_X = 12
-const CARD_GAP_Y = 12
-
-// ─── Step 1 detail panel (right side) ──────────────────────────────────────
-const DETAIL_X = GRID_X + CARD_COLS * (CARD_W + CARD_GAP_X) + 20
-const DETAIL_W = W - DETAIL_X - 20
-
-// ─── Step 2 layout ─────────────────────────────────────────────────────────
-const LEFT_W  = 264
-const RIGHT_W = 264
-const CENTER_X = LEFT_W + (W - LEFT_W - RIGHT_W) / 2
-const CENTER_Y = HEADER_H + (H - HEADER_H - 180) / 2 + 20
-const BOTTOM_Y = H - 180
-
+// ─── Scene ─────────────────────────────────────────────────────────────────
 export class SelectionScene extends Phaser.Scene {
-  private step: 1 | 2 = 1
+  private step: 1 | 2 | 3 = 1
 
+  private username        = ''
   private selectedClassId = 'chrono_architect'
   private selectedShipId  = 'sidewinder'
 
   private previewAngle = 0
   private previewGfx!: Phaser.GameObjects.Graphics
 
-  // Step 1 objects
-  private s1!: Phaser.GameObjects.Container
-  private cardGfxMap: Map<string, Phaser.GameObjects.Graphics> = new Map()
-  private detailIconGfx!: Phaser.GameObjects.Graphics
-  private detailName!:    Phaser.GameObjects.Text
-  private detailRole!:    Phaser.GameObjects.Text
-  private detailDesc!:    Phaser.GameObjects.Text
-  private detailTagRow!:  Phaser.GameObjects.Container
+  // ── step 1 ──
+  private s1Objects: Phaser.GameObjects.GameObject[] = []
+  private usernameDisplay!: Phaser.GameObjects.Text
+  private cursorTimer!: Phaser.Time.TimerEvent
+  private cursorOn = true
 
-  // Step 2 objects
-  private s2!: Phaser.GameObjects.Container
-  private classBadgeGfx!: Phaser.GameObjects.Graphics
-  private classBadgeName!: Phaser.GameObjects.Text
-  private shipItems: Map<string, { text: Phaser.GameObjects.Text; bg: Phaser.GameObjects.Graphics }> = new Map()
-  private centerTitle!:  Phaser.GameObjects.Text
-  private centerSub!:    Phaser.GameObjects.Text
-  private tagContainer!: Phaser.GameObjects.Container
-  private synergyText!:  Phaser.GameObjects.Text
-  private statText!:     Phaser.GameObjects.Text
+  // ── step 2 ──
+  private s2Objects: Phaser.GameObjects.GameObject[] = []
+  private classItemBgs  = new Map<string, Phaser.GameObjects.Graphics>()
+  private classItemTexts = new Map<string, Phaser.GameObjects.Text>()
+  private classIconGfx!: Phaser.GameObjects.Graphics
+  private c_name!: Phaser.GameObjects.Text
+  private c_role!: Phaser.GameObjects.Text
+  private c_desc!: Phaser.GameObjects.Text
+  private c_coopLabel!: Phaser.GameObjects.Text
+  private c_coop!: Phaser.GameObjects.Text
+  private c_tagRow!: Phaser.GameObjects.Container
+
+  // ── step 3 ──
+  private s3Objects: Phaser.GameObjects.GameObject[] = []
+  private shipItemBgs   = new Map<string, Phaser.GameObjects.Graphics>()
+  private shipItemTexts = new Map<string, Phaser.GameObjects.Text>()
+  private s_name!: Phaser.GameObjects.Text
+  private s_sub!: Phaser.GameObjects.Text
+  private s_stats!: Phaser.GameObjects.Text
+  private s_synergy!: Phaser.GameObjects.Text
+  private s_tagRow!: Phaser.GameObjects.Container
+  private classBadge!: Phaser.GameObjects.Text
 
   private readonly mgr = new LoadoutManager()
 
-  constructor() {
-    super({ key: 'SelectionScene' })
-  }
+  constructor() { super({ key: 'SelectionScene' }) }
 
+  // ──────────────────────────────────────────────────────────────────────────
   create(): void {
-    this.drawBackground()
+    this.drawBg()
     this.buildHeader()
+    this.buildChrome()
     this.buildStep1()
     this.buildStep2()
-
-    this.s1.setVisible(true)
-    this.s2.setVisible(false)
-
-    this.selectClass(this.selectedClassId)
+    this.buildStep3()
+    this.showStep(1)
   }
 
   update(_t: number, delta: number): void {
-    if (this.step === 2) {
+    if (this.step === 3) {
       this.previewAngle += (delta / 1000) * 0.35
       this.redrawPreview()
     }
   }
 
   // ─── Background ────────────────────────────────────────────────────────────
-
-  private drawBackground(): void {
-    const gfx = this.add.graphics()
-    gfx.lineStyle(1, 0x001122, 0.55)
-    for (let x = 0; x <= W; x += 60) gfx.lineBetween(x, 0, x, H)
-    for (let y = 0; y <= H; y += 60) gfx.lineBetween(0, y, W, y)
+  private drawBg(): void {
+    const g = this.add.graphics()
+    g.lineStyle(1, 0x001122, 0.5)
+    for (let x = 0; x <= W; x += 60) g.lineBetween(x, 0, x, H)
+    for (let y = 0; y <= H; y += 60) g.lineBetween(0, y, W, y)
   }
 
   private buildHeader(): void {
-    const gfx = this.add.graphics()
-    gfx.lineStyle(1, DIM, 0.6)
-    gfx.lineBetween(0, HEADER_H, W, HEADER_H)
+    const g = this.add.graphics()
+    g.lineStyle(1, DIM, 0.6)
+    g.lineBetween(0, HDR_H, W, HDR_H)
 
     this.add.text(W / 2, 14, 'PROJECT NEON FLEET', {
       fontSize: '18px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
@@ -114,377 +110,402 @@ export class SelectionScene extends Phaser.Scene {
     }).setOrigin(0.5)
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // STEP 1 — CLASS SELECTION
-  // ─────────────────────────────────────────────────────────────────────────────
+  // Panel chrome — shared for steps 2 & 3
+  private buildChrome(): void {
+    const g = this.add.graphics()
+    g.lineStyle(1, DIM, 0.55)
+    g.lineBetween(DIV_X, HDR_H, DIV_X, BTM_Y)
+    g.lineBetween(0, BTM_Y, W, BTM_Y)
+  }
 
+  // ─── Step visibility ───────────────────────────────────────────────────────
+  private showStep(n: 1 | 2 | 3): void {
+    this.step = n
+    this.s1Objects.forEach(o => (o as any).setVisible(n === 1))
+    this.s2Objects.forEach(o => (o as any).setVisible(n === 2))
+    this.s3Objects.forEach(o => (o as any).setVisible(n === 3))
+
+    if (n === 1) {
+      this.input.keyboard!.on('keydown', this.onKey, this)
+      this.refreshUsername()
+    } else {
+      this.input.keyboard!.off('keydown', this.onKey, this)
+    }
+
+    if (n === 2) this.selectClass(this.selectedClassId)
+    if (n === 3) { this.previewAngle = 0; this.selectShip(this.selectedShipId) }
+  }
+
+  private reg<T extends Phaser.GameObjects.GameObject>(obj: T, step: 1 | 2 | 3): T {
+    if (step === 1) this.s1Objects.push(obj)
+    else if (step === 2) this.s2Objects.push(obj)
+    else this.s3Objects.push(obj)
+    return obj
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // STEP 1 — USERNAME
+  // ─────────────────────────────────────────────────────────────────────────
   private buildStep1(): void {
-    this.s1 = this.add.container(0, 0)
-    const classes = DataLoader.getAllClasses()
+    const cy = HDR_H + MAIN_H / 2
 
-    // Step label
-    this.s1.add(this.make.text({ x: GRID_X, y: HEADER_H + 4, text: '01 · SELECT SPECIALIZATION',
-      style: { fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4 } }))
+    this.reg(this.add.text(W / 2, cy - 90, '01 · ENTER CALLSIGN', {
+      fontSize: '10px', color: '#224433', fontFamily: 'monospace', letterSpacing: 5,
+    }).setOrigin(0.5), 1)
 
-    // Class grid cards
-    classes.forEach((cls, i) => {
-      const col = i % CARD_COLS
-      const row = Math.floor(i / CARD_COLS)
-      const cx  = GRID_X + col * (CARD_W + CARD_GAP_X)
-      const cy  = GRID_Y + row * (CARD_H + CARD_GAP_Y)
-      this.buildClassCard(cls, cx, cy)
+    // Input box
+    const bx = W / 2 - 200; const bw = 400; const bh = 52
+    const boxGfx = this.add.graphics()
+    boxGfx.lineStyle(1, ACCENT, 0.6)
+    boxGfx.strokeRect(bx, cy - 44, bw, bh)
+    this.reg(boxGfx, 1)
+
+    this.usernameDisplay = this.reg(this.add.text(W / 2, cy - 18, '', {
+      fontSize: '24px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
+    }).setOrigin(0.5), 1)
+
+    this.reg(this.add.text(W / 2, cy + 22, 'A – Z  ·  0 – 9  ·  UNDERSCORE  ·  MAX 14', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 3,
+    }).setOrigin(0.5), 1)
+
+    this.cursorTimer = this.time.addEvent({
+      delay: 530, loop: true, callback: () => {
+        this.cursorOn = !this.cursorOn; this.refreshUsername()
+      },
     })
 
-    // Detail panel divider
-    const divGfx = this.add.graphics()
-    divGfx.lineStyle(1, DIM, 0.5)
-    divGfx.lineBetween(DETAIL_X - 16, HEADER_H + 10, DETAIL_X - 16, H - 20)
-    this.s1.add(divGfx)
+    const btn = addButton(this, W / 2 - 110, cy + 54, 220, 44, 'CONFIRM  →', ACCENT, () => {
+      if (this.username.length > 0) this.showStep(2)
+    })
+    this.reg(btn.gfx, 1)
+    this.reg(btn.text, 1)
 
-    // Detail panel label
-    this.s1.add(this.make.text({ x: DETAIL_X, y: HEADER_H + 4, text: 'SPECIALIZATION DETAIL',
-      style: { fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4 } }))
+    this.reg(this.add.text(W / 2, cy + 116, 'PRESS ENTER TO CONFIRM', {
+      fontSize: '9px', color: '#1a3322', fontFamily: 'monospace', letterSpacing: 4,
+    }).setOrigin(0.5), 1)
+  }
 
-    // Detail icon (redrawn on select)
-    this.detailIconGfx = this.add.graphics()
-    this.s1.add(this.detailIconGfx)
+  private onKey(evt: KeyboardEvent): void {
+    if (evt.key === 'Backspace') {
+      this.username = this.username.slice(0, -1)
+    } else if (evt.key === 'Enter' && this.username.length > 0) {
+      this.showStep(2)
+      return
+    } else if (evt.key.length === 1 && /[a-zA-Z0-9_]/.test(evt.key) && this.username.length < 14) {
+      this.username += evt.key.toUpperCase()
+    }
+    this.refreshUsername()
+  }
 
-    this.detailName = this.add.text(DETAIL_X + DETAIL_W / 2, GRID_Y + 76, '', {
-      fontSize: '18px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
-    }).setOrigin(0.5)
-    this.s1.add(this.detailName)
+  private refreshUsername(): void {
+    this.usernameDisplay?.setText(this.username + (this.cursorOn ? '|' : ' '))
+  }
 
-    this.detailRole = this.add.text(DETAIL_X + DETAIL_W / 2, GRID_Y + 98, '', {
+  // ─────────────────────────────────────────────────────────────────────────
+  // STEP 2 — CLASS SELECTION
+  // ─────────────────────────────────────────────────────────────────────────
+  private buildStep2(): void {
+    // Left panel label
+    this.reg(this.add.text(14, HDR_H + 8, '02 · SPECIALIZATION', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
+    }), 2)
+
+    // Class list
+    DataLoader.getAllClasses().forEach((cls, i) => {
+      const color = CLASS_COLORS[cls.id] ?? ACCENT
+      const y = HDR_H + 32 + i * ITEM_H
+
+      const bg = this.reg(this.add.graphics(), 2) as Phaser.GameObjects.Graphics
+      this.classItemBgs.set(cls.id, bg)
+
+      // Small icon
+      const iconGfx = this.reg(this.add.graphics(), 2) as Phaser.GameObjects.Graphics
+      drawClassIcon(iconGfx, cls.id, 28, y + ITEM_H / 2, color, 26)
+
+      const nameT = this.reg(this.add.text(56, y + 10, cls.name, {
+        fontSize: '13px', color: `#${color.toString(16).padStart(6, '0')}`,
+        fontFamily: 'monospace', fontStyle: 'bold',
+      }), 2) as Phaser.GameObjects.Text
+
+      const roleT = this.reg(this.add.text(56, y + 28, cls.roleCategory, {
+        fontSize: '10px', color: '#335566', fontFamily: 'monospace',
+      }), 2)
+
+      this.classItemTexts.set(cls.id, nameT)
+
+      const zone = this.reg(
+        this.add.zone(0, y, L, ITEM_H).setOrigin(0, 0).setInteractive(), 2
+      ) as Phaser.GameObjects.Zone
+      zone.on('pointerover', () => { if (this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, true)  })
+      zone.on('pointerout',  () => { if (this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, false) })
+      zone.on('pointerdown', () => this.selectClass(cls.id))
+    })
+
+    // Right panel — class detail
+    this.classIconGfx = this.reg(this.add.graphics(), 2) as Phaser.GameObjects.Graphics
+
+    this.c_name = this.reg(this.add.text(R_CX, HDR_H + 110, '', {
+      fontSize: '22px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
+    }).setOrigin(0.5), 2) as Phaser.GameObjects.Text
+
+    this.c_role = this.reg(this.add.text(R_CX, HDR_H + 136, '', {
       fontSize: '11px', color: '#335566', fontFamily: 'monospace',
-    }).setOrigin(0.5)
-    this.s1.add(this.detailRole)
+    }).setOrigin(0.5), 2) as Phaser.GameObjects.Text
 
-    this.detailDesc = this.add.text(DETAIL_X + 10, GRID_Y + 122, '', {
-      fontSize: '11px', color: '#445566', fontFamily: 'monospace',
-      wordWrap: { width: DETAIL_W - 20 }, lineSpacing: 4,
-    })
-    this.s1.add(this.detailDesc)
+    this.c_desc = this.reg(this.add.text(R_X + 30, HDR_H + 162, '', {
+      fontSize: '12px', color: '#446655', fontFamily: 'monospace',
+      wordWrap: { width: R_W - 60 }, lineSpacing: 5,
+    }), 2) as Phaser.GameObjects.Text
 
-    // Primary tags label
-    this.s1.add(this.make.text({ x: DETAIL_X, y: GRID_Y + 200, text: 'PRIMARY TAGS',
-      style: { fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4 } }))
+    this.reg(this.add.text(R_X + 30, HDR_H + 238, 'PRIMARY TAGS', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
+    }), 2)
 
-    this.detailTagRow = this.add.container(DETAIL_X, GRID_Y + 216)
-    this.s1.add(this.detailTagRow)
+    this.c_tagRow = this.reg(this.add.container(R_X + 30, HDR_H + 256), 2) as Phaser.GameObjects.Container
 
-    // Select button
-    const btn = addButton(this, DETAIL_X, H - 80, DETAIL_W, 44, '02 · SELECT SHIP  →', ACCENT, () => this.goToStep2())
-    this.s1.add(btn.gfx)
-    this.s1.add(btn.text)
+    this.c_coopLabel = this.reg(this.add.text(R_X + 30, HDR_H + 310, 'CO-OP SYNERGY', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
+    }), 2) as Phaser.GameObjects.Text
+
+    this.c_coop = this.reg(this.add.text(R_X + 30, HDR_H + 328, '', {
+      fontSize: '11px', color: '#446655', fontFamily: 'monospace',
+      wordWrap: { width: R_W - 60 }, lineSpacing: 5,
+    }), 2) as Phaser.GameObjects.Text
+
+    // Bottom bar
+    const back2 = addButton(this, 14, BTM_Y + 14, 160, 40, '← BACK', 0x334455, () => this.showStep(1))
+    this.reg(back2.gfx, 2); this.reg(back2.text, 2)
+
+    this.reg(this.add.text(W / 2, BTM_Y + 34, '● ●', {
+      fontSize: '10px', color: '#224433', fontFamily: 'monospace', letterSpacing: 8,
+    }).setOrigin(0.5), 2)
+
+    const next2 = addButton(this, W - 220, BTM_Y + 14, 206, 40, '03 · SELECT SHIP  →', ACCENT, () => this.showStep(3))
+    this.reg(next2.gfx, 2); this.reg(next2.text, 2)
   }
 
-  private buildClassCard(cls: ClassSpecialization, x: number, y: number): void {
-    const color = CLASS_COLORS[cls.id] ?? ACCENT
-
-    const bg = this.add.graphics()
-    this.cardGfxMap.set(cls.id, bg)
-    this.s1.add(bg)
-
-    // Icon graphics (drawn per card, static)
-    const iconGfx = this.add.graphics()
-    drawClassIcon(iconGfx, cls.id, x + CARD_W / 2, y + 38, color, 44)
-    this.s1.add(iconGfx)
-
-    const nameText = this.add.text(x + CARD_W / 2, y + 70, cls.name, {
-      fontSize: '11px', color: `#${color.toString(16).padStart(6, '0')}`,
-      fontFamily: 'monospace', fontStyle: 'bold',
-    }).setOrigin(0.5)
-    this.s1.add(nameText)
-
-    const roleText = this.add.text(x + CARD_W / 2, y + 86, cls.roleCategory, {
-      fontSize: '9px', color: '#335566', fontFamily: 'monospace',
-    }).setOrigin(0.5)
-    this.s1.add(roleText)
-
-    const zone = this.add.zone(x, y, CARD_W, CARD_H).setOrigin(0, 0).setInteractive()
-    zone.on('pointerover', () => {
-      if (this.selectedClassId !== cls.id) this.hoverCard(cls.id, true)
-    })
-    zone.on('pointerout', () => {
-      if (this.selectedClassId !== cls.id) this.hoverCard(cls.id, false)
-    })
-    zone.on('pointerdown', () => this.selectClass(cls.id))
-    this.s1.add(zone)
-  }
-
-  private hoverCard(id: string, hover: boolean): void {
-    const bg = this.cardGfxMap.get(id)
-    if (!bg) return
-    const col = CARD_COLS, i = DataLoader.getAllClasses().findIndex(c => c.id === id)
-    const cx  = GRID_X + (i % col) * (CARD_W + CARD_GAP_X)
-    const cy  = GRID_Y + Math.floor(i / col) * (CARD_H + CARD_GAP_Y)
+  private hoverClassItem(id: string, hover: boolean): void {
+    const i = DataLoader.getAllClasses().findIndex(c => c.id === id)
+    const y = HDR_H + 32 + i * ITEM_H
     const color = CLASS_COLORS[id] ?? ACCENT
+    const bg = this.classItemBgs.get(id)!
     bg.clear()
     if (hover) {
-      bg.fillStyle(color, 0.06)
-      bg.fillRect(cx, cy, CARD_W, CARD_H)
-      bg.lineStyle(1, color, 0.3)
-      bg.strokeRect(cx, cy, CARD_W, CARD_H)
-    } else {
-      bg.lineStyle(1, DIM, 0.4)
-      bg.strokeRect(cx, cy, CARD_W, CARD_H)
+      bg.fillStyle(color, 0.06); bg.fillRect(0, y, L, ITEM_H)
+      bg.lineStyle(1, color, 0.25); bg.strokeRect(0, y, L, ITEM_H)
     }
   }
 
   private selectClass(id: string): void {
-    // Deselect previous
-    this.hoverCard(this.selectedClassId, false)
+    this.hoverClassItem(this.selectedClassId, false)
+    this.classItemTexts.get(this.selectedClassId)?.setAlpha(0.4)
     this.selectedClassId = id
+
+    const cls   = DataLoader.getClass(id)
     const color = CLASS_COLORS[id] ?? ACCENT
-    const cls = DataLoader.getClass(id)
     if (!cls) return
 
-    // Highlight selected card
-    const bg = this.cardGfxMap.get(id)!
-    const i  = DataLoader.getAllClasses().findIndex(c => c.id === id)
-    const cx = GRID_X + (i % CARD_COLS) * (CARD_W + CARD_GAP_X)
-    const cy = GRID_Y + Math.floor(i / CARD_COLS) * (CARD_H + CARD_GAP_Y)
+    const i = DataLoader.getAllClasses().findIndex(c => c.id === id)
+    const y = HDR_H + 32 + i * ITEM_H
+    const bg = this.classItemBgs.get(id)!
     bg.clear()
-    bg.fillStyle(color, 0.1)
-    bg.fillRect(cx, cy, CARD_W, CARD_H)
-    bg.lineStyle(1.5, color, 0.85)
-    bg.strokeRect(cx, cy, CARD_W, CARD_H)
+    bg.fillStyle(color, 0.1); bg.fillRect(0, y, L, ITEM_H)
+    bg.lineStyle(1.5, color, 0.8); bg.strokeRect(0, y, L, ITEM_H)
+    this.classItemTexts.get(id)?.setAlpha(1)
 
-    // Update detail panel
-    this.detailIconGfx.clear()
-    drawClassIcon(this.detailIconGfx, id, DETAIL_X + DETAIL_W / 2, GRID_Y + 42, color, 60)
-
+    // Update right panel
     const hex = `#${color.toString(16).padStart(6, '0')}`
-    this.detailName.setText(cls.name).setColor(hex).setStroke(hex, 1)
-    this.detailRole.setText(cls.roleCategory)
-    this.detailDesc.setText(cls.description)
+    this.classIconGfx.clear()
+    drawClassIcon(this.classIconGfx, id, R_CX, HDR_H + 56, color, 70)
 
-    this.detailTagRow.removeAll(true)
+    this.c_name.setText(cls.name).setColor(hex).setStroke(hex, 1)
+    this.c_role.setText(cls.roleCategory)
+    this.c_desc.setText(cls.description)
+    this.c_coop.setText(cls.coopSynergyMechanism)
+
+    this.c_tagRow.removeAll(true)
     let tx = 0
     for (const tag of cls.primaryTags) {
       const chip = addTagChip(this, tx, 0, tag, color)
-      this.detailTagRow.add(chip)
-      tx += chip.width + 6
+      this.c_tagRow.add(chip); tx += chip.width + 6
     }
   }
 
-  private goToStep2(): void {
-    this.step = 2
-    this.s1.setVisible(false)
-    this.s2.setVisible(true)
-    this.updateClassBadge()
-    this.selectShip(this.selectedShipId)
-  }
+  // ─────────────────────────────────────────────────────────────────────────
+  // STEP 3 — SHIP SELECTION
+  // ─────────────────────────────────────────────────────────────────────────
+  private buildStep3(): void {
+    // Left panel label
+    this.reg(this.add.text(14, HDR_H + 8, '03 · CHASSIS', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
+    }), 3)
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // STEP 2 — SHIP SELECTION
-  // ─────────────────────────────────────────────────────────────────────────────
+    // Class badge (shows selected class)
+    this.classBadge = this.reg(this.add.text(14, BTM_Y - 24, '', {
+      fontSize: '10px', color: '#335566', fontFamily: 'monospace',
+    }), 3) as Phaser.GameObjects.Text
 
-  private buildStep2(): void {
-    this.s2 = this.add.container(0, 0)
-
-    // Panel chrome
-    const chrome = this.add.graphics()
-    chrome.lineStyle(1, DIM, 0.6)
-    chrome.lineBetween(LEFT_W, HEADER_H, LEFT_W, BOTTOM_Y)
-    chrome.lineBetween(W - RIGHT_W, HEADER_H, W - RIGHT_W, BOTTOM_Y)
-    chrome.lineBetween(0, BOTTOM_Y, W, BOTTOM_Y)
-    chrome.lineBetween(820, BOTTOM_Y, 820, H)
-    this.s2.add(chrome)
-
-    // Back button
-    const back = addButton(this, 10, HEADER_H + 8, 130, 28, '← BACK', 0x334455, () => this.backToStep1())
-    this.s2.add(back.gfx)
-    this.s2.add(back.text)
-
-    // Step label
-    this.s2.add(this.make.text({ x: W - RIGHT_W / 2, y: HEADER_H + 10, text: '02 · CHASSIS',
-      style: { fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4 },
-      add: false
-    }).setOrigin(0.5))
-
-    // Class badge (top-left, shows chosen class)
-    this.classBadgeGfx  = this.add.graphics()
-    this.classBadgeName = this.add.text(170, HEADER_H + 12, '', {
-      fontSize: '11px', color: '#00ffff', fontFamily: 'monospace',
-    })
-    this.s2.add(this.classBadgeGfx)
-    this.s2.add(this.classBadgeName)
-
-    // Ship list (right panel)
-    this.buildShipList()
-
-    // Preview graphics
-    this.previewGfx = this.add.graphics()
-    this.s2.add(this.previewGfx)
-
-    this.centerTitle = this.add.text(CENTER_X, CENTER_Y + 130, '', {
-      fontSize: '18px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
-    }).setOrigin(0.5)
-    this.s2.add(this.centerTitle)
-
-    this.centerSub = this.add.text(CENTER_X, CENTER_Y + 152, '', {
-      fontSize: '11px', color: '#335566', fontFamily: 'monospace',
-    }).setOrigin(0.5)
-    this.s2.add(this.centerSub)
-
-    // Bottom
-    this.buildBottom()
-  }
-
-  private buildShipList(): void {
+    // Ship list grouped by weight
     const groups = [
       { label: 'LIGHT',  ids: ['sidewinder', 'cobra', 'mamba']    },
       { label: 'MEDIUM', ids: ['krait', 'chieftain', 'python']    },
       { label: 'HEAVY',  ids: ['anaconda', 'cutter', 'type_10']   },
     ]
-    let y = HEADER_H + 44
-    const x = W - RIGHT_W + 4
+    let y = HDR_H + 32
 
     for (const grp of groups) {
-      const lbl = this.make.text({ x: x + 10, y, text: grp.label,
-        style: { fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4 }, add: false })
-      this.s2.add(lbl)
+      this.reg(this.add.text(14, y, grp.label, {
+        fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
+      }), 3)
       y += 18
 
       for (const id of grp.ids) {
-        const ship  = DataLoader.getShip(id)
-        const geo   = getGeometry(id)
+        const ship = DataLoader.getShip(id)
+        const geo  = getGeometry(id)
         if (!ship || !geo) continue
+        const color = geo.color
 
-        const bg = this.add.graphics()
-        const txt = this.add.text(x + 10, y + 4, ship.name.replace(' Frame', ''), {
-          fontSize: '12px', color: `#${geo.color.toString(16).padStart(6, '0')}`,
-          fontFamily: 'monospace',
-        }).setAlpha(0.4)
+        const bg = this.reg(this.add.graphics(), 3) as Phaser.GameObjects.Graphics
+        this.shipItemBgs.set(id, bg)
 
-        const zone = this.add.zone(x, y, RIGHT_W, 24).setOrigin(0, 0).setInteractive()
-        zone.on('pointerover',  () => { if (this.selectedShipId !== id) txt.setAlpha(0.7) })
-        zone.on('pointerout',   () => { if (this.selectedShipId !== id) txt.setAlpha(0.4) })
-        zone.on('pointerdown',  () => this.selectShip(id))
+        const nameT = this.reg(this.add.text(14, y + 5, ship.name.replace(' Frame', ''), {
+          fontSize: '13px', color: `#${color.toString(16).padStart(6, '0')}`,
+          fontFamily: 'monospace', fontStyle: 'bold',
+        }).setAlpha(0.4), 3) as Phaser.GameObjects.Text
+        this.shipItemTexts.set(id, nameT)
 
-        this.s2.add(bg)
-        this.s2.add(txt)
-        this.s2.add(zone)
-        this.shipItems.set(id, { text: txt, bg })
-        y += 26
+        this.reg(this.add.text(14, y + 22, ship.subtitle, {
+          fontSize: '9px', color: '#224433', fontFamily: 'monospace',
+        }).setAlpha(0.4), 3)
+
+        const zone = this.reg(
+          this.add.zone(0, y, L, 36).setOrigin(0, 0).setInteractive(), 3
+        ) as Phaser.GameObjects.Zone
+        zone.on('pointerover', () => { if (this.selectedShipId !== id) this.hoverShipItem(id, true)  })
+        zone.on('pointerout',  () => { if (this.selectedShipId !== id) this.hoverShipItem(id, false) })
+        zone.on('pointerdown', () => this.selectShip(id))
+
+        y += 40
       }
-      y += 6
+      y += 10
     }
-  }
 
-  private buildBottom(): void {
-    this.s2.add(this.make.text({ x: 14, y: BOTTOM_Y + 10, text: 'TAG PROFILE',
-      style: { fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4 }, add: false }))
+    // Right panel — ship detail
+    this.previewGfx = this.reg(this.add.graphics(), 3) as Phaser.GameObjects.Graphics
 
-    this.s2.add(this.make.text({ x: 14, y: BOTTOM_Y + 56, text: 'CLASS SYNERGY',
-      style: { fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4 }, add: false }))
+    this.s_name = this.reg(this.add.text(R_CX, R_MID + 130, '', {
+      fontSize: '22px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
+    }).setOrigin(0.5), 3) as Phaser.GameObjects.Text
 
-    this.synergyText = this.add.text(14, BOTTOM_Y + 72, '', {
+    this.s_sub = this.reg(this.add.text(R_CX, R_MID + 155, '', {
+      fontSize: '11px', color: '#335566', fontFamily: 'monospace',
+    }).setOrigin(0.5), 3) as Phaser.GameObjects.Text
+
+    this.reg(this.add.text(R_X + 30, R_MID + 186, 'CLASS SYNERGY', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
+    }), 3)
+
+    this.s_synergy = this.reg(this.add.text(R_X + 30, R_MID + 202, '', {
       fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold', color: '#ffcc00',
       stroke: '#ffcc00', strokeThickness: 1,
       shadow: { offsetX: 0, offsetY: 0, color: '#ffcc00', blur: 10, fill: true },
-    })
-    this.s2.add(this.synergyText)
+    }), 3) as Phaser.GameObjects.Text
 
-    this.s2.add(this.make.text({ x: 14, y: BOTTOM_Y + 110, text: 'HULL  ·  ARMOR  ·  SPEED  ·  EVASION  ·  MASS',
-      style: { fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 2 }, add: false }))
+    this.reg(this.add.text(R_X + 30, R_MID + 238, 'HULL  ·  ARMOR  ·  SPEED  ·  EVASION  ·  MASS', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 2,
+    }), 3)
 
-    this.statText = this.add.text(14, BOTTOM_Y + 126, '', {
+    this.s_stats = this.reg(this.add.text(R_X + 30, R_MID + 254, '', {
       fontSize: '12px', color: '#336655', fontFamily: 'monospace',
-    })
-    this.s2.add(this.statText)
+    }), 3) as Phaser.GameObjects.Text
 
-    this.tagContainer = this.add.container(14, BOTTOM_Y + 24)
-    this.s2.add(this.tagContainer)
+    this.reg(this.add.text(R_X + 30, R_MID + 286, 'STARTING TAGS', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
+    }), 3)
 
-    const btn = addButton(this, W - 240, BOTTOM_Y + 44, 220, 48, 'LAUNCH SECTOR RUN', ACCENT, () => this.launch())
-    this.s2.add(btn.gfx)
-    this.s2.add(btn.text)
+    this.s_tagRow = this.reg(this.add.container(R_X + 30, R_MID + 302), 3) as Phaser.GameObjects.Container
 
-    this.s2.add(this.make.text({ x: W - 130, y: BOTTOM_Y + 110, text: 'P1 HOST',
-      style: { fontSize: '10px', color: '#335566', fontFamily: 'monospace' }, add: false }).setOrigin(0.5))
+    // Bottom bar
+    const back3 = addButton(this, 14, BTM_Y + 14, 160, 40, '← BACK', 0x334455, () => this.showStep(2))
+    this.reg(back3.gfx, 3); this.reg(back3.text, 3)
+
+    this.reg(this.add.text(W / 2, BTM_Y + 34, '● ● ●', {
+      fontSize: '10px', color: '#224433', fontFamily: 'monospace', letterSpacing: 8,
+    }).setOrigin(0.5), 3)
+
+    const launch = addButton(this, W - 220, BTM_Y + 14, 206, 40, 'LAUNCH SECTOR RUN', ACCENT, () => this.launch())
+    this.reg(launch.gfx, 3); this.reg(launch.text, 3)
   }
 
-  // ─── Step 2 selection logic ─────────────────────────────────────────────────
-
-  private updateClassBadge(): void {
-    const cls   = DataLoader.getClass(this.selectedClassId)
-    const color = CLASS_COLORS[this.selectedClassId] ?? ACCENT
-    if (!cls) return
-
-    this.classBadgeGfx.clear()
-    drawClassIcon(this.classBadgeGfx, this.selectedClassId, 158, HEADER_H + 16, color, 22)
-
-    const hex = `#${color.toString(16).padStart(6, '0')}`
-    this.classBadgeName.setText(cls.name).setColor(hex)
+  private hoverShipItem(id: string, hover: boolean): void {
+    const geo = getGeometry(id)
+    const color = geo?.color ?? ACCENT
+    const bg = this.shipItemBgs.get(id)!
+    const nameT = this.shipItemTexts.get(id)
+    bg.clear()
+    if (hover) {
+      const y = (nameT?.y ?? 0) - 5
+      bg.fillStyle(color, 0.06); bg.fillRect(0, y, L, 36)
+      bg.lineStyle(1, color, 0.25); bg.strokeRect(0, y, L, 36)
+    }
   }
 
   private selectShip(id: string): void {
-    // Deselect previous
-    const prev = this.shipItems.get(this.selectedShipId)
-    if (prev) {
-      prev.text.setAlpha(0.4)
-      prev.bg.clear()
-    }
+    this.hoverShipItem(this.selectedShipId, false)
+    this.shipItemTexts.get(this.selectedShipId)?.setAlpha(0.4)
 
     this.selectedShipId = id
-    const ship = DataLoader.getShip(id)
-    const geo  = getGeometry(id)
+    const ship  = DataLoader.getShip(id)
+    const geo   = getGeometry(id)
+    const cls   = DataLoader.getClass(this.selectedClassId)
     if (!ship || !geo) return
 
-    // Highlight selected
-    const item = this.shipItems.get(id)!
-    item.text.setAlpha(1)
-    item.bg.clear()
-    item.bg.fillStyle(geo.color, 0.08)
-    item.bg.fillRect(W - RIGHT_W + 4, item.text.y - 4, RIGHT_W - 4, 24)
-    item.bg.lineStyle(1, geo.color, 0.4)
-    item.bg.strokeRect(W - RIGHT_W + 4, item.text.y - 4, RIGHT_W - 4, 24)
+    const color = geo.color
+    const hex   = `#${color.toString(16).padStart(6, '0')}`
+    const nameT = this.shipItemTexts.get(id)!
+    nameT.setAlpha(1)
 
-    // Center labels
-    const hex = `#${geo.color.toString(16).padStart(6, '0')}`
-    this.centerTitle.setText(ship.name.replace(' Frame', '').toUpperCase()).setColor(hex).setStroke(hex, 1)
-    this.centerSub.setText(`${ship.subtitle}  ·  ${ship.weightClass}`)
+    const bg = this.shipItemBgs.get(id)!
+    bg.clear()
+    bg.fillStyle(color, 0.1); bg.fillRect(0, nameT.y - 5, L, 36)
+    bg.lineStyle(1.5, color, 0.8); bg.strokeRect(0, nameT.y - 5, L, 36)
 
-    // Tag profiler
-    this.tagContainer.removeAll(true)
-    let tx = 0
-    const shipColor = geo.color
-    this.tagContainer.add(this.make.text({ x: 0, y: 0, text: 'HARDWARE · ',
-      style: { fontSize: '9px', color: '#224433', fontFamily: 'monospace' }, add: false }))
-    tx += 82
-    for (const [tag, count] of Object.entries(ship.hardwareTags)) {
-      const chip = addTagChip(this, tx, 0, `${tag}×${count}`, shipColor)
-      this.tagContainer.add(chip)
-      tx += chip.width + 6
-      if (tx > 780) break
-    }
+    // Right panel
+    this.s_name.setText(ship.name.replace(' Frame', '').toUpperCase()).setColor(hex).setStroke(hex, 1)
+    this.s_sub.setText(`${ship.subtitle}  ·  ${ship.weightClass}`)
 
-    const cls = DataLoader.getClass(this.selectedClassId)
-    if (cls) {
-      tx = 82
-      this.tagContainer.add(this.make.text({ x: 0, y: 16, text: 'CLASS    · ',
-        style: { fontSize: '9px', color: '#224433', fontFamily: 'monospace' }, add: false }))
-      for (const tag of cls.primaryTags) {
-        const chip = addTagChip(this, tx, 16, tag, CLASS_COLORS[this.selectedClassId] ?? ACCENT)
-        this.tagContainer.add(chip)
-        tx += chip.width + 6
-        if (tx > 780) break
-      }
-    }
-
-    // Synergy
     const rating = (ship.classSynergies as Record<string, string>)[this.selectedClassId] ?? '?'
     const sc = synergyColor(rating)
     const sh = `#${sc.toString(16).padStart(6, '0')}`
-    this.synergyText.setText(synergyLabel(rating)).setColor(sh).setStroke(sh, 1)
+    this.s_synergy.setText(synergyLabel(rating)).setColor(sh).setStroke(sh, 1)
 
-    // Key stats
     const s = ship.baseStats
-    this.statText.setText(
+    this.s_stats.setText(
       `${s.HULL.toLocaleString()} HP  ·  ${s.ARMOR}%  ·  ${s.TOP_SPEED} u/s  ·  ${s.EVASION}%  ·  ${s.MASS}`
     )
+
+    this.s_tagRow.removeAll(true)
+    let tx = 0
+    for (const [tag, count] of Object.entries(ship.hardwareTags)) {
+      const chip = addTagChip(this, tx, 0, `${tag}×${count}`, color)
+      this.s_tagRow.add(chip); tx += chip.width + 6
+      if (tx > R_W - 60) break
+    }
+    if (cls) {
+      tx = 0
+      const clsColor = CLASS_COLORS[this.selectedClassId] ?? ACCENT
+      for (const tag of cls.primaryTags) {
+        const chip = addTagChip(this, tx, 16, tag, clsColor)
+        this.s_tagRow.add(chip); tx += chip.width + 6
+      }
+    }
+
+    // Class badge
+    const clsName = DataLoader.getClass(this.selectedClassId)?.name ?? ''
+    this.classBadge?.setText(`▸ ${clsName}`)
+
+    // Reset preview rotation on new ship
+    this.previewAngle = 0
   }
 
   private redrawPreview(): void {
@@ -497,26 +518,20 @@ export class SelectionScene extends Phaser.Scene {
     const cos   = Math.cos(this.previewAngle)
     const sin   = Math.sin(this.previewAngle)
     const rot   = (x: number, y: number) => ({
-      x: CENTER_X + (x * sin + y * cos) * scale,
-      y: CENTER_Y + (-x * cos + y * sin) * scale,
+      x: R_CX + (x * sin + y * cos) * scale,
+      y: R_MID + (-x * cos + y * sin) * scale,
     })
 
     const pts = geo.outline.map(([x, y]) => rot(x, y))
     const clsColor = CLASS_COLORS[this.selectedClassId] ?? ACCENT
 
-    gfx.lineStyle(40, clsColor, 0.025)
-    gfx.strokeCircle(CENTER_X, CENTER_Y, 100)
-    gfx.lineStyle(20, clsColor, 0.05)
-    gfx.strokeCircle(CENTER_X, CENTER_Y, 80)
+    gfx.lineStyle(40, clsColor, 0.025); gfx.strokeCircle(R_CX, R_MID, 100)
+    gfx.lineStyle(20, clsColor, 0.05);  gfx.strokeCircle(R_CX, R_MID, 80)
 
-    gfx.lineStyle(12, geo.color, 0.04)
-    gfx.strokePoints(pts, true)
-    gfx.lineStyle(6,  geo.color, 0.15)
-    gfx.strokePoints(pts, true)
-    gfx.lineStyle(2.5,geo.color, 0.55)
-    gfx.strokePoints(pts, true)
-    gfx.lineStyle(1.5,geo.color, 1.0)
-    gfx.strokePoints(pts, true)
+    gfx.lineStyle(12, geo.color, 0.04); gfx.strokePoints(pts, true)
+    gfx.lineStyle(6,  geo.color, 0.15); gfx.strokePoints(pts, true)
+    gfx.lineStyle(2.5,geo.color, 0.55); gfx.strokePoints(pts, true)
+    gfx.lineStyle(1.5,geo.color, 1.0);  gfx.strokePoints(pts, true)
 
     for (const [x1, y1, x2, y2] of geo.details) {
       const p1 = rot(x1, y1); const p2 = rot(x2, y2)
@@ -525,27 +540,21 @@ export class SelectionScene extends Phaser.Scene {
     }
   }
 
-  private backToStep1(): void {
-    this.step = 1
-    this.s2.setVisible(false)
-    this.s1.setVisible(true)
-  }
-
-  // ─── Launch ─────────────────────────────────────────────────────────────────
-
+  // ─── Launch ────────────────────────────────────────────────────────────────
   private launch(): void {
     const state = this.mgr.build(this.selectedShipId, this.selectedClassId)
     if (!state) return
-    console.log('[SelectionScene] Loadout:', {
-      ship: this.selectedShipId, class: this.selectedClassId,
-      tags: state.aggregator.getAll(), stats: state.computedStats,
+    console.log('[Loadout]', {
+      pilot: this.username,
+      ship:  this.selectedShipId,
+      class: this.selectedClassId,
+      tags:  state.aggregator.getAll(),
     })
-    const overlay = this.add.graphics()
-    overlay.fillStyle(0x00ffff, 0)
-    overlay.fillRect(0, 0, W, H)
+    const ov = this.add.graphics()
+    ov.fillStyle(0x00ffff, 0).fillRect(0, 0, W, H)
     this.tweens.add({
-      targets: overlay, alpha: { from: 0, to: 0.15 }, duration: 200, yoyo: true,
-      onComplete: () => { overlay.destroy(); this.scene.start('PhysicsScene') },
+      targets: ov, alpha: { from: 0, to: 0.15 }, duration: 200, yoyo: true,
+      onComplete: () => { ov.destroy(); this.scene.start('PhysicsScene') },
     })
   }
 }
