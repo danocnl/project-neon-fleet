@@ -538,22 +538,30 @@ export class SelectionScene extends Phaser.Scene {
       y: R_MID + (x * sin + y * cos) * scale,
     })
 
-    const pts = geo.outline.map(([x, y]) => rot(x, y))
     const clsColor = CLASS_COLORS[this.selectedClassId] ?? ACCENT
+    // Apply geo.scale so light ships appear smaller than heavy in the preview
+    const baseScale = 2.2
+    const rs = scale * geo.scale
 
-    gfx.lineStyle(40, clsColor, 0.025); gfx.strokeCircle(R_CX, R_MID, 100)
-    gfx.lineStyle(20, clsColor, 0.05);  gfx.strokeCircle(R_CX, R_MID, 80)
+    const pts = geo.outline.map(([x, y]) => rot(x * geo.scale, y * geo.scale))
 
-    gfx.lineStyle(12, geo.color, 0.04); gfx.strokePoints(pts, true)
-    gfx.lineStyle(6,  geo.color, 0.15); gfx.strokePoints(pts, true)
-    gfx.lineStyle(2.5,geo.color, 0.55); gfx.strokePoints(pts, true)
-    gfx.lineStyle(1.5,geo.color, 1.0);  gfx.strokePoints(pts, true)
+    // Soft aura ring behind ship
+    gfx.lineStyle(40, clsColor, 0.025); gfx.strokeCircle(R_CX, R_MID, 90)
+    gfx.lineStyle(20, clsColor, 0.05);  gfx.strokeCircle(R_CX, R_MID, 70)
+
+    // 4-layer neon glow in class colour
+    gfx.lineStyle(12, clsColor, 0.04); gfx.strokePoints(pts, true)
+    gfx.lineStyle(6,  clsColor, 0.15); gfx.strokePoints(pts, true)
+    gfx.lineStyle(2.5,clsColor, 0.55); gfx.strokePoints(pts, true)
+    gfx.lineStyle(1.5,clsColor, 1.0);  gfx.strokePoints(pts, true)
 
     for (const [x1, y1, x2, y2] of geo.details) {
-      const p1 = rot(x1, y1); const p2 = rot(x2, y2)
-      gfx.lineStyle(1, geo.color, 0.45)
+      const p1 = rot(x1 * geo.scale, y1 * geo.scale)
+      const p2 = rot(x2 * geo.scale, y2 * geo.scale)
+      gfx.lineStyle(1, clsColor, 0.45)
       gfx.lineBetween(p1.x, p1.y, p2.x, p2.y)
     }
+    void rs; void baseScale
   }
 
   // ─── Launch ────────────────────────────────────────────────────────────────

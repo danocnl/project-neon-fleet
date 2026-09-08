@@ -64,7 +64,8 @@ export class PhysicsScene extends Phaser.Scene {
     wrapBounds(this.actor.body, this.cameras.main.width, this.cameras.main.height)
 
     this.actor.gfx.clear()
-    drawNeonShip(this.actor.gfx, this.actor.body, this.actor.geometry, this.runData.classId)
+    const shipColor = CLASS_COLORS[this.runData.classId] ?? 0x00ffff
+    drawNeonShip(this.actor.gfx, this.actor.body, this.actor.geometry, shipColor)
   }
 
   // ─── Build ─────────────────────────────────────────────────────────────────
@@ -140,37 +141,29 @@ function drawNeonShip(
   gfx: Phaser.GameObjects.Graphics,
   body: PhysicsBody,
   geo: ShipGeometry,
-  classId: string
+  color: number
 ): void {
   const cos = Math.cos(body.heading)
   const sin = Math.sin(body.heading)
+  const s   = geo.scale
 
   const rot = (x: number, y: number): Phaser.Types.Math.Vector2Like => ({
-    x: body.x + x * cos - y * sin,
-    y: body.y + x * sin + y * cos,
+    x: body.x + (x * cos - y * sin) * s,
+    y: body.y + (x * sin + y * cos) * s,
   })
 
   const pts = geo.outline.map(([x, y]) => rot(x, y))
 
-  // Faint class-coloured engine aura
-  const clsColor = CLASS_COLORS[classId] ?? 0xff00ff
-  gfx.lineStyle(16, clsColor, 0.04)
-  gfx.strokePoints(pts, true)
-
-  // 4-layer neon glow
-  gfx.lineStyle(10, geo.color, 0.04)
-  gfx.strokePoints(pts, true)
-  gfx.lineStyle(5,  geo.color, 0.15)
-  gfx.strokePoints(pts, true)
-  gfx.lineStyle(2.5,geo.color, 0.55)
-  gfx.strokePoints(pts, true)
-  gfx.lineStyle(1.5,geo.color, 1.0)
-  gfx.strokePoints(pts, true)
+  // 4-layer neon glow in class colour
+  gfx.lineStyle(10, color, 0.04); gfx.strokePoints(pts, true)
+  gfx.lineStyle(5,  color, 0.15); gfx.strokePoints(pts, true)
+  gfx.lineStyle(2.5,color, 0.55); gfx.strokePoints(pts, true)
+  gfx.lineStyle(1.5,color, 1.0);  gfx.strokePoints(pts, true)
 
   for (const [x1, y1, x2, y2] of geo.details) {
     const p1 = rot(x1, y1)
     const p2 = rot(x2, y2)
-    gfx.lineStyle(1, geo.color, 0.45)
+    gfx.lineStyle(1, color, 0.45)
     gfx.lineBetween(p1.x, p1.y, p2.x, p2.y)
   }
 }
