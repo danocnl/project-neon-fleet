@@ -17,6 +17,11 @@
 
 **Synergy ratings:** S = exceptional · A = good · B = workable · C = poor
 
+**Turning circles by weight class:** Velocity direction is rate-limited each frame so ships must arc into new headings rather than reversing instantly.
+- **Light** — 149°/s max turn rate. Tight responsive circles; near-instant direction change at low speed.
+- **Medium** — 97°/s. Moderate arc; noticeable sweep when changing course at speed.
+- **Heavy** — 52°/s. Wide sweeping arcs; committed trajectories. Cannot reverse quickly — position decisions matter.
+
 ---
 
 ## Light Class

@@ -93,8 +93,9 @@ export class LobbyScene extends Phaser.Scene {
     }).setOrigin(0.5)
 
     this.startBtnGfx = this.add.graphics()
-    this.startBtn = this.add.text(W / 2, 470, '▸  START MISSION', {
-      fontSize: '16px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
+    this.startBtn = this.add.text(W / 2, 496, '▸  START MISSION', {
+      fontSize: '18px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
+      padding: { x: 60, y: 20 },
     }).setOrigin(0.5).setVisible(false)
 
     // Solo fallback — always visible so host is never stuck
@@ -138,27 +139,33 @@ export class LobbyScene extends Phaser.Scene {
     })
   }
 
+  private _startBtnReady = false
+
   private showStartButton(pilot: string, shipId: string, classId: string): void {
     const bw = 500, bh = 52, bx = W / 2 - bw / 2, by = 470
-    this.startBtnGfx.clear()
-    this.startBtnGfx.lineStyle(2, 0x00ffff, 0.9)
-    this.startBtnGfx.strokeRect(bx, by, bw, bh)
-    this.startBtnGfx.fillStyle(0x00ffff, 0.10)
-    this.startBtnGfx.fillRect(bx, by, bw, bh)
-    this.startBtn.setPosition(W / 2, by + bh / 2).setFontSize('18px').setVisible(true)
 
-    const zone = this.add.zone(bx, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true })
-    zone.on('pointerover', () => {
+    // Redraw the border every call (guest may reconnect / re-send config)
+    this.startBtnGfx.clear()
+    this.startBtnGfx.lineStyle(2, 0x00ffff, 0.9); this.startBtnGfx.strokeRect(bx, by, bw, bh)
+    this.startBtnGfx.fillStyle(0x00ffff, 0.10);   this.startBtnGfx.fillRect(bx, by, bw, bh)
+    this.startBtn.setVisible(true)
+
+    // Only wire up interactivity once — prevents stacking duplicate handlers
+    if (this._startBtnReady) return
+    this._startBtnReady = true
+
+    this.startBtn.setInteractive({ useHandCursor: true })
+    this.startBtn.on('pointerover', () => {
       this.startBtnGfx.clear()
       this.startBtnGfx.lineStyle(2, 0x00ffff, 1);   this.startBtnGfx.strokeRect(bx, by, bw, bh)
       this.startBtnGfx.fillStyle(0x00ffff, 0.18);   this.startBtnGfx.fillRect(bx, by, bw, bh)
     })
-    zone.on('pointerout', () => {
+    this.startBtn.on('pointerout', () => {
       this.startBtnGfx.clear()
       this.startBtnGfx.lineStyle(2, 0x00ffff, 0.9); this.startBtnGfx.strokeRect(bx, by, bw, bh)
       this.startBtnGfx.fillStyle(0x00ffff, 0.10);   this.startBtnGfx.fillRect(bx, by, bw, bh)
     })
-    zone.on('pointerdown', () => {
+    this.startBtn.on('pointerdown', () => {
       network.sendStartGame()
       this.scene.start('PhysicsScene', {
         pilot, shipId, classId,

@@ -17,6 +17,8 @@
 
 **TURRET_ARRAY** (Type-10 special tag) converts ALL equipped weapons to 360° targeting regardless of their natural FIRING_ARC. A Railgun or Gauss Cannon on a Type-10 becomes a full-rotation precision weapon.
 
+**Range tiers:** Short (250–380u) · Medium (380–520u) · Long (520–700u) · Extreme (700u+). Each tier requires a different engagement distance — ships in ASSAULT mode orbit at 200u, well within short-range weapons' effective band. Precision weapons (Railgun, Gauss) reward longer orbits or KITE mode.
+
 **Size → slot required:** SMALL fits WEAPON_SLOT_SMALL+. MEDIUM fits WEAPON_SLOT_MEDIUM+. Etc.
 
 ---
@@ -34,7 +36,7 @@ Rapid-fire ballistic. Low per-shot damage compensated by extreme fire rate. The 
 | RATE_OF_FIRE | 8.0 shots/s |
 | AMMO_CAPACITY | 40 |
 | RELOAD_SPEED | 1.5s |
-| RANGE | 250u |
+| RANGE | 300u |
 | ACCURACY | 8° spread |
 | VELOCITY | 380 u/s |
 | ENERGY_COST | 3 /shot |
@@ -54,7 +56,7 @@ Standard workhorse kinetic. Reliable, well-rounded. Fills the medium slot on Kra
 | RATE_OF_FIRE | 6.0 shots/s |
 | AMMO_CAPACITY | 60 |
 | RELOAD_SPEED | 2.0s |
-| RANGE | 300u |
+| RANGE | 380u |
 | ACCURACY | 6° spread |
 | VELOCITY | 400 u/s |
 | ENERGY_COST | 6 /shot |
@@ -72,7 +74,7 @@ High-calibre rotary. Slower cycle but each round hits significantly harder. Mean
 | RATE_OF_FIRE | 4.0 shots/s |
 | AMMO_CAPACITY | 80 |
 | RELOAD_SPEED | 2.5s |
-| RANGE | 340u |
+| RANGE | 450u |
 | ACCURACY | 5° spread |
 | VELOCITY | 420 u/s |
 | ENERGY_COST | 10 /shot |
@@ -113,7 +115,7 @@ Rapid-pulse energy beam. Infinite ammo, zero spread. Consistent and efficient. N
 | DAMAGE | 10 per pulse |
 | RATE_OF_FIRE | 6.0 pulses/s |
 | AMMO_CAPACITY | ∞ |
-| RANGE | 300u |
+| RANGE | 380u |
 | ACCURACY | 0° (perfect) |
 | VELOCITY | instant |
 | ENERGY_COST | 8 /pulse |
@@ -133,7 +135,7 @@ Continuous cutting beam. DAMAGE is DPS. No ammo. Significant passive heat — HE
 | DAMAGE | 55 DPS |
 | RATE_OF_FIRE | continuous |
 | AMMO_CAPACITY | ∞ |
-| RANGE | 380u |
+| RANGE | 520u |
 | ACCURACY | 0° (perfect) |
 | VELOCITY | instant |
 | PASSIVE_DRAIN | 14 energy/s |
@@ -153,7 +155,7 @@ High-power continuous beam array. Exceptional DPS but extreme passive heat. Ship
 | DAMAGE | 130 DPS |
 | RATE_OF_FIRE | continuous |
 | AMMO_CAPACITY | ∞ |
-| RANGE | 450u |
+| RANGE | 700u |
 | ACCURACY | 0° (perfect) |
 | VELOCITY | instant |
 | PASSIVE_DRAIN | 28 energy/s |
@@ -176,7 +178,7 @@ Electromagnetic accelerator. Extreme single-shot damage. Requires 1.5s charge be
 | RATE_OF_FIRE | 0.5 shots/s |
 | CHARGE_TIME | 1.5s |
 | AMMO_CAPACITY | 1 (auto-recharge) |
-| RANGE | 650u |
+| RANGE | 1000u |
 | ACCURACY | 0° (perfect) |
 | VELOCITY | 900 u/s |
 | ENERGY_COST | 28 /shot |
@@ -195,7 +197,7 @@ Capital-grade electromagnetic slug thrower. Devastating per-shot damage at extre
 | RATE_OF_FIRE | 0.25 shots/s |
 | CHARGE_TIME | 2.5s |
 | AMMO_CAPACITY | 1 (auto-recharge) |
-| RANGE | 900u |
+| RANGE | 1300u |
 | ACCURACY | 0° (perfect) |
 | VELOCITY | 1400 u/s |
 | ENERGY_COST | 48 /shot |
@@ -220,7 +222,7 @@ Compact self-guided explosive. Limited magazine. AoE detonation — effective ag
 | RATE_OF_FIRE | 1.5 shots/s |
 | AMMO_CAPACITY | 6 |
 | RELOAD_SPEED | 2.0s |
-| RANGE | 350u |
+| RANGE | 480u |
 | ACCURACY | 2° |
 | VELOCITY | 240 u/s |
 | BLAST_RADIUS | 40u |
@@ -239,7 +241,7 @@ Heavy self-guided warhead. Massive AoE detonation radius. Very slow fire rate, t
 | RATE_OF_FIRE | 0.35 shots/s |
 | AMMO_CAPACITY | 3 |
 | RELOAD_SPEED | 4.0s |
-| RANGE | 500u |
+| RANGE | 700u |
 | ACCURACY | 1° |
 | VELOCITY | 180 u/s |
 | BLAST_RADIUS | 100u |
@@ -264,7 +266,7 @@ Benefits from: `ENERGY`, `EMP`, `RATE_OF_FIRE` tags.
 | RATE_OF_FIRE | 1.0 shots/s |
 | AMMO_CAPACITY | 10 |
 | RELOAD_SPEED | 2.5s |
-| RANGE | 350u |
+| RANGE | 420u |
 | VELOCITY | 300 u/s |
 | ENERGY_COST | 22 /shot |
 | HEAT_GEN | 8 /shot |
@@ -284,7 +286,7 @@ Benefits from: `ENERGY`, `CHAIN`, `TETHER`, `DAMAGE_SHARE` tags.
 | RATE_OF_FIRE | 1.2 shots/s |
 | AMMO_CAPACITY | 8 |
 | RELOAD_SPEED | 2.0s |
-| RANGE | 320u |
+| RANGE | 380u |
 | VELOCITY | 350 u/s |
 | ENERGY_COST | 16 /shot |
 | HEAT_GEN | 10 /shot |

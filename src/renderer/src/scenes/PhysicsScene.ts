@@ -115,6 +115,7 @@ export class PhysicsScene extends Phaser.Scene {
   private simulator!:      CombatSimulator
   private enemies!:        EnemyManager
   private projectiles!:    ProjectileSystem
+  private projectiles2?:   ProjectileSystem   // actor2's visual projectiles (host only)
   private playerState!:    PlayerState
   private draftedCards:    UpgradeCard[] = []
   private readonly mgr = new LoadoutManager()
@@ -135,6 +136,14 @@ export class PhysicsScene extends Phaser.Scene {
   private spectatorText?: Phaser.GameObjects.Text
   private godMode         = false
   private godModeText!:   Phaser.GameObjects.Text
+
+  // ─── Class active ability ─────────────────────────────────────────────────
+  private activeCooldownMs  = 0      // counts down to 0 (ready)
+  private activeRemainingMs = 0      // duration of current active effect
+  private activeCooldownMax = 0      // set from class
+  private activeGfx!:       Phaser.GameObjects.Graphics
+  private activeCooldownBar!: Phaser.GameObjects.Graphics
+  private activeLabel!:     Phaser.GameObjects.Text
   private flightMode:     FlightMode = 'PATROL'
   private modeChips:      { mode: FlightMode; gfx: Phaser.GameObjects.Graphics; text: Phaser.GameObjects.Text }[] = []
   private upgradeBtnGfx!: Phaser.GameObjects.Graphics
@@ -165,12 +174,24 @@ export class PhysicsScene extends Phaser.Scene {
   private combatState2?:  CombatState
   private actor2Waypoint:    { x: number; y: number } = { x: 0, y: 0 }
   private guestFlightMode:  FlightMode = 'PATROL'
-  private supportOrbitAngle  = 0   // P1's orbit angle around partner
-  private actor2OrbitAngle   = 0   // P2's orbit angle around P1
-  private lockedTargetId:     string | null = null   // HUNTER lock for P1
-  private actor2LockedTargetId: string | null = null // HUNTER lock for P2
+  // SUPPORT orbit angles
+  private supportOrbitAngle  = 0
+  private actor2OrbitAngle   = 0
+  // ASSAULT lock-on
+  private lockedTargetId:       string | null = null
+  private actor2LockedTargetId: string | null = null
+  private assaultOrbitAngle  = 0
+  private actor2AssaultAngle = 0
+  // PATROL orbit angles
+  private patrolOrbitAngle   = 0
+  private actor2PatrolAngle  = 0
+  // KITE angle
+  private kiteAngle          = 0
   private netSendTimer  = 0
-  private remoteEnemies: RemoteEnemyState[] = []
+  private remoteEnemies:          RemoteEnemyState[] = []
+  private remoteP1Projectiles:    import('../systems/NetworkManager').RemoteProjectile[] = []
+  private remoteP2Projectiles:    import('../systems/NetworkManager').RemoteProjectile[] = []
+  private remoteEnemyProjectiles: import('../systems/NetworkManager').RemoteProjectile[] = []
   private remoteP1?:     RemoteShipState
   private remoteGfx?:    Phaser.GameObjects.Graphics
   private p2HullBar?:    Phaser.GameObjects.Graphics
@@ -222,16 +243,36 @@ export class PhysicsScene extends Phaser.Scene {
   update(_t: number, delta: number): void {
     const dt = Math.min(delta / 1000, 0.05)
 
-    // Waypoint navigation
-    if (this.flightMode === 'HUNTER') {
-      // Lock-on: update waypoint every frame to track the current target directly
-      const hunterTarget = this.resolveHunterTarget(
+    // Waypoint navigation — ASSAULT is per-frame lock-on, others use arrival-based
+    if (this.flightMode === 'ASSAULT') {
+      const assaultTarget = this.resolveHunterTarget(
         this.actor.body.x, this.actor.body.y,
         this.enemies.getEntities(),
         this.enemies.currentTarget,
         (id) => { this.lockedTargetId = id }
       )
-      if (hunterTarget) this.actor.waypoint = { x: hunterTarget.x, y: hunterTarget.y }
+      if (assaultTarget) {
+        // Lead-point orbit: place waypoint 60° clockwise ahead of the ship's current
+        // angle around the target.  The ship always chases a point 60° ahead, so the
+        // waypoint is never faster than the ship — produces smooth circular orbiting.
+        const dx = this.actor.body.x - assaultTarget.x
+        const dy = this.actor.body.y - assaultTarget.y
+        const dist = Math.hypot(dx, dy) || 1
+        const nx = dx / dist, ny = dy / dist
+        const lead = Math.PI / 3   // 60°
+        const cosL = Math.cos(lead), sinL = Math.sin(lead)
+        const lx = nx * cosL + ny * sinL   // clockwise rotation
+        const ly = -nx * sinL + ny * cosL
+        this.actor.waypoint = {
+          x: ((assaultTarget.x + lx * 200) % WORLD_W + WORLD_W) % WORLD_W,
+          y: ((assaultTarget.y + ly * 200) % WORLD_H + WORLD_H) % WORLD_H,
+        }
+      } else {
+        // No target — let normal arrival-based waypoint pick a new destination
+        const dx = this.actor.waypoint.x - this.actor.body.x
+        const dy = this.actor.waypoint.y - this.actor.body.y
+        if (Math.hypot(dx, dy) < this.actor.arrivalR) this.actor.waypoint = this.nextWaypoint()
+      }
     } else {
       const dx = this.actor.waypoint.x - this.actor.body.x
       const dy = this.actor.waypoint.y - this.actor.body.y
@@ -242,10 +283,44 @@ export class PhysicsScene extends Phaser.Scene {
 
     // Use shortest wrapped path so the ship crosses edges rather than going "the long way round"
     const wp = this.wrappedWaypoint()
-    const { fx, fy } = chase(this.actor.body, wp.x, wp.y)
-    const avoid = this.asteroidAvoidanceForce()
-    stepPhysics(this.actor.body, fx + avoid.x, fy + avoid.y, dt)
+    const rawF   = chase(this.actor.body, wp.x, wp.y)
+    const avoid  = this.asteroidAvoidanceForce()
+
+    // Throttle thrust when a weapon target is close — ship slows to keep target in arc
+    const tgt     = this.enemies.currentTarget
+    const tgtDist = tgt ? Math.hypot(tgt.x - this.actor.body.x, tgt.y - this.actor.body.y) : Infinity
+    const throttle = (tgt !== null && tgtDist < 280 && this.flightMode !== 'KITE' && this.flightMode !== 'ASSAULT') ? 0.2 : 1.0
+
+    // Lateral force scaling — ships must arc into turns, not pivot instantly
+    const { fx, fy } = this.steerForce(
+      (rawF.fx + avoid.x) * throttle,
+      (rawF.fy + avoid.y) * throttle,
+      this.actor.body,
+      this.getLateralScale(this.runData.shipId)
+    )
+    stepPhysics(this.actor.body, fx, fy, dt)
     wrapBounds(this.actor.body, WORLD_W, WORLD_H)
+    // Heading smoothly rotates toward destination each frame.
+    // ASSAULT: face locked target; all other modes: face the current waypoint.
+    // This decouples the visual rotation from physics drift so the ship always
+    // looks like it's going where it intends, not sliding sideways.
+    {
+      let targetHeading = this.actor.body.heading  // default: hold
+      if (this.flightMode === 'ASSAULT' && this.lockedTargetId) {
+        const lt = this.enemies.getEntities().find(e => e.instanceId === this.lockedTargetId && e.alive)
+        if (lt) targetHeading = Math.atan2(lt.x - this.actor.body.x, -(lt.y - this.actor.body.y))
+      } else {
+        const wp = this.wrappedWaypoint()
+        const wdx = wp.x - this.actor.body.x, wdy = wp.y - this.actor.body.y
+        if (Math.hypot(wdx, wdy) > 15) targetHeading = Math.atan2(wdx, -wdy)
+      }
+      // Smooth rotation — rate scales with ship weight class
+      const rotRate = this.getLateralScale(this.runData.shipId) * 16  // Light≈6.4, Heavy≈2.4 rad/s
+      let hDiff = targetHeading - this.actor.body.heading
+      if (hDiff >  Math.PI) hDiff -= 2 * Math.PI
+      if (hDiff < -Math.PI) hDiff += 2 * Math.PI
+      this.actor.body.heading += Math.sign(hDiff) * Math.min(Math.abs(hDiff), rotRate * dt)
+    }
 
     // Camera follows ship
     // Spectator mode: follow the live partner's ship
@@ -278,8 +353,10 @@ export class PhysicsScene extends Phaser.Scene {
               ?? DEFAULT_LOADOUTS[this.runData.shipId]
               ?? { weapons: [], modules: [] }
     const playerRadius   = this.getPlayerCollisionRadius()
-    const targetPriority = this.flightMode === 'HUNTER' ? 'drones'
-                         : 'any'
+    // ASSAULT targets whatever is nearest (any type — drones AND asteroids)
+    // SUPPORT fires at whatever enters the firing arc while orbiting the partner
+    const targetPriority = 'any'
+    const supportAnchor  = undefined   // no partner anchor — fire on whatever is in arc
 
     // Guest: skip local enemy simulation — render from host state instead
     if (this.netRole !== 'guest') {
@@ -290,8 +367,7 @@ export class PhysicsScene extends Phaser.Scene {
         radius: 16,
         body: this.actor2.body,
         weaponIds: DEFAULT_LOADOUTS[(this as any)._guestShipId ?? 'sidewinder']?.weapons ?? [],
-        targetPriority: this.guestFlightMode === 'HUNTER' ? 'drones' as const
-                      : 'any' as const,
+        targetPriority: 'any' as const,
         onEnemyAttack: (damage: number) => this.combatState2!.takeDamage(damage),
       } : undefined
 
@@ -315,7 +391,9 @@ export class PhysicsScene extends Phaser.Scene {
           }
           this.updateKillCounter()
         },
-        p2
+        this.getBaseClass() === 'conductor' && this.activeRemainingMs > 0 ? 1.5 : 1,
+        p2,
+        supportAnchor
       )
     } else {
       // Guest: draw remote entities only
@@ -329,7 +407,49 @@ export class PhysicsScene extends Phaser.Scene {
         const ship2 = DataLoader.getShip((this as any)._guestShipId ?? 'sidewinder')
         if (ship2) this.combatState2.tick(delta, ship2.baseStats.SHIELD_REGEN / 1000)
         this.actor2.gfx.clear()
-        drawNeonShip(this.actor2.gfx, this.actor2.body, this.actor2.geometry, COPILOT_COLOR, 1)
+        if (!this.p2Dead) {
+          // Tick guest active on host side
+          if (this._p2ActiveMs > 0) {
+            this._p2ActiveMs -= delta
+            if (this._p2ActiveBase === 'architect') {
+              this.combatState2.currentHull   = this.combatState2.maxHull
+              this.combatState2.currentShield = this.combatState2.maxShield
+            }
+            if (this._p2ActiveBase === 'conductor') {
+              this.combatState2.currentHeat = Math.max(0, this.combatState2.currentHeat - this.combatState2.maxHeat * 0.08)
+            }
+            if (this._p2ActiveBase === 'weaver') {
+              this.combatState2.currentShield = Math.min(this.combatState2.maxShield,
+                this.combatState2.currentShield + this.combatState2.maxShield * 0.15)
+            }
+          }
+          const p2Alpha = this.combatState2.isPhased ? 0.3 : 1
+          drawNeonShip(this.actor2.gfx, this.actor2.body, this.actor2.geometry, COPILOT_COLOR, p2Alpha)
+        }
+        // Update actor2's visual projectiles — target nearest enemy to actor2
+        if (this.projectiles2) {
+          const a2body = this.actor2.body
+          const a2tgt = this.enemies.getEntities()
+            .filter(e => e.alive)
+            .reduce<import('../combat/EnemyEntity').EnemyEntity | null>((best, e) => {
+              const d = Math.hypot(e.x - a2body.x, e.y - a2body.y)
+              return !best || d < Math.hypot(best.x - a2body.x, best.y - a2body.y) ? e : best
+            }, null)
+          // Only show visual projectiles when within engagement range — prevents
+          // shots streaking across the full viewport when target is far away
+          const a2dist = a2tgt ? Math.hypot(a2tgt.x - a2body.x, a2tgt.y - a2body.y) : Infinity
+          // Arc check — only fire visual projectiles when target is in the weapon's forward cone
+          const a2toAngle  = a2tgt ? Math.atan2(a2tgt.x - a2body.x, -(a2tgt.y - a2body.y)) : 0
+          let   a2arcDiff  = Math.abs(a2toAngle - a2body.heading)
+          if (a2arcDiff > Math.PI) a2arcDiff = Math.PI * 2 - a2arcDiff
+          const a2HalfArc  = 15 * Math.PI / 180   // 30° total — matches pulse_laser
+          const a2InRange  = a2dist <= 450 && a2arcDiff <= a2HalfArc
+          this.projectiles2.update(
+            dt, a2body.x, a2body.y, a2body.heading,
+            a2tgt?.x ?? 0, a2tgt?.y ?? 0, a2InRange
+          )
+          this.projectiles2.draw()
+        }
       }
       this.netSendTimer += delta
       if (this.netSendTimer >= 50) {
@@ -349,13 +469,14 @@ export class PhysicsScene extends Phaser.Scene {
       }
     }
 
-    // Projectiles
-    const tgt = this.enemies.currentTarget
+    // Projectiles — only fire visuals when target is within engagement range
+    const projTgt  = this.enemies.currentTarget
+    const projDist = projTgt ? Math.hypot(projTgt.x - this.actor.body.x, projTgt.y - this.actor.body.y) : Infinity
     this.projectiles.update(
       dt,
       this.actor.body.x, this.actor.body.y, this.actor.body.heading,
-      tgt?.x ?? 0, tgt?.y ?? 0,
-      tgt !== null
+      projTgt?.x ?? 0, projTgt?.y ?? 0,
+      projTgt !== null && projDist <= 450
     )
     this.projectiles.draw()
 
@@ -402,37 +523,36 @@ export class PhysicsScene extends Phaser.Scene {
     this.updateGrid()
     this.updateMinimap(clsColor)
     this.updateHUD()
+    this.tickClassActive(delta)
     this.pulseUpgradeButton(dt)
   }
 
   private onSectorAdvance(sector: number): void {
-    // Spawn a ring of enemies around the player immediately
     this.enemies.spawnSectorTransitionWave(this.sector, this.actor.body.x, this.actor.body.y)
+    this.showSectorAdvanceEffect(sector)
+    // Notify guest so they see the same event
+    if (this.netRole === 'host') network.send({ type: 'SECTOR_ADVANCE', sector })
+  }
 
-    // Large announcement text
+  /** Visual-only sector advance effects — safe to call on both host and guest. */
+  private showSectorAdvanceEffect(sector: number): void {
     const txt = this.add.text(VIEW_W / 2, VIEW_H / 2 - 40, `SECTOR  ${sector}`, {
       fontSize: '52px', color: '#ffffff', fontFamily: 'monospace', fontStyle: 'bold',
       stroke: '#ffffff', strokeThickness: 2,
       shadow: { offsetX: 0, offsetY: 0, color: '#00ffff', blur: 24, fill: true },
     }).setOrigin(0.5).setScrollFactor(0).setDepth(200).setAlpha(0)
 
-    this.add.text(VIEW_W / 2, VIEW_H / 2 + 22, 'SECTOR ADVANCE', {
+    const sub = this.add.text(VIEW_W / 2, VIEW_H / 2 + 22, 'SECTOR ADVANCE', {
       fontSize: '12px', color: '#335544', fontFamily: 'monospace', letterSpacing: 6,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(200)
-      .setAlpha(0).setName('sector_sub')
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(200).setAlpha(0)
 
-    // Fade in → hold → fade out
     this.tweens.add({
-      targets: [txt, this.children.getByName('sector_sub')].filter(Boolean),
+      targets: [txt, sub],
       alpha: { from: 0, to: 1 },
       duration: 400, yoyo: true, hold: 900,
-      onComplete: () => {
-        txt.destroy()
-        this.children.getByName('sector_sub')?.destroy()
-      },
+      onComplete: () => { txt.destroy(); sub.destroy() },
     })
 
-    // Brief screen flash in the sector colour
     const flash = this.add.graphics().setScrollFactor(0).setDepth(199)
     const gridCol = this.sector.getGridColor()
     flash.fillStyle(gridCol, 0.35).fillRect(0, 0, VIEW_W, VIEW_H)
@@ -576,7 +696,10 @@ export class PhysicsScene extends Phaser.Scene {
 
   private triggerBenchmarkWarp(): void {
     this.simulator.stop()
-    if (this.netRole !== 'solo') network.disconnect()
+    // For co-op: disconnect after a brief delay so GAME_OVER reaches the guest first
+    if (this.netRole !== 'solo') {
+      this.time.delayedCall(300, () => network.disconnect())
+    }
 
     // White flash then fade to black → BenchmarkScene
     this.cameras.main.flash(250, 255, 255, 255)
@@ -669,62 +792,78 @@ export class PhysicsScene extends Phaser.Scene {
   private nextWaypoint(): { x: number; y: number } {
     const bx = this.actor.body.x, by = this.actor.body.y
     const entities = this.enemies.getEntities()
+    const KITE_RANGE = 280
 
     switch (this.flightMode) {
-      case 'EVASIVE': {
-        // Steer directly away from the nearest threat
-        const threats = entities.filter(e => e.def.behavior !== 'DRIFT' && e.alive)
-        if (threats.length > 0) {
-          const nearest = threats.reduce((a, b) =>
-            Math.hypot(a.x - bx, a.y - by) < Math.hypot(b.x - bx, b.y - by) ? a : b)
-          const awayAngle = Math.atan2(by - nearest.y, bx - nearest.x)
-          const dist = Phaser.Math.Between(500, 900)
-          return {
-            x: ((bx + Math.cos(awayAngle) * dist) % WORLD_W + WORLD_W) % WORLD_W,
-            y: ((by + Math.sin(awayAngle) * dist) % WORLD_H + WORLD_H) % WORLD_H,
-          }
+      case 'PATROL': {
+        // Orbit the centroid of ALL live enemies — wider radius ensures
+        // the sweep activates enemies across the whole sector
+        const alive = entities.filter(e => e.alive)
+        if (alive.length === 0) return this.randomWaypointFrom(bx, by)
+        const cx = alive.reduce((s, e) => s + e.x, 0) / alive.length
+        const cy = alive.reduce((s, e) => s + e.y, 0) / alive.length
+        this.patrolOrbitAngle += Math.PI / 4
+        return {
+          x: ((cx + Math.cos(this.patrolOrbitAngle) * 480) % WORLD_W + WORLD_W) % WORLD_W,
+          y: ((cy + Math.sin(this.patrolOrbitAngle) * 480) % WORLD_H + WORLD_H) % WORLD_H,
         }
-        return this.randomWaypointFrom(bx, by)
       }
 
-      case 'HUNTER': {
-        // Primary: strafe around nearest drone/turret. Fallback: orbit nearest asteroid.
-        const drones = entities.filter(e => e.def.behavior !== 'DRIFT' && e.alive)
-        const huntTarget = drones.length > 0
-          ? drones.reduce((a, b) => Math.hypot(a.x - bx, a.y - by) < Math.hypot(b.x - bx, b.y - by) ? a : b)
-          : entities.filter(e => e.def.behavior === 'DRIFT' && e.alive)
-              .reduce<typeof entities[0] | null>((a, b) =>
-                !a || Math.hypot(b.x - bx, b.y - by) < Math.hypot(a.x - bx, a.y - by) ? b : a, null)
-        if (huntTarget) {
-          const angleToTarget = Math.atan2(huntTarget.y - by, huntTarget.x - bx)
-          const side = Math.random() > 0.5 ? 1 : -1
-          const orbitAngle = angleToTarget + side * (Math.PI * 0.5 + (Math.random() - 0.5) * 0.6)
-          const orbitDist = 160 + huntTarget.def.stats.COLLISION_RADIUS
-          return {
-            x: ((huntTarget.x + Math.cos(orbitAngle) * orbitDist) % WORLD_W + WORLD_W) % WORLD_W,
-            y: ((huntTarget.y + Math.sin(orbitAngle) * orbitDist) % WORLD_H + WORLD_H) % WORLD_H,
-          }
+      case 'KITE': {
+        // Dance perpendicular to nearest threat at ~85% weapon range
+        const threat = entities.filter(e => e.alive)
+          .reduce<typeof entities[0] | null>((best, e) => {
+            const d = Math.hypot(e.x - bx, e.y - by)
+            return (!best || d < Math.hypot(best.x - bx, best.y - by)) ? e : best
+          }, null)
+        if (!threat) return this.randomWaypointFrom(bx, by)
+        const dist = Math.hypot(threat.x - bx, threat.y - by)
+        const awayAngle = Math.atan2(by - threat.y, bx - threat.x)
+        if (dist < KITE_RANGE * 0.6) {
+          // Too close — retreat directly away
+          this.kiteAngle = awayAngle
+        } else {
+          // Strafe: advance angle with random lateral jitter
+          this.kiteAngle = awayAngle + (Math.random() - 0.5) * (Math.PI / 3)
         }
-        return this.randomWaypointFrom(bx, by)
+        const targetDist = KITE_RANGE * 0.85
+        return {
+          x: ((threat.x + Math.cos(this.kiteAngle) * targetDist) % WORLD_W + WORLD_W) % WORLD_W,
+          y: ((threat.y + Math.sin(this.kiteAngle) * targetDist) % WORLD_H + WORLD_H) % WORLD_H,
+        }
       }
+
+      case 'ASSAULT':
+        // Per-frame lock-on handled in update() — this branch is never reached
+        return this.randomWaypointFrom(bx, by)
 
       case 'SUPPORT': {
-        // Smooth circular orbit around the partner — advance angle each waypoint
+        // Circular orbit around partner; solo fallback → PATROL centroid
         const partner = this.netRole === 'host'  ? this.actor2?.body
                       : this.netRole === 'guest' ? this.remoteP1
                       : null
         if (partner) {
-          this.supportOrbitAngle += Math.PI / 5   // 36° per step → ~10 steps per orbit
-          const orbitR = 140
+          this.supportOrbitAngle += Math.PI / 5
           return {
-            x: ((partner.x + Math.cos(this.supportOrbitAngle) * orbitR) % WORLD_W + WORLD_W) % WORLD_W,
-            y: ((partner.y + Math.sin(this.supportOrbitAngle) * orbitR) % WORLD_H + WORLD_H) % WORLD_H,
+            x: ((partner.x + Math.cos(this.supportOrbitAngle) * 140) % WORLD_W + WORLD_W) % WORLD_W,
+            y: ((partner.y + Math.sin(this.supportOrbitAngle) * 140) % WORLD_H + WORLD_H) % WORLD_H,
           }
         }
-        return this.randomWaypointFrom(bx, by)
+        // Solo: behave like PATROL
+        const alive2 = entities.filter(e => e.alive)
+          .sort((a, b) => Math.hypot(a.x - bx, a.y - by) - Math.hypot(b.x - bx, b.y - by))
+          .slice(0, 5)
+        if (alive2.length === 0) return this.randomWaypointFrom(bx, by)
+        const cx2 = alive2.reduce((s, e) => s + e.x, 0) / alive2.length
+        const cy2 = alive2.reduce((s, e) => s + e.y, 0) / alive2.length
+        this.supportOrbitAngle += Math.PI / 4
+        return {
+          x: ((cx2 + Math.cos(this.supportOrbitAngle) * 350) % WORLD_W + WORLD_W) % WORLD_W,
+          y: ((cy2 + Math.sin(this.supportOrbitAngle) * 350) % WORLD_H + WORLD_H) % WORLD_H,
+        }
       }
 
-      default: // PATROL
+      default: // PATROL fallback
         return this.randomWaypointFrom(bx, by)
     }
   }
@@ -788,7 +927,7 @@ export class PhysicsScene extends Phaser.Scene {
 
   private enterSpectatorMode(): void {
     this.spectating = true
-    this.actor.gfx.setAlpha(0.25)   // ghost the dead ship
+    this.actor.gfx.setVisible(false)   // hide dead ship entirely
     const partnerName = this.netRole === 'host'
       ? ((this as any)._guestPilot ?? 'CO-PILOT')
       : this.runData.pilot
@@ -801,14 +940,33 @@ export class PhysicsScene extends Phaser.Scene {
   private setupHostNet(): void {
     network.on('FLIGHT_MODE', (msg) => {
       this.guestFlightMode = msg.mode as FlightMode
-      // Immediately repick actor2's waypoint so the mode change takes effect at once
-      if (this.actor2) {
-        this.actor2Waypoint = this.nextWaypointFor(
-          this.actor2.body.x, this.actor2.body.y, this.guestFlightMode
-        )
+      if (this.guestFlightMode !== 'ASSAULT') {
+        this.actor2LockedTargetId = null
+        this.actor2AssaultAngle   = 0
+        // Immediately repick waypoint for non-assault modes
+        if (this.actor2) {
+          this.actor2Waypoint = this.nextWaypointFor(
+            this.actor2.body.x, this.actor2.body.y, this.guestFlightMode
+          )
+        }
       }
     })
     // Guest reports their real position — snap actor2 to it so the host sees the actual ship
+    network.on('PLAYER_ACTIVE', (msg) => {
+      if (!this.combatState2) return
+      const base     = msg.base as string
+      const duration = msg.duration as number
+      if (base === 'architect') {
+        // Bulwark: restore P2 to full immediately and for duration via broadcast
+        this._p2ActiveBase = 'architect'; this._p2ActiveMs = duration
+      } else if (base === 'conductor') {
+        this._p2ActiveBase = 'conductor'; this._p2ActiveMs = duration
+      } else if (base === 'weaver') {
+        this.combatState2.activeEffects.push({ type: 'PHASE', remainingMs: duration, value: 1 })
+        this._p2ActiveBase = 'weaver'; this._p2ActiveMs = duration
+      }
+    })
+
     network.on('GUEST_POSITION', (msg) => {
       if (!this.actor2) return
       this.actor2.body.x       = msg.x as number
@@ -826,21 +984,38 @@ export class PhysicsScene extends Phaser.Scene {
     const guestClassId = (this as any)._guestClassId ?? 'chrono_architect'
     this.buildActor2(guestShipId)
     this.buildCombatState2(guestShipId, guestClassId)
+    this.remoteActiveGfx = this.add.graphics().setDepth(196)
+    // Visual projectiles for actor2
+    const loadout2 = DEFAULT_LOADOUTS[guestShipId] ?? { weapons: [], modules: [] }
+    this.projectiles2 = new ProjectileSystem()
+    this.projectiles2.init(this, loadout2.weapons)
   }
 
-  private _hostShipId?:  string
-  private _hostClassId?: string
+  private _hostShipId?:   string
+  private _hostClassId?:  string
+  private _p1Dead         = false
+  private _p2ActiveBase?: string    // host: tracks guest active for simulation
+  private _p2ActiveMs     = 0
+  private _remoteActiveBase?: string  // guest: received host active state
+  private _remoteActiveMs   = 0
+  private remoteActiveGfx?: Phaser.GameObjects.Graphics  // draws partner's glow
 
   private setupGuestNet(): void {
-    this.remoteGfx = this.add.graphics().setDepth(5)
+    this.remoteGfx        = this.add.graphics().setDepth(5)
+    this.remoteActiveGfx  = this.add.graphics().setDepth(196)
     network.on('GAME_STATE', (msg) => {
       const snap = msg as unknown as GameStateSnapshot
-      this.remoteP1      = snap.p1
-      this.remoteEnemies = snap.enemies
+      this.remoteP1               = snap.p1
+      this.remoteEnemies          = snap.enemies
+      this._remoteActiveBase      = snap.p1ActiveBase
+      this._remoteActiveMs        = snap.p1ActiveMs ?? 0
+      this.remoteP1Projectiles    = snap.p1Projectiles    ?? []
+      this.remoteP2Projectiles    = snap.p2Projectiles    ?? []
+      this.remoteEnemyProjectiles = snap.enemyProjectiles ?? []
       if (snap.hostShipId  && !this._hostShipId)  this._hostShipId  = snap.hostShipId
       if (snap.hostClassId && !this._hostClassId) this._hostClassId = snap.hostClassId
-      // Authoritative P2 state from host
-      if (this.combatState && snap.p2) {
+      // Authoritative P2 state from host — skip during active (active protects locally)
+      if (this.combatState && snap.p2 && this.activeRemainingMs <= 0) {
         this.combatState.currentHull   = snap.p2.hullRatio   * this.combatState.maxHull
         this.combatState.currentShield = snap.p2.shieldRatio * (this.combatState.maxShield || 1)
       }
@@ -862,7 +1037,15 @@ export class PhysicsScene extends Phaser.Scene {
       }
     })
     network.on('P1_DEAD', () => {
+      this._p1Dead = true
       if (this.p2NameText) this.p2NameText.setText('HOST IN SPECTATOR')
+    })
+    network.on('SECTOR_ADVANCE', (msg) => {
+      // Update local sector number and show the same visual effect as host
+      const s = msg.sector as number
+      this.sector['_sector'] = s   // sync sector state
+      this.showSectorAdvanceEffect(s)
+      this.sectorText?.setText(`SECTOR ${s}`)
     })
     network.on('GAME_OVER', () => {
       if (!this.isDead) {
@@ -911,14 +1094,27 @@ export class PhysicsScene extends Phaser.Scene {
     if (!this.actor2) return
     const body = this.actor2.body
 
-    if (this.guestFlightMode === 'HUNTER') {
-      const hunterTarget = this.resolveHunterTarget(
+    if (this.guestFlightMode === 'ASSAULT') {
+      const assaultTarget = this.resolveHunterTarget(
         body.x, body.y,
         this.enemies.getEntities(),
         null,
         (id) => { this.actor2LockedTargetId = id }
       )
-      if (hunterTarget) this.actor2Waypoint = { x: hunterTarget.x, y: hunterTarget.y }
+      if (assaultTarget) {
+        const dx2 = body.x - assaultTarget.x
+        const dy2 = body.y - assaultTarget.y
+        const dist2 = Math.hypot(dx2, dy2) || 1
+        const nx2 = dx2 / dist2, ny2 = dy2 / dist2
+        const lead = Math.PI / 3
+        const cosL = Math.cos(lead), sinL = Math.sin(lead)
+        const lx2 = nx2 * cosL + ny2 * sinL
+        const ly2 = -nx2 * sinL + ny2 * cosL
+        this.actor2Waypoint = {
+          x: ((assaultTarget.x + lx2 * 200) % WORLD_W + WORLD_W) % WORLD_W,
+          y: ((assaultTarget.y + ly2 * 200) % WORLD_H + WORLD_H) % WORLD_H,
+        }
+      }
     } else {
       const dx = this.actor2Waypoint.x - body.x
       const dy = this.actor2Waypoint.y - body.y
@@ -934,52 +1130,82 @@ export class PhysicsScene extends Phaser.Scene {
     if (wdy >  WORLD_H / 2) wdy -= WORLD_H
     if (wdy < -WORLD_H / 2) wdy += WORLD_H
     const wp2 = { x: body.x + wdx, y: body.y + wdy }
-    const { fx, fy } = chase(body, wp2.x, wp2.y)
-    stepPhysics(body, fx, fy, dt)
+    const rawF2 = chase(body, wp2.x, wp2.y)
+    // Throttle when P2 has a close weapon target
+    const a2WeaponTgt = this.enemies.getEntities()
+      .filter(e => e.alive)
+      .reduce<import('../combat/EnemyEntity').EnemyEntity | null>((best, e) => {
+        const d = Math.hypot(e.x - body.x, e.y - body.y)
+        return !best || d < Math.hypot(best.x - body.x, best.y - body.y) ? e : best
+      }, null)
+    const a2TgtDist  = a2WeaponTgt ? Math.hypot(a2WeaponTgt.x - body.x, a2WeaponTgt.y - body.y) : Infinity
+    const a2Throttle = (a2WeaponTgt && a2TgtDist < 280 && this.guestFlightMode !== 'KITE' && this.guestFlightMode !== 'ASSAULT') ? 0.2 : 1.0
+    const { fx: fx2, fy: fy2 } = this.steerForce(
+      rawF2.fx * a2Throttle, rawF2.fy * a2Throttle,
+      body, this.getLateralScale((this as any)._guestShipId ?? 'sidewinder')
+    )
+    stepPhysics(body, fx2, fy2, dt)
     wrapBounds(body, WORLD_W, WORLD_H)
+    {
+      let targetH2 = body.heading
+      if (this.guestFlightMode === 'ASSAULT' && this.actor2LockedTargetId) {
+        const lt2 = this.enemies.getEntities().find(e => e.instanceId === this.actor2LockedTargetId && e.alive)
+        if (lt2) targetH2 = Math.atan2(lt2.x - body.x, -(lt2.y - body.y))
+      } else {
+        // Face actor2's waypoint (already wrapped)
+        const wdx = this.actor2Waypoint.x - body.x, wdy = this.actor2Waypoint.y - body.y
+        if (Math.hypot(wdx, wdy) > 15) targetH2 = Math.atan2(wdx, -wdy)
+      }
+      const rotRate2 = this.getLateralScale((this as any)._guestShipId ?? 'sidewinder') * 16
+      let hDiff2 = targetH2 - body.heading
+      if (hDiff2 >  Math.PI) hDiff2 -= 2 * Math.PI
+      if (hDiff2 < -Math.PI) hDiff2 += 2 * Math.PI
+      body.heading += Math.sign(hDiff2) * Math.min(Math.abs(hDiff2), rotRate2 * dt)
+    }
   }
 
-  // Mirrors nextWaypoint() exactly but takes explicit coordinates (for actor2).
+  // Mirrors nextWaypoint() for actor2 using explicit coordinates.
   private nextWaypointFor(fromX: number, fromY: number, mode: FlightMode): { x: number; y: number } {
     const bx = fromX, by = fromY
     const entities = this.enemies.getEntities()
+    const KITE_RANGE = 280
 
     switch (mode) {
-      case 'EVASIVE': {
-        const threats = entities.filter(e => e.def.behavior !== 'DRIFT' && e.alive)
-        if (threats.length > 0) {
-          const nearest = threats.reduce((a, b) =>
-            Math.hypot(a.x - bx, a.y - by) < Math.hypot(b.x - bx, b.y - by) ? a : b)
-          const awayAngle = Math.atan2(by - nearest.y, bx - nearest.x)
-          const dist = Phaser.Math.Between(500, 900)
-          return {
-            x: ((bx + Math.cos(awayAngle) * dist) % WORLD_W + WORLD_W) % WORLD_W,
-            y: ((by + Math.sin(awayAngle) * dist) % WORLD_H + WORLD_H) % WORLD_H,
-          }
+      case 'PATROL': {
+        const alive = entities.filter(e => e.alive)
+          .sort((a, b) => Math.hypot(a.x - bx, a.y - by) - Math.hypot(b.x - bx, b.y - by))
+          .slice(0, 5)
+        if (alive.length === 0) return this.randomWaypointFrom(bx, by)
+        const cx = alive.reduce((s, e) => s + e.x, 0) / alive.length
+        const cy = alive.reduce((s, e) => s + e.y, 0) / alive.length
+        this.actor2PatrolAngle += Math.PI / 4
+        return {
+          x: ((cx + Math.cos(this.actor2PatrolAngle) * 350) % WORLD_W + WORLD_W) % WORLD_W,
+          y: ((cy + Math.sin(this.actor2PatrolAngle) * 350) % WORLD_H + WORLD_H) % WORLD_H,
         }
-        return this.randomWaypointFrom(bx, by)
       }
 
-      case 'HUNTER': {
-        // Drones first; fall back to asteroids when no drones alive
-        const drones = entities.filter(e => e.def.behavior !== 'DRIFT' && e.alive)
-        const huntTarget = drones.length > 0
-          ? drones.reduce((a, b) => Math.hypot(a.x - bx, a.y - by) < Math.hypot(b.x - bx, b.y - by) ? a : b)
-          : entities.filter(e => e.def.behavior === 'DRIFT' && e.alive)
-              .reduce<typeof entities[0] | null>((a, b) =>
-                !a || Math.hypot(b.x - bx, b.y - by) < Math.hypot(a.x - bx, a.y - by) ? b : a, null)
-        if (huntTarget) {
-          const angleToTarget = Math.atan2(huntTarget.y - by, huntTarget.x - bx)
-          const side          = Math.random() > 0.5 ? 1 : -1
-          const orbitAngle    = angleToTarget + side * (Math.PI * 0.5 + (Math.random() - 0.5) * 0.6)
-          const orbitDist     = 160 + huntTarget.def.stats.COLLISION_RADIUS
-          return {
-            x: ((huntTarget.x + Math.cos(orbitAngle) * orbitDist) % WORLD_W + WORLD_W) % WORLD_W,
-            y: ((huntTarget.y + Math.sin(orbitAngle) * orbitDist) % WORLD_H + WORLD_H) % WORLD_H,
-          }
+      case 'KITE': {
+        const threat = entities.filter(e => e.alive)
+          .reduce<typeof entities[0] | null>((best, e) => {
+            const d = Math.hypot(e.x - bx, e.y - by)
+            return (!best || d < Math.hypot(best.x - bx, best.y - by)) ? e : best
+          }, null)
+        if (!threat) return this.randomWaypointFrom(bx, by)
+        const dist = Math.hypot(threat.x - bx, threat.y - by)
+        const awayAngle = Math.atan2(by - threat.y, bx - threat.x)
+        const kiteAngle = dist < KITE_RANGE * 0.6
+          ? awayAngle
+          : awayAngle + (Math.random() - 0.5) * (Math.PI / 3)
+        return {
+          x: ((threat.x + Math.cos(kiteAngle) * KITE_RANGE * 0.85) % WORLD_W + WORLD_W) % WORLD_W,
+          y: ((threat.y + Math.sin(kiteAngle) * KITE_RANGE * 0.85) % WORLD_H + WORLD_H) % WORLD_H,
         }
-        return this.randomWaypointFrom(bx, by)
       }
+
+      case 'ASSAULT':
+        // Per-frame in updateActor2 — this case is never reached
+        return this.randomWaypointFrom(bx, by)
 
       case 'SUPPORT': {
         this.actor2OrbitAngle += Math.PI / 5
@@ -990,7 +1216,7 @@ export class PhysicsScene extends Phaser.Scene {
         }
       }
 
-      default: // PATROL
+      default: // PATROL fallback
         return this.randomWaypointFrom(bx, by)
     }
   }
@@ -1018,6 +1244,11 @@ export class PhysicsScene extends Phaser.Scene {
       kills:       this.killCount,
       hostShipId:  this.runData.shipId,
       hostClassId: this.runData.classId,
+      p1Projectiles:    this.projectiles.getStates(),
+      p2Projectiles:    this.projectiles2?.getStates() ?? [],
+      enemyProjectiles: this.enemies.getEnemyProjectileStates(),
+      p1ActiveBase: this.activeRemainingMs > 0 ? (this.getBaseClass() ?? undefined) : undefined,
+      p1ActiveMs:   this.activeRemainingMs > 0 ? this.activeRemainingMs : undefined,
     }
     network.sendState(snap)
   }
@@ -1027,8 +1258,8 @@ export class PhysicsScene extends Phaser.Scene {
     if (!g) return
     g.clear()
 
-    // Remote P1 — purple so both players can instantly tell each other apart
-    if (this.remoteP1) {
+    // Remote P1 — hidden once the host ship is destroyed
+    if (this.remoteP1 && !this._p1Dead) {
       const geo = this._hostShipId ? getGeometry(this._hostShipId) : null
       if (geo) {
         const fakeBody = {
@@ -1076,6 +1307,19 @@ export class PhysicsScene extends Phaser.Scene {
         g.fillStyle(0x4488ff, 1);   g.fillRect(bx, by, bw * e.shieldRatio, 3)
       }
     }
+
+    // Draw received projectiles — P1 (host), P2 (co-pilot on host), and enemy shots
+    const drawProjs = (projs: import('../systems/NetworkManager').RemoteProjectile[]) => {
+      for (const p of projs) {
+        g.lineStyle(p.size * 0.7, p.color, 0.35)
+        g.lineBetween(p.x, p.y, p.x - p.vx * 0.055, p.y - p.vy * 0.055)
+        g.fillStyle(p.color, 0.18); g.fillCircle(p.x, p.y, p.size + 2.5)
+        g.fillStyle(p.color, 1.0);  g.fillCircle(p.x, p.y, p.size)
+      }
+    }
+    drawProjs(this.remoteP1Projectiles)
+    drawProjs(this.remoteP2Projectiles)
+    drawProjs(this.remoteEnemyProjectiles)
   }
 
   private buildP2HUD(): void {
@@ -1120,6 +1364,167 @@ export class PhysicsScene extends Phaser.Scene {
   }
 
   // ─── Background ──────────────────────────────────────────────────────────
+
+  // ─── Class active ability ─────────────────────────────────────────────────
+
+  private buildActiveHUD(add: (obj: Phaser.GameObjects.GameObject) => Phaser.GameObjects.GameObject): void {
+    const base = this.getBaseClass()
+    if (!base) return
+
+    const labels: Record<string, { key: string; cooldown: number; color: string }> = {
+      architect: { key: 'BULWARK',     cooldown: 45000, color: '#ffffff' },
+      conductor: { key: 'OVERCLOCK',   cooldown: 40000, color: '#ff8800' },
+      weaver:    { key: 'PHASE SHIFT', cooldown: 35000, color: '#cc44ff' },
+    }
+    const def = labels[base]
+    this.activeCooldownMax = def.cooldown
+
+    // Label above flight modes
+    this.activeLabel = this.add.text(14, 216, `SPACE  ·  ${def.key}`, {
+      fontSize: '9px', color: def.color, fontFamily: 'monospace', letterSpacing: 2,
+    }); add(this.activeLabel)
+
+    // Cooldown bar underneath label
+    this.activeCooldownBar = this.add.graphics(); add(this.activeCooldownBar)
+    this.activeGfx = this.add.graphics().setDepth(195)   // world-space — camera follows ship
+  }
+
+  private getBaseClass(): 'architect' | 'conductor' | 'weaver' | null {
+    const id = this.runData.classId.toLowerCase()
+    if (id.includes('architect')) return 'architect'
+    if (id.includes('conductor')) return 'conductor'
+    if (id.includes('weaver'))    return 'weaver'
+    return null
+  }
+
+  private triggerClassActive(): void {
+    if (this.activeCooldownMs > 0 || this.activeRemainingMs > 0 || this.p1Dead) return
+    const base = this.getBaseClass()
+    if (!base) return
+
+    const durations: Record<string, number> = { architect: 3000, conductor: 6000, weaver: 4000 }
+    this.activeRemainingMs = durations[base]
+    this.activeCooldownMs  = this.activeCooldownMax
+    // Notify host so P2's active effect is honoured in the authoritative simulation
+    if (this.netRole === 'guest') network.send({ type: 'PLAYER_ACTIVE', base, duration: durations[base] })
+
+    // Immediate effect on activation
+    if (base === 'weaver') {
+      // Start PHASE — use existing CombatState effect system
+      this.combatState.activeEffects.push({ type: 'PHASE', remainingMs: this.activeRemainingMs, value: 1 })
+    }
+    if (base === 'architect') {
+      // Flash white around ship immediately
+      const g = this.activeGfx
+      g.fillStyle(0xffffff, 0.25).fillCircle(this.actor.body.x, this.actor.body.y, 80)
+      this.time.delayedCall(200, () => g.clear())
+    }
+  }
+
+  private tickClassActive(deltaMs: number): void {
+    if (this.activeCooldownMs > 0)  this.activeCooldownMs  = Math.max(0, this.activeCooldownMs  - deltaMs)
+    if (this.activeRemainingMs > 0) this.activeRemainingMs = Math.max(0, this.activeRemainingMs - deltaMs)
+
+    // Update cooldown bar
+    if (this.activeCooldownBar) {
+      const base = this.getBaseClass()
+      const ready = this.activeCooldownMs <= 0
+      const ratio = ready ? 1 : 1 - this.activeCooldownMs / this.activeCooldownMax
+      const barColors: Record<string, number> = { architect: 0xffffff, conductor: 0xff8800, weaver: 0xcc44ff }
+      const col = barColors[base ?? 'architect'] ?? 0x00ffff
+      const BW = 130, BH = 5, BX = 14, BY = 227
+      this.activeCooldownBar.clear()
+      this.activeCooldownBar.fillStyle(0x111111, 0.8); this.activeCooldownBar.fillRect(BX, BY, BW, BH)
+      this.activeCooldownBar.fillStyle(col, ready ? 1 : 0.6)
+      this.activeCooldownBar.fillRect(BX, BY, BW * ratio, BH)
+      if (ready) this.activeLabel?.setAlpha(1)
+      else        this.activeLabel?.setAlpha(0.4)
+    }
+
+    const base = this.getBaseClass()
+    const durations: Record<string, number> = { architect: 3000, conductor: 6000, weaver: 4000 }
+
+    // Own active — mechanics + glow
+    this.activeGfx?.clear()
+    if (base && this.activeRemainingMs > 0) {
+      if (base === 'architect') {
+        this.combatState.currentHull   = this.combatState.maxHull
+        this.combatState.currentShield = this.combatState.maxShield
+      }
+      if (base === 'conductor') {
+        this.combatState.currentHeat = Math.max(0, this.combatState.currentHeat - this.combatState.maxHeat * 0.08)
+      }
+      if (base === 'weaver') {
+        this.combatState.currentShield = Math.min(this.combatState.maxShield,
+          this.combatState.currentShield + this.combatState.maxShield * 0.15)
+      }
+      if (this.activeGfx)
+        this.drawActiveGlow(this.activeGfx, this.actor.body.x, this.actor.body.y, base, this.activeRemainingMs, durations[base])
+    }
+
+    // Partner's active glow — host draws actor2's, guest draws remoteP1's
+    this.remoteActiveGfx?.clear()
+    if (this.remoteActiveGfx) {
+      if (this.netRole === 'host' && this._p2ActiveMs > 0 && this._p2ActiveBase && this.actor2) {
+        this.drawActiveGlow(this.remoteActiveGfx, this.actor2.body.x, this.actor2.body.y,
+          this._p2ActiveBase, this._p2ActiveMs, durations[this._p2ActiveBase] ?? 4000)
+      }
+      if (this.netRole === 'guest' && this._remoteActiveMs > 0 && this._remoteActiveBase && this.remoteP1) {
+        this.drawActiveGlow(this.remoteActiveGfx, this.remoteP1.x, this.remoteP1.y,
+          this._remoteActiveBase, this._remoteActiveMs, durations[this._remoteActiveBase] ?? 4000)
+      }
+    }
+  }
+
+  /**
+   * Lateral force scale by weight class.
+   * Full forward/braking thrust; lateral (turning) thrust is reduced.
+   * Creates natural arc-into-turn behaviour without post-physics hacks.
+   *   Light  0.40 → responsive arcs
+   *   Medium 0.26 → noticeable sweep
+   *   Heavy  0.15 → wide committed arcs
+   */
+  private getLateralScale(shipId: string): number {
+    const wc = DataLoader.getShip(shipId)?.weightClass
+    if (wc === 'Heavy')  return 0.15
+    if (wc === 'Medium') return 0.26
+    return 0.40
+  }
+
+  /**
+   * Decompose `{ fx, fy }` into forward (along current velocity) and lateral
+   * components, then damp the lateral part by `lateralScale`.
+   * Ships near-stationary pivot freely; moving ships must arc into turns.
+   */
+  private steerForce(
+    fx: number, fy: number,
+    body: import('../physics/PhysicsBody').PhysicsBody,
+    lateralScale: number
+  ): { fx: number; fy: number } {
+    const speed = Math.hypot(body.vx, body.vy)
+    if (speed < 8) return { fx, fy }   // near-stationary: full force allowed
+
+    const hx = body.vx / speed, hy = body.vy / speed   // unit heading
+    const fwd  = fx * hx + fy * hy                      // forward component (scalar)
+    const latX = fx - hx * fwd                          // lateral remainder
+    const latY = fy - hy * fwd
+    return { fx: hx * fwd + latX * lateralScale, fy: hy * fwd + latY * lateralScale }
+  }
+
+  /** Shared glow renderer — called for local active AND remote partner active. */
+  private drawActiveGlow(g: Phaser.GameObjects.Graphics, x: number, y: number, base: string, remainingMs: number, totalMs: number): void {
+    const t = Math.max(0, remainingMs / totalMs)
+    if (base === 'architect') {
+      g.lineStyle(4, 0xffffff, t * 0.65);  g.strokeCircle(x, y, 40 + (1-t)*20)
+      g.lineStyle(12, 0xffffff, t * 0.15); g.strokeCircle(x, y, 62 + (1-t)*20)
+    } else if (base === 'conductor') {
+      g.lineStyle(4, 0xff8800, t * 0.55);  g.strokeCircle(x, y, 38)
+      g.lineStyle(14, 0xff8800, t * 0.14); g.strokeCircle(x, y, 58)
+    } else if (base === 'weaver') {
+      g.lineStyle(4, 0xcc44ff, t * 0.70);  g.strokeCircle(x, y, 38)
+      g.lineStyle(12, 0xcc44ff, t * 0.18); g.strokeCircle(x, y, 60)
+    }
+  }
 
   private buildBackground(): void {
     const rng = (lo: number, hi: number) => lo + Math.random() * (hi - lo)
@@ -1249,22 +1654,24 @@ export class PhysicsScene extends Phaser.Scene {
       g.fillCircle(ex, ey, e.isAsteroid ? 1.5 : 2)
     }
 
-    // Player dot — use local position (own ship)
-    const selfX = this.actor.body.x
-    const selfY = this.actor.body.y
-    const px = MM_X + (selfX / WORLD_W) * MM_W
-    const py = MM_Y + (selfY / WORLD_H) * MM_H
-    g.fillStyle(clsColor, 1); g.fillCircle(px, py, 3)
-    g.lineStyle(1, clsColor, 0.4); g.strokeCircle(px, py, 5)
+    // Player dot — hidden when dead/spectating
+    if (!this.p1Dead) {
+      const selfX = this.actor.body.x
+      const selfY = this.actor.body.y
+      const px = MM_X + (selfX / WORLD_W) * MM_W
+      const py = MM_Y + (selfY / WORLD_H) * MM_H
+      g.fillStyle(clsColor, 1); g.fillCircle(px, py, 3)
+      g.lineStyle(1, clsColor, 0.4); g.strokeCircle(px, py, 5)
+    }
 
     // Co-pilot dot — host draws actor2, guest draws remoteP1
-    if (this.netRole === 'host' && this.actor2) {
+    if (this.netRole === 'host' && this.actor2 && !this.p2Dead) {
       const p2x = MM_X + (this.actor2.body.x / WORLD_W) * MM_W
       const p2y = MM_Y + (this.actor2.body.y / WORLD_H) * MM_H
       g.fillStyle(COPILOT_COLOR, 1); g.fillCircle(p2x, p2y, 3)
       g.lineStyle(1, COPILOT_COLOR, 0.4); g.strokeCircle(p2x, p2y, 5)
     }
-    if (this.netRole === 'guest' && this.remoteP1) {
+    if (this.netRole === 'guest' && this.remoteP1 && !this._p1Dead) {
       const p1x = MM_X + (this.remoteP1.x / WORLD_W) * MM_W
       const p1y = MM_Y + (this.remoteP1.y / WORLD_H) * MM_H
       g.fillStyle(COPILOT_COLOR, 1); g.fillCircle(p1x, p1y, 3)
@@ -1325,8 +1732,8 @@ export class PhysicsScene extends Phaser.Scene {
     // Flight mode chips
     const MODES: { mode: FlightMode; label: string; key: string }[] = [
       { mode: 'PATROL',  label: 'PATROL',  key: '1' },
-      { mode: 'EVASIVE', label: 'EVASIVE', key: '2' },
-      { mode: 'HUNTER',  label: 'HUNTER',  key: '3' },
+      { mode: 'KITE',    label: 'KITE',    key: '2' },
+      { mode: 'ASSAULT', label: 'ASSAULT', key: '3' },
       { mode: 'SUPPORT', label: 'SUPPORT', key: '4' },
     ]
     const CW = 74, CH = 18, CG = 4
@@ -1357,9 +1764,13 @@ export class PhysicsScene extends Phaser.Scene {
     })
 
     this.input.keyboard!.on('keydown-ONE',   () => this.setFlightMode('PATROL'))
-    this.input.keyboard!.on('keydown-TWO',   () => this.setFlightMode('EVASIVE'))
-    this.input.keyboard!.on('keydown-THREE', () => this.setFlightMode('HUNTER'))
+    this.input.keyboard!.on('keydown-TWO',   () => this.setFlightMode('KITE'))
+    this.input.keyboard!.on('keydown-THREE', () => this.setFlightMode('ASSAULT'))
     this.input.keyboard!.on('keydown-FOUR',  () => this.setFlightMode('SUPPORT'))
+    this.input.keyboard!.on('keydown-SPACE', () => this.triggerClassActive())
+
+    // ─── Active ability HUD ───────────────────────────────────────────────
+    this.buildActiveHUD(add)
 
     // Trigger log
     add(this.add.text(14, VIEW_H - LOG_MAX * 18 - 30, 'TRIGGER LOG', {
@@ -1477,16 +1888,20 @@ export class PhysicsScene extends Phaser.Scene {
   }
 
   private asteroidAvoidanceForce(): { x: number; y: number } {
-    const isEvasive  = this.flightMode === 'EVASIVE'
-    const avoidRange = isEvasive ? 400 : 220    // detection radius (u)
-    const strength   = isEvasive ? 5.0 : 1.8    // force multiplier
+    // KITE needs strong asteroid avoidance since it's already managing range actively
+    const isKite     = this.flightMode === 'KITE'
+    const avoidRange = isKite ? 400 : 220
+    const strength   = isKite ? 5.0 : 1.8
 
     let fx = 0, fy = 0
     const bx = this.actor.body.x, by = this.actor.body.y
     const accel = this.actor.body.accel
 
+    const weaponTarget = this.enemies.currentTarget
     for (const e of this.enemies.getEntities()) {
       if (!e.def.id.startsWith('asteroid') || !e.alive) continue
+      // Don't dodge the asteroid we're actively shooting — let the ship close in
+      if (e === weaponTarget) continue
       const dx = bx - e.x, dy = by - e.y
       const dist = Math.hypot(dx, dy)
       if (dist >= avoidRange || dist < 0.5) continue
@@ -1503,8 +1918,9 @@ export class PhysicsScene extends Phaser.Scene {
   private setFlightMode(mode: FlightMode): void {
     this.flightMode = mode
     this.updateModeChips()
-    if (mode !== 'HUNTER') {
+    if (mode !== 'ASSAULT') {
       this.lockedTargetId = null
+      this.assaultOrbitAngle = 0
       this.actor.waypoint = this.nextWaypoint()
     }
     // Guest: broadcast flight mode to host

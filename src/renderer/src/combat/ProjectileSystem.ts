@@ -100,6 +100,10 @@ export class ProjectileSystem {
     this.projectiles = this.projectiles.filter(p => p.lifetimeMs > 0)
   }
 
+  getStates(): Array<{ x: number; y: number; vx: number; vy: number; color: number; size: number }> {
+    return this.projectiles.map(p => ({ x: p.x, y: p.y, vx: p.vx, vy: p.vy, color: p.color, size: p.size }))
+  }
+
   draw(): void {
     const g = this.gfx
     g.clear()

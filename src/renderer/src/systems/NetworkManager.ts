@@ -11,6 +11,10 @@ export interface RemoteEnemyState {
   hullRatio: number; shieldRatio: number
 }
 
+export interface RemoteProjectile {
+  x: number; y: number; vx: number; vy: number; color: number; size: number
+}
+
 export interface GameStateSnapshot {
   tick: number
   p1: RemoteShipState
@@ -18,8 +22,13 @@ export interface GameStateSnapshot {
   enemies: RemoteEnemyState[]
   sector: number
   kills: number
-  hostShipId?:  string
-  hostClassId?: string
+  hostShipId?:    string
+  hostClassId?:   string
+  p1Projectiles?: RemoteProjectile[]
+  p2Projectiles?: RemoteProjectile[]
+  enemyProjectiles?: RemoteProjectile[]
+  p1ActiveBase?:  string   // active class ability in progress
+  p1ActiveMs?:    number
 }
 
 type MsgHandler = (msg: Record<string, unknown>) => void

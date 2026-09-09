@@ -10,12 +10,23 @@ const WORLD_H = 720  * 5
 const SPAWN_CLEAR_RADIUS = 700
 
 const WEAPON_STATS: Record<string, { dps: number; range: number; arc: number }> = {
-  light_chaingun: { dps: 64,  range: 250, arc: 25 },
-  chaingun:       { dps: 108, range: 300, arc: 25 },
-  pulse_laser:    { dps: 60,  range: 300, arc: 30 },
-  beam_laser:     { dps: 55,  range: 380, arc: 15 },  // Mamba default
-  emp_cannon:     { dps: 30,  range: 350, arc: 60 },
-  arc_cannon:     { dps: 50,  range: 320, arc: 25 },
+  // Kinetic
+  light_chaingun: { dps:  64, range:  300, arc: 25 },
+  chaingun:       { dps: 108, range:  380, arc: 25 },
+  heavy_chaingun: { dps: 160, range:  450, arc: 20 },
+  // Energy
+  pulse_laser:    { dps:  60, range:  380, arc: 30 },
+  beam_laser:     { dps:  55, range:  520, arc: 15 },
+  heavy_beam:     { dps:  90, range:  700, arc: 10 },
+  // Precision
+  railgun:        { dps: 200, range: 1000, arc: 10 },
+  gauss_cannon:   { dps: 300, range: 1300, arc:  8 },
+  // Explosive
+  micro_missile:  { dps:  48, range:  480, arc: 60 },
+  torpedo:        { dps: 120, range:  700, arc: 60 },
+  // Special
+  emp_cannon:     { dps:  30, range:  420, arc: 60 },
+  arc_cannon:     { dps:  50, range:  380, arc: 25 },
 }
 
 const ENEMY_COLOR: Record<string, number> = {
@@ -114,12 +125,14 @@ export class EnemyManager {
     sector: SectorManager,
     onEnemyAttack: (damage: number) => void,
     onKill: (result: KillResult) => void,
+    dpsMultiplier?: number,
     player2?: {
       x: number; y: number; heading: number; radius: number
       body: PhysicsBody; weaponIds: string[]
       targetPriority: 'any' | 'drones' | 'asteroids'
       onEnemyAttack: (damage: number) => void
-    }
+    },
+    weaponTargetAnchor?: { x: number; y: number }
   ): void {
     const { dps: playerDps, range: playerRange, arc: playerArc } = computeLoadout(weaponIds)
     const deltaMs = dt * 1000
@@ -136,11 +149,13 @@ export class EnemyManager {
     this.checkCollisions(playerX, playerY, playerRadius, playerBody, onEnemyAttack)
     if (player2) this.checkCollisions(player2.x, player2.y, player2.radius, player2.body, player2.onEnemyAttack)
 
-    // P1 attacks nearest in arc
-    const target = this.nearestAlive(playerX, playerY, playerRange, playerHeading, playerArc, targetPriority)
+    // P1 attacks nearest in arc — SUPPORT mode uses partner anchor for ranking
+    const target = weaponTargetAnchor
+      ? this.nearestAliveToAnchor(weaponTargetAnchor.x, weaponTargetAnchor.y, playerX, playerY, playerRange, playerHeading, playerArc, targetPriority)
+      : this.nearestAlive(playerX, playerY, playerRange, playerHeading, playerArc, targetPriority)
     this._currentTarget = target
     if (target) {
-      target.takeDamage(playerDps * dt)
+      target.takeDamage(playerDps * dt * (dpsMultiplier ?? 1))
       this.spawnHitSparks(target.x, target.y, target.def.stats.COLLISION_RADIUS)
     }
 
@@ -287,12 +302,28 @@ export class EnemyManager {
         e.heading = Math.atan2(e.vx, -e.vy)
         break
       case 'CHASE': {
-        // Chase whichever player is closer within leash range
         const leash = e.def.leash ?? Infinity
         const d1 = Math.hypot(px - e.x, py - e.y)
         const d2 = p2 ? Math.hypot(p2.x - e.x, p2.y - e.y) : Infinity
-        const tgtX = (p2 && d2 < d1 && d2 <= leash) ? p2.x : px
-        const tgtY = (p2 && d2 < d1 && d2 <= leash) ? p2.y : py
+
+        // Co-op: split enemies between players using instance parity so both
+        // players always have threats hunting them rather than all enemies
+        // piling onto whichever player happens to be slightly closer.
+        let tgtX: number, tgtY: number
+        if (p2) {
+          const preferP2 = parseInt(e.instanceId.split('_').pop() ?? '0', 10) % 2 === 1
+          if (preferP2) {
+            // This enemy prefers P2; fall back to P1 only if P2 is out of leash
+            tgtX = d2 <= leash ? p2.x : (d1 <= leash ? px : px)
+            tgtY = d2 <= leash ? p2.y : (d1 <= leash ? py : py)
+          } else {
+            // This enemy prefers P1; fall back to P2 only if P1 is out of leash
+            tgtX = d1 <= leash ? px : (d2 <= leash ? p2.x : px)
+            tgtY = d1 <= leash ? py : (d2 <= leash ? p2.y : py)
+          }
+        } else {
+          tgtX = px; tgtY = py
+        }
         const dx = tgtX - e.x, dy = tgtY - e.y
         const dist = Math.hypot(dx, dy)
 
@@ -425,6 +456,41 @@ export class EnemyManager {
     return scan(() => true)
   }
 
+  // SUPPORT mode: rank enemies by distance to anchor (partner), but gate by shooter's arc/range
+  nearestAliveToAnchor(
+    anchorX: number, anchorY: number,
+    shooterX: number, shooterY: number,
+    range: number, heading: number, arcDeg: number,
+    priority: 'any' | 'drones' | 'asteroids' = 'any'
+  ): EnemyEntity | null {
+    const halfArc = (arcDeg / 2) * (Math.PI / 180)
+
+    const scan = (filter: (e: EnemyEntity) => boolean): EnemyEntity | null => {
+      let best: EnemyEntity | null = null, bestAnchorDist = Infinity
+      for (const e of this.entities) {
+        if (!e.alive || !filter(e)) continue
+        // Arc/range gate from shooter
+        const sdx = e.x - shooterX, sdy = e.y - shooterY
+        const shooterDist = Math.hypot(sdx, sdy)
+        if (shooterDist >= range) continue
+        if (arcDeg < 360) {
+          const a = Math.atan2(sdx, -sdy)
+          let diff = Math.abs(a - heading)
+          if (diff > Math.PI) diff = Math.abs(diff - Math.PI * 2)
+          if (diff > halfArc) continue
+        }
+        // Rank by distance to anchor (partner)
+        const anchorDist = Math.hypot(e.x - anchorX, e.y - anchorY)
+        if (anchorDist < bestAnchorDist) { best = e; bestAnchorDist = anchorDist }
+      }
+      return best
+    }
+
+    if (priority === 'drones')    return scan(e => e.def.behavior !== 'DRIFT') ?? scan(() => true)
+    if (priority === 'asteroids') return scan(e => e.def.behavior === 'DRIFT') ?? scan(() => true)
+    return scan(() => true)
+  }
+
   // Called on sector advance — spawns enemies in a ring around the player for immediate action
   spawnSectorTransitionWave(sector: SectorManager, playerX: number, playerY: number): void {
     const wave = sector.getSpawnWave()
@@ -531,6 +597,10 @@ export class EnemyManager {
       g.fillStyle(p.color, alpha)
       g.fillCircle(p.x, p.y, p.size * 0.6)
     }
+  }
+
+  getEnemyProjectileStates(): Array<{ x: number; y: number; vx: number; vy: number; color: number; size: number }> {
+    return this.enemyProjs.map(p => ({ x: p.x, y: p.y, vx: p.vx, vy: p.vy, color: p.color, size: p.size }))
   }
 
   get count(): number { return this.entities.length }
