@@ -1145,5 +1145,224 @@
       { "tag": "BROADCAST", "effect": "BROADCAST range determines who receives buffs; TEAM_CLUSTER confirms both ships are in range." },
       { "tag": "AMPLIFICATION", "effect": "Clustered ships trigger amplification on each other simultaneously — peak buff output requires tight formation." }
     ]
+  },
+
+  { "category": "SHIP", "subCategory": "UTILITY", "tag": "PICKUP_RADIUS",
+    "description": "Radius within which the ship and its HARVESTER drones automatically collect dropped items and orbs.",
+    "mechanic": "Each tag adds +20u to collection radius. Base radius is 40u.",
+    "interactions": [
+      { "tag": "HARVESTER", "effect": "HARVESTER drones use the ship's PICKUP_RADIUS as their autonomous collection range." },
+      { "tag": "GLOBAL_RADIUS", "effect": "GLOBAL_RADIUS amplifies PICKUP_RADIUS alongside all other radius effects." },
+      { "tag": "SALVAGE", "effect": "PICKUP_RADIUS extends debris collection range, feeding Scrap Salvager's DEBRIS_FIELD pool faster." }
+    ]
+  },
+
+  { "category": "CONSTRUCT", "subCategory": "SPECS", "tag": "DRONE_SHIELD",
+    "description": "Energy shield pool of an individual drone unit. Absorbed before DRONE_HULL takes damage.",
+    "mechanic": "Each tag adds +100 shield points to all active drones.",
+    "interactions": [
+      { "tag": "DRONE_HULL", "effect": "Shield absorbs damage first; DRONE_HULL is the last line of defence. Both must scale together." },
+      { "tag": "SHIELD_DRONE", "effect": "SHIELD_DRONE behavior generates and maintains this shield pool actively." },
+      { "tag": "ON_SHIELD_DROP", "effect": "If a drone's shield depletes, the parent ship's ON_SHIELD_DROP logic can fire reactively." }
+    ]
+  },
+
+  { "category": "CONSTRUCT", "subCategory": "SPECS", "tag": "THREAT_LEVEL",
+    "description": "How aggressively a construct generates enemy aggro. Low = passive, high = decoy.",
+    "mechanic": "Each tag increases the drone's threat multiplier by +0.5. At 5+ stacks most enemies prioritise the drone over the parent ship.",
+    "interactions": [
+      { "tag": "DECOY", "effect": "DECOY behavior depends on high THREAT_LEVEL to reliably redirect enemy targeting." },
+      { "tag": "DRONE_HULL", "effect": "High-threat drones attract fire — DRONE_HULL must be high enough to survive the attention." },
+      { "tag": "DRONE_SHIELD", "effect": "Shield pool extends how long a high-threat decoy can absorb incoming fire before destruction." }
+    ]
+  },
+
+  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "DECOY",
+    "description": "Construct deliberately generates threat to attract enemy targeting away from the parent ship.",
+    "mechanic": "Each tag increases decoy aggro radius by +30u and extends aggro persistence after taking a hit.",
+    "interactions": [
+      { "tag": "THREAT_LEVEL", "effect": "THREAT_LEVEL determines how effectively the decoy redirects enemy targeting." },
+      { "tag": "KAMIKAZE", "effect": "A DECOY drone that detonates when destroyed — sacrificial lure with a lethal farewell." },
+      { "tag": "INFESTATION", "effect": "When enemies destroy a DECOY, infestation triggers on the killer from the dying drone." },
+      { "tag": "SALVAGE", "effect": "Destroyed decoys generate debris, feeding Scrap Salvager's DEBRIS_FIELD pool." }
+    ]
+  },
+
+  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "SHIELD_DRONE",
+    "description": "Drone projects a protective field, absorbing incoming damage directed at the parent ship or a nearby ally.",
+    "mechanic": "Each tag increases the drone's shield projection capacity by +150 SP.",
+    "interactions": [
+      { "tag": "DRONE_SHIELD", "effect": "SHIELD_DRONE projects its DRONE_SHIELD pool as a barrier between the ship and incoming fire." },
+      { "tag": "ON_SHIELD_DROP", "effect": "When the drone's projected shield depletes, the parent ship's ON_SHIELD_DROP logic fires." },
+      { "tag": "INVULNERABILITY", "effect": "Shield drone depletion can chain into a Phase Weaver invulnerability window." }
+    ]
+  },
+
+  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "HARVESTER",
+    "description": "Drone autonomously collects dropped items, debris, and environmental resources within PICKUP_RADIUS.",
+    "mechanic": "Each tag increases harvester collection speed and adds +1 concurrent collection target.",
+    "interactions": [
+      { "tag": "PICKUP_RADIUS", "effect": "Harvester uses the ship's PICKUP_RADIUS as its autonomous collection range — larger radius, wider sweep." },
+      { "tag": "SALVAGE", "effect": "Harvester collecting debris directly feeds Scrap Salvager's DEBRIS_FIELD deployment pool." },
+      { "tag": "RESOURCE_FEED", "effect": "Energy resources collected by harvesters feed back into the ship's grid via RESOURCE_FEED." }
+    ]
+  },
+
+  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "ESCORT",
+    "description": "Drone flies in formation with an allied ship rather than orbiting the parent, applying its behavior to the escorted ally.",
+    "mechanic": "Each tag extends escort assignment range by +100u and improves formation responsiveness.",
+    "interactions": [
+      { "tag": "REPAIR_SWARM", "effect": "An escort with REPAIR_SWARM behavior continuously heals an ally rather than the parent ship." },
+      { "tag": "BROADCAST", "effect": "Escort drones carrying BROADCAST buffs deliver them to the assigned ally's position." },
+      { "tag": "ALLY_LOW_HP", "effect": "ALLY_LOW_HP trigger can reactively dispatch escorts to a damaged partner." }
+    ]
+  },
+
+  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "MINE_LAYER",
+    "description": "Drone autonomously deploys mines at tactical positions in the world.",
+    "mechanic": "Each tag reduces mine deployment cooldown by 1.5s.",
+    "interactions": [
+      { "tag": "MINE", "effect": "MINE_LAYER drones deploy MINE constructs at intervals — the layer is the drone, MINE is the payload." },
+      { "tag": "PERSISTENCE", "effect": "Deployed mines last longer with higher PERSISTENCE, expanding area-denial windows." },
+      { "tag": "GRAVITY", "effect": "Mine-layer drones prioritise placing mines inside active graviton fields for maximum clustering effect." }
+    ]
+  },
+
+  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "MINE",
+    "description": "Stationary proximity-detonating construct placed in world space. Auto-detonates when an enemy enters detection range.",
+    "mechanic": "Each tag increases mine detection radius by +15u and detonation damage by +20.",
+    "interactions": [
+      { "tag": "BLAST_RADIUS", "effect": "Detonation AoE scales with BLAST_RADIUS tags." },
+      { "tag": "GLOBAL_RADIUS", "effect": "GLOBAL_RADIUS amplifies both detection radius and blast radius simultaneously." },
+      { "tag": "COMPRESSION", "effect": "Mines inside a compressed cluster deal bonus damage to densely packed enemies." },
+      { "tag": "PERSISTENCE", "effect": "PERSISTENCE determines how long mines remain active before expiring naturally." }
+    ]
+  },
+
+  { "category": "CONSTRUCT", "subCategory": "BEHAVIOR", "tag": "PERSISTENCE",
+    "description": "Duration that deployed constructs (mines, prisms, debris barriers, drones) remain active before expiring.",
+    "mechanic": "Each tag adds +4s to the lifespan of all deployed constructs.",
+    "interactions": [
+      { "tag": "MINE", "effect": "Mines last significantly longer, expanding area-denial coverage windows." },
+      { "tag": "MIRROR", "effect": "Vector Specialist prisms persist longer, making beam-redirect geometry more reliable." },
+      { "tag": "DEBRIS_FIELD", "effect": "Deployed debris barriers remain active longer before degrading." },
+      { "tag": "SINGULARITY", "effect": "Active singularities persist longer with PERSISTENCE stacking." }
+    ]
+  },
+
+  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "BEAM",
+    "description": "Weapon fires a continuous beam rather than discrete projectiles. Interacts with MIRROR, PRISM, and REFLECTION. Cannot ricochet off surfaces.",
+    "mechanic": "Each tag increases continuous beam DPS by +10% and extends effective beam length by +8%.",
+    "interactions": [
+      { "tag": "MIRROR", "effect": "BEAM weapons are redirected by deployed mirror prisms — the foundation of Vector Specialist geometry." },
+      { "tag": "PRISM", "effect": "Beams split into copies at prisms. BEAM weapons are the only type that interact with PRISM." },
+      { "tag": "REFLECTION", "effect": "BEAM weapons bounce back from REFLECTION armor, returning toward the attacker." },
+      { "tag": "ENERGY", "effect": "ENERGY type bonuses compound with BEAM DPS — beam builds naturally stack both." }
+    ]
+  },
+
+  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "PROJECTILE_COUNT",
+    "description": "Number of simultaneous projectiles fired per shot (shotgun spread, volley fire).",
+    "mechanic": "Each tag adds +1 simultaneous projectile per shot.",
+    "interactions": [
+      { "tag": "ACCURACY", "effect": "Lower accuracy spreads multiple projectiles into a wider cone — natural shotgun spread." },
+      { "tag": "SPLIT", "effect": "Each projectile in a volley can independently split, compounding total hit count." },
+      { "tag": "CHAIN", "effect": "Each projectile in a volley chains independently to new targets." }
+    ]
+  },
+
+  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "CHAIN",
+    "description": "Projectile jumps to a new nearby target after each hit.",
+    "mechanic": "Each tag adds +1 chain jump. Each jump retains 70% of the previous hit's damage.",
+    "interactions": [
+      { "tag": "TETHER", "effect": "Chain shots propagate along existing tether networks — Quantum Entangler's native projectile type." },
+      { "tag": "DAMAGE_SHARE", "effect": "Chain damage echoes to all tethered targets simultaneously via DAMAGE_SHARE." },
+      { "tag": "COMPRESSION", "effect": "Clustered enemies make chain jumps trivially reliable — COMPRESSION is a passive CHAIN amplifier." },
+      { "tag": "EMP", "effect": "A chaining EMP shot disables every enemy in the chain sequence in a single pass." }
+    ]
+  },
+
+  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "SPLIT",
+    "description": "Projectile divides into multiple copies at a set range or on first impact.",
+    "mechanic": "Each tag adds +1 split copy. Each copy deals 60% of the parent projectile's damage.",
+    "interactions": [
+      { "tag": "PIERCE", "effect": "Each split copy pierces independently — split + pierce hits every enemy in multiple lines." },
+      { "tag": "PRISM", "effect": "Split copies hitting a prism are further split — exponential coverage from a single shot." },
+      { "tag": "COMPRESSION", "effect": "Split projectiles into a compressed cluster hit every enemy simultaneously for maximum damage." },
+      { "tag": "TEMPORAL_ECHO", "effect": "Split copies echoed by TEMPORAL_ECHO double the copy count 0.8s after the shot." }
+    ]
+  },
+
+  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "PULSE",
+    "description": "Weapon radiates an effect outward from the ship itself rather than firing toward a target.",
+    "mechanic": "Each tag increases pulse base damage by +15%.",
+    "interactions": [
+      { "tag": "PULSE_RADIUS", "effect": "PULSE_RADIUS determines the reach of the pulse effect — primary scaling stat for pulse weapons." },
+      { "tag": "AURA_RADIUS", "effect": "AURA_RADIUS tags also extend PULSE weapon radius, connecting pulse weapons to class aura builds." },
+      { "tag": "GLOBAL_RADIUS", "effect": "GLOBAL_RADIUS amplifies pulse reach alongside all other radius effects." },
+      { "tag": "FREQUENCY", "effect": "FREQUENCY reduces effective PULSE_INTERVAL — more frequent pulses with shorter downtime." }
+    ]
+  },
+
+  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "RETURN",
+    "description": "Projectile returns to the source after reaching max range or completing its chain. Source ship is immune to its own returning projectile.",
+    "mechanic": "Each tag (boolean at 1; 2+ increases return speed). Return pass deals 80% of outward damage.",
+    "interactions": [
+      { "tag": "PIERCE", "effect": "Projectile pierces targets on both the outward and return passes — double pierce line through the same enemies." },
+      { "tag": "CHAIN", "effect": "Chains between targets on the way out and again on the way back." },
+      { "tag": "RICOCHET", "effect": "Return path also bounces off surfaces and prisms, creating complex multi-hit geometry." },
+      { "tag": "SPLIT", "effect": "Split copies each return independently — outward and inbound copies all travel back to source." }
+    ]
+  },
+
+  { "category": "WEAPON", "subCategory": "STATS", "tag": "PASSIVE_DRAIN",
+    "description": "Energy drawn per second while the weapon is active, independent of firing rate.",
+    "mechanic": "Each tag represents the weapon's passive energy consumption rate (energy/s).",
+    "interactions": [
+      { "tag": "ENERGY_GRID", "effect": "Larger grid sustains passive drain for longer before browning out." },
+      { "tag": "ENERGY_REGEN", "effect": "Energy regen must exceed total passive drain across all active weapons to maintain sustained operation." },
+      { "tag": "OVERCLOCK", "effect": "Overclock burns additional energy on top of passive drain during burst windows — plan grid capacity accordingly." }
+    ]
+  },
+
+  { "category": "WEAPON", "subCategory": "STATS", "tag": "PASSIVE_HEAT",
+    "description": "Heat generated per second while the weapon is running, independent of whether it is firing.",
+    "mechanic": "Each tag represents the weapon's continuous heat output (heat/s).",
+    "interactions": [
+      { "tag": "HEAT_DISSIPATION", "effect": "Net heat = PASSIVE_HEAT minus HEAT_DISSIPATION. Insufficient dissipation causes gradual overheat even without firing." },
+      { "tag": "VOLTAGE", "effect": "Hyper-Conductor converts passive heat into VOLTAGE output — passive heat becomes a resource, not a liability." },
+      { "tag": "ON_OVERHEAT", "effect": "High PASSIVE_HEAT weapons can trigger ON_OVERHEAT without ever firing, enabling deliberate heat builds." }
+    ]
+  },
+
+  { "category": "WEAPON", "subCategory": "STATS", "tag": "PULSE_RADIUS",
+    "description": "Radius of ship-centred pulse and aura weapon effects. Distinct from BLAST_RADIUS which applies to projectile explosions.",
+    "mechanic": "Each tag adds +25u to pulse weapon effective radius.",
+    "interactions": [
+      { "tag": "PULSE", "effect": "PULSE behavior weapons use PULSE_RADIUS as their primary area scaling stat." },
+      { "tag": "AURA_RADIUS", "effect": "AURA_RADIUS and PULSE_RADIUS both extend ship-centred field effects and stack additively." },
+      { "tag": "GLOBAL_RADIUS", "effect": "GLOBAL_RADIUS amplifies PULSE_RADIUS alongside every other radius effect in the build." }
+    ]
+  },
+
+  { "category": "WEAPON", "subCategory": "STATS", "tag": "PULSE_INTERVAL",
+    "description": "Seconds between automatic pulse weapon firings. Lower is faster.",
+    "mechanic": "Each tag reduces pulse interval by 0.3s. Minimum interval 0.2s.",
+    "interactions": [
+      { "tag": "FREQUENCY", "effect": "FREQUENCY tags further reduce effective pulse interval — Resonance Bard naturally lowers it." },
+      { "tag": "EXECUTION_SPEED", "effect": "Chrono Architect EXECUTION_SPEED reduces automation loop timing, effectively lowering pulse interval." },
+      { "tag": "COOLDOWN", "effect": "COOLDOWN reduction applies to manually triggered reactive pulse abilities." }
+    ]
+  },
+
+  { "category": "SPECIALIZATION", "subCategory": "SPATIAL", "tag": "GLOBAL_RADIUS",
+    "description": "Universally amplifies all area and radius-based effects: BLAST_RADIUS, PULSE_RADIUS, PICKUP_RADIUS, mine detection and detonation, AURA_RADIUS, PULL_FORCE fields, singularity reach.",
+    "mechanic": "Each tag adds +12% to all radius-based values across the entire loadout.",
+    "interactions": [
+      { "tag": "BLAST_RADIUS", "effect": "Explosive AoE grows — every mine, torpedo, and grenade covers more area." },
+      { "tag": "GRAVITY", "effect": "Singularity pull field and PULL_FORCE radius both scale — Graviton Weaver is the primary GLOBAL_RADIUS class." },
+      { "tag": "PULSE_RADIUS", "effect": "Pulse weapon reach grows — combined with AURA_RADIUS makes Resonance Bard fields enormous." },
+      { "tag": "PICKUP_RADIUS", "effect": "Item collection range grows — high GLOBAL_RADIUS builds passively vacuum the battlefield." }
+    ]
   }
 ]

@@ -548,3 +548,145 @@ At 5 stacks: ~1.34× all aura effects. At 10 stacks: ~1.79×.
 - × HARMONIC — HARMONIC stacks accumulate faster when TEAM_CLUSTER is maintained — formation play rewards compound scaling.
 - × BROADCAST — BROADCAST confirms both ships are in range to receive buffs simultaneously.
 - × AMPLIFICATION — Clustered ships trigger amplification on each other — peak buff output requires tight formation.
+
+---
+
+## NEW TAGS — Weapons, Constructs, Drones & Radius
+
+---
+
+## [SHIP] — New Utility Tags
+
+**PICKUP_RADIUS** — Each tag: +20u collection radius (base 40u). Ship and HARVESTER drones auto-collect dropped items within this range.
+- × HARVESTER — Harvester drones use the ship's PICKUP_RADIUS as their autonomous collection range.
+- × GLOBAL_RADIUS — GLOBAL_RADIUS amplifies PICKUP_RADIUS alongside all other radius effects.
+- × SALVAGE — Extends debris collection range, feeding Scrap Salvager's DEBRIS_FIELD pool faster.
+
+---
+
+## [CONSTRUCT] — New Spec Tags
+
+**DRONE_SHIELD** — Each tag: +100 shield points to all active drones. Absorbed before DRONE_HULL takes damage.
+- × DRONE_HULL — Shield absorbs damage first; DRONE_HULL is the last line of defence.
+- × SHIELD_DRONE — SHIELD_DRONE behavior generates and maintains this shield pool.
+- × ON_SHIELD_DROP — Drone shield depletion can fire the parent ship's ON_SHIELD_DROP logic reactively.
+
+**THREAT_LEVEL** — Each tag: +0.5 threat multiplier. At 5+ stacks most enemies prioritise the drone over the parent ship.
+- × DECOY — DECOY behavior depends on high THREAT_LEVEL to reliably redirect enemy targeting.
+- × DRONE_HULL — High-threat drones attract fire; DRONE_HULL must survive the attention.
+- × DRONE_SHIELD — Shield pool extends how long a high-threat decoy can absorb incoming fire.
+
+---
+
+## [CONSTRUCT] — New Behavior Tags
+
+**DECOY** — Each tag: +30u aggro radius, extends aggro persistence after taking a hit.
+- × THREAT_LEVEL — Determines how effectively the decoy redirects enemy targeting.
+- × KAMIKAZE — A DECOY that detonates when destroyed — sacrificial lure with a lethal farewell.
+- × INFESTATION — When enemies destroy a DECOY, infestation triggers on the killer.
+- × SALVAGE — Destroyed decoys generate debris, feeding Scrap Salvager builds.
+
+**SHIELD_DRONE** — Each tag: +150 SP shield projection capacity.
+- × DRONE_SHIELD — SHIELD_DRONE projects its DRONE_SHIELD pool as a barrier between ship and incoming fire.
+- × ON_SHIELD_DROP — When the drone's shield depletes, the parent ship's ON_SHIELD_DROP logic fires.
+- × INVULNERABILITY — Shield drone depletion can chain into a Phase Weaver invulnerability window.
+
+**HARVESTER** — Each tag: +1 concurrent collection target, increased collection speed.
+- × PICKUP_RADIUS — Uses ship's PICKUP_RADIUS as autonomous collection range.
+- × SALVAGE — Collected debris feeds directly into Scrap Salvager's DEBRIS_FIELD pool.
+- × RESOURCE_FEED — Energy resources collected feed back into the ship's grid.
+
+**ESCORT** — Each tag: +100u escort assignment range.
+- × REPAIR_SWARM — Escort with REPAIR_SWARM heals an ally rather than the parent ship.
+- × BROADCAST — Escort drones deliver BROADCAST buffs to the assigned ally's position.
+- × ALLY_LOW_HP — ALLY_LOW_HP trigger can reactively dispatch escorts to a damaged partner.
+
+**MINE_LAYER** — Each tag: -1.5s mine deployment cooldown.
+- × MINE — MINE_LAYER drones deploy MINE constructs at intervals.
+- × PERSISTENCE — Deployed mines last longer, expanding area-denial windows.
+- × GRAVITY — Mine-layer drones prioritise placing mines inside active graviton fields.
+
+**MINE** — Each tag: +15u detection radius, +20 detonation damage.
+- × BLAST_RADIUS — Detonation AoE scales with BLAST_RADIUS tags.
+- × GLOBAL_RADIUS — Amplifies both detection radius and blast radius simultaneously.
+- × COMPRESSION — Mines inside a compressed cluster deal bonus damage to densely packed enemies.
+- × PERSISTENCE — Determines how long mines remain active before expiring.
+
+**PERSISTENCE** — Each tag: +4s to lifespan of all deployed constructs (mines, prisms, debris, drones).
+- × MINE — Mines last significantly longer, expanding area-denial coverage.
+- × MIRROR — Vector Specialist prisms persist longer, making beam geometry more reliable.
+- × DEBRIS_FIELD — Deployed debris barriers remain active longer.
+- × SINGULARITY — Active singularities persist longer.
+
+---
+
+## [WEAPON] — New Behavior Tags
+
+**BEAM** — Each tag: +10% continuous DPS, +8% beam length. Only type that interacts with MIRROR and PRISM.
+- × MIRROR — BEAM weapons are redirected by deployed mirrors — foundation of Vector Specialist geometry.
+- × PRISM — Beams split into copies at prisms. Only BEAM weapons interact with PRISM.
+- × REFLECTION — BEAM weapons bounce back from REFLECTION armor toward the attacker.
+- × ENERGY — ENERGY type bonuses compound with BEAM DPS — beam builds naturally stack both.
+
+**PROJECTILE_COUNT** — Each tag: +1 simultaneous projectile per shot (shotgun / volley).
+- × ACCURACY — Lower accuracy spreads projectiles into a wider cone.
+- × SPLIT — Each projectile in a volley can independently split.
+- × CHAIN — Each projectile in a volley chains independently to new targets.
+
+**CHAIN** — Each tag: +1 chain jump, 70% damage retained per jump.
+- × TETHER — Chain shots propagate along tether networks — Quantum Entangler's native projectile type.
+- × DAMAGE_SHARE — Chain damage echoes to all tethered targets simultaneously.
+- × COMPRESSION — Clustered enemies make chain jumps trivially reliable — COMPRESSION is a passive CHAIN amplifier.
+- × EMP — A chaining EMP shot disables every enemy in the chain sequence in one pass.
+
+**SPLIT** — Each tag: +1 split copy at 60% parent damage.
+- × PIERCE — Each split copy pierces independently.
+- × PRISM — Split copies hitting a prism are further split — exponential coverage.
+- × COMPRESSION — Split projectiles into a compressed cluster hit every enemy simultaneously.
+- × TEMPORAL_ECHO — Split copies echoed by TEMPORAL_ECHO double the copy count 0.8s after the shot.
+
+**PULSE** — Each tag: +15% pulse base damage. Weapon radiates from ship rather than firing toward a target.
+- × PULSE_RADIUS — Primary scaling stat for pulse weapons.
+- × AURA_RADIUS — AURA_RADIUS also extends PULSE radius, connecting pulse weapons to class aura builds.
+- × GLOBAL_RADIUS — Amplifies pulse reach alongside all other radius effects.
+- × FREQUENCY — FREQUENCY reduces effective PULSE_INTERVAL — faster pulses.
+
+**RETURN** — Boolean. Projectile returns to source after max range or chain completion. Source immune to own projectile. Return pass deals 80% damage.
+- × PIERCE — Pierces targets on both outward and return passes — double pierce line.
+- × CHAIN — Chains between targets on the way out and again on the way back.
+- × RICOCHET — Return path also bounces off surfaces and prisms.
+- × SPLIT — Split copies each return independently.
+
+---
+
+## [WEAPON] — New Stat Tags
+
+**PASSIVE_DRAIN** — Energy drawn per second while weapon is active, independent of firing rate.
+- × ENERGY_GRID — Larger grid sustains passive drain longer before browning out.
+- × ENERGY_REGEN — Regen must exceed total passive drain to maintain sustained operation.
+- × OVERCLOCK — Overclock burns additional energy on top of passive drain during burst windows.
+
+**PASSIVE_HEAT** — Heat generated per second while weapon is running, independent of firing.
+- × HEAT_DISSIPATION — Net heat = PASSIVE_HEAT minus HEAT_DISSIPATION. Insufficient dissipation = gradual overheat without firing.
+- × VOLTAGE — Hyper-Conductor converts passive heat into VOLTAGE — passive heat becomes a resource.
+- × ON_OVERHEAT — High PASSIVE_HEAT weapons can trigger ON_OVERHEAT without firing, enabling deliberate heat builds.
+
+**PULSE_RADIUS** — Each tag: +25u pulse weapon effective radius. Distinct from BLAST_RADIUS (projectile explosions).
+- × PULSE — PULSE behavior weapons use PULSE_RADIUS as their primary area scaling stat.
+- × AURA_RADIUS — Both extend ship-centred field effects and stack additively.
+- × GLOBAL_RADIUS — Amplifies PULSE_RADIUS alongside every other radius effect in the build.
+
+**PULSE_INTERVAL** — Each tag: -0.3s between automatic pulse firings. Minimum 0.2s.
+- × FREQUENCY — FREQUENCY further reduces effective pulse interval.
+- × EXECUTION_SPEED — Chrono Architect EXECUTION_SPEED lowers pulse interval via automation loop timing.
+- × COOLDOWN — Applies to manually triggered reactive pulse abilities.
+
+---
+
+## [SPECIALIZATION][SPATIAL] — New Tag
+
+**GLOBAL_RADIUS** — Each tag: +12% to all radius-based values across the entire loadout (BLAST_RADIUS, PULSE_RADIUS, PICKUP_RADIUS, mine detection/detonation, AURA_RADIUS, PULL_FORCE fields, singularity reach).
+- × BLAST_RADIUS — Explosive AoE grows — every mine, torpedo, and grenade covers more area.
+- × GRAVITY — Singularity pull field and PULL_FORCE radius both scale — Graviton Weaver is the primary GLOBAL_RADIUS class.
+- × PULSE_RADIUS — Combined with AURA_RADIUS makes Resonance Bard fields enormous.
+- × PICKUP_RADIUS — Item collection range grows — high GLOBAL_RADIUS builds passively vacuum the battlefield.
