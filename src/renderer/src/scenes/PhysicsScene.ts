@@ -280,6 +280,30 @@ export class PhysicsScene extends Phaser.Scene {
     this.draftedCards = this.playerState.draftedCards
     this.combatState  = new CombatState(ship, this.runData.classId)
 
+    // Apply equipped module bonuses (level-stacked)
+    const equippedMods = SaveManager.getEquippedModules(this.runData.shipId)
+    for (const moduleId of equippedMods) {
+      const mod = DataLoader.getModule(moduleId)
+      const level = SaveManager.getModuleLevel(moduleId)
+      if (!mod || level === 0) continue
+      const bonuses = mod.passiveBonuses as Record<string, number>
+      if (bonuses.HULL) {
+        this.combatState.maxHull += bonuses.HULL * level
+        this.combatState.currentHull = this.combatState.maxHull
+      }
+      if (bonuses.SHIELD_MAX) {
+        this.combatState.maxShield += bonuses.SHIELD_MAX * level
+        this.combatState.currentShield = this.combatState.maxShield
+      }
+      if (bonuses.HEAT_CAPACITY) {
+        this.combatState.maxHeat += bonuses.HEAT_CAPACITY * level
+      }
+      if (bonuses.ENERGY_GRID) {
+        this.combatState.maxEnergy += bonuses.ENERGY_GRID * level
+        this.combatState.currentEnergy = this.combatState.maxEnergy
+      }
+    }
+
     this.dispatcher = new EventDispatcher()
     this.evaluator  = new TriggerEvaluator()
     this.executor   = new ActionExecutor()

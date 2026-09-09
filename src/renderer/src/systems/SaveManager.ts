@@ -1,29 +1,37 @@
+import type { ShipFrame, WeaponSize } from '../types'
+
 const SAVE_KEY = 'neon_fleet_save_v1'
+const MODULE_MAX_LEVEL = 5
 
 export interface SaveData {
   credits:      number
   totalKills:   number
   totalRuns:    number
   highestLevel: number
-  // Last run — skip selection on quick relaunch
+  // Quick-relaunch
   lastPilot?:   string
   lastShipId?:  string
   lastClassId?: string
   // Armory navigation pending
   armoryPending?: { pilot: string; shipId: string; classId: string }
-  // Permanent inventory
-  inventory?: { weapons: string[]; modules: string[] }
-  // Per-ship equipped loadouts (overrides defaults when set)
-  loadouts?: Record<string, { weapons: string[]; modules: string[] }>
+  // Weapon inventory (no levels)
+  weaponInventory: string[]
+  // Module inventory with levels: moduleId → level (1-5)
+  moduleInventory: Record<string, number>
+  // Per-ship equipped modules (moduleIds in slots)
+  equippedModules: Record<string, string[]>
+  // Legacy field — migrated on load
+  inventory?: { weapons?: string[]; modules?: string[] }
 }
 
 const DEFAULTS: SaveData = {
-  credits:      200,
-  totalKills:   0,
-  totalRuns:    0,
-  highestLevel: 0,
-  inventory:    { weapons: [], modules: [] },
-  loadouts:     {},
+  credits:        200,
+  totalKills:     0,
+  totalRuns:      0,
+  highestLevel:   0,
+  weaponInventory: [],
+  moduleInventory: {},
+  equippedModules: {},
 }
 
 export class SaveManager {
@@ -31,21 +39,37 @@ export class SaveManager {
     try {
       const raw = localStorage.getItem(SAVE_KEY)
       if (raw) {
-        const parsed = JSON.parse(raw) as SaveData
+        const parsed = JSON.parse(raw) as SaveData & { inventory?: { weapons?: string[]; modules?: string[] } }
+
+        // Migrate legacy flat inventory
+        const weaponInv: string[] = parsed.weaponInventory ?? parsed.inventory?.weapons ?? []
+        const modInv: Record<string, number> = parsed.moduleInventory ?? {}
+
+        // Migrate old modules array to level-1 entries
+        const legacyMods: string[] = (parsed.inventory?.modules as string[] | undefined) ?? []
+        for (const id of legacyMods) {
+          if (!modInv[id]) modInv[id] = 1
+        }
+
         return {
           ...DEFAULTS,
           ...parsed,
-          inventory: { weapons: [], modules: [], ...(parsed.inventory ?? {}) },
-          loadouts:  { ...(parsed.loadouts ?? {}) },
+          weaponInventory: weaponInv,
+          moduleInventory: modInv,
+          equippedModules: parsed.equippedModules ?? {},
+          inventory: undefined,
         }
       }
     } catch {}
-    return { ...DEFAULTS, inventory: { weapons: [], modules: [] }, loadouts: {} }
+    return { ...DEFAULTS }
   }
 
   static save(data: SaveData): void {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(data))
+    const toSave = { ...data, inventory: undefined }
+    localStorage.setItem(SAVE_KEY, JSON.stringify(toSave))
   }
+
+  // ─── Run results ─────────────────────────────────────────────────────────────
 
   static applyRunResult(creditsEarned: number, kills: number, levelReached: number): SaveData {
     const d = this.load()
@@ -69,7 +93,7 @@ export class SaveManager {
     return Math.round(maxHull * 0.05)
   }
 
-  // ─── Last run (quick relaunch) ────────────────────────────────────────────
+  // ─── Last run (quick relaunch) ────────────────────────────────────────────────
 
   static saveLastRun(pilot: string, shipId: string, classId: string): void {
     const d = this.load()
@@ -90,7 +114,7 @@ export class SaveManager {
     this.save(d)
   }
 
-  // ─── Armory navigation pending ────────────────────────────────────────────
+  // ─── Armory navigation ────────────────────────────────────────────────────────
 
   static setArmoryPending(pilot: string, shipId: string, classId: string): void {
     const d = this.load()
@@ -108,40 +132,146 @@ export class SaveManager {
     this.save(d)
   }
 
-  // ─── Inventory ────────────────────────────────────────────────────────────
+  // ─── Weapon inventory (no levels) ─────────────────────────────────────────────
 
-  static getInventory(): { weapons: string[]; modules: string[] } {
-    const d = this.load()
-    return d.inventory ?? { weapons: [], modules: [] }
+  static isWeaponOwned(id: string): boolean {
+    return this.load().weaponInventory.includes(id)
   }
 
-  static isOwned(id: string, type: 'weapon' | 'module'): boolean {
-    const inv = this.getInventory()
-    return type === 'weapon' ? inv.weapons.includes(id) : inv.modules.includes(id)
-  }
-
-  static buyItem(id: string, type: 'weapon' | 'module', price: number): boolean {
+  static buyWeapon(id: string, price: number): boolean {
     const d = this.load()
-    if (d.credits < price) return false
+    if (d.credits < price || d.weaponInventory.includes(id)) return false
     d.credits -= price
-    if (!d.inventory) d.inventory = { weapons: [], modules: [] }
-    if (type === 'weapon' && !d.inventory.weapons.includes(id)) d.inventory.weapons.push(id)
-    if (type === 'module' && !d.inventory.modules.includes(id)) d.inventory.modules.push(id)
+    d.weaponInventory.push(id)
     this.save(d)
     return true
   }
 
-  // ─── Per-ship loadouts ────────────────────────────────────────────────────
+  // Legacy alias used by ArmoryScene
+  static isOwned(id: string, type: 'weapon' | 'module'): boolean {
+    return type === 'weapon' ? this.isWeaponOwned(id) : this.getModuleLevel(id) > 0
+  }
+
+  static buyItem(id: string, type: 'weapon' | 'module', price: number): boolean {
+    return type === 'weapon' ? this.buyWeapon(id, price) : this.buyOrUpgradeModule(id, price) !== false
+  }
+
+  // ─── Module inventory (levelled) ──────────────────────────────────────────────
+
+  static getModuleInventory(): Record<string, number> {
+    return { ...this.load().moduleInventory }
+  }
+
+  static getModuleLevel(id: string): number {
+    return this.load().moduleInventory[id] ?? 0
+  }
+
+  static getModuleUpgradePrice(id: string, basePrice: number): number {
+    const level = this.getModuleLevel(id)
+    return Math.round(basePrice * Math.pow(2, level))
+  }
+
+  static buyOrUpgradeModule(id: string, basePrice: number): number | false {
+    const d = this.load()
+    const currentLevel = d.moduleInventory[id] ?? 0
+    if (currentLevel >= MODULE_MAX_LEVEL) return false
+    const cost = Math.round(basePrice * Math.pow(2, currentLevel))
+    if (d.credits < cost) return false
+    d.credits -= cost
+    d.moduleInventory[id] = currentLevel + 1
+    this.save(d)
+    return currentLevel + 1
+  }
+
+  // ─── Equipped modules per ship ────────────────────────────────────────────────
+
+  static getEquippedModules(shipId: string): string[] {
+    return [...(this.load().equippedModules[shipId] ?? [])]
+  }
+
+  /**
+   * Equip a module to a ship slot.
+   * Caller must pass moduleSize and equippedSizeCounts (from DataLoader, to avoid circular deps).
+   * equippedSizeCounts: how many modules of each size are already equipped.
+   */
+  static equipModule(
+    shipId: string,
+    moduleId: string,
+    moduleSize: WeaponSize,
+    ship: ShipFrame,
+    equippedSizeCounts: Record<string, number>
+  ): boolean {
+    const d = this.load()
+    if ((d.moduleInventory[moduleId] ?? 0) === 0) return false
+
+    const slotKey = `MODULE_SLOT_${moduleSize}` as keyof typeof ship.baseStats
+    const maxSlots = (ship.baseStats as unknown as Record<string, number>)[slotKey] ?? 0
+    const usedSlots = equippedSizeCounts[moduleSize] ?? 0
+    if (usedSlots >= maxSlots) return false
+
+    const equipped = d.equippedModules[shipId] ?? []
+    equipped.push(moduleId)
+    d.equippedModules[shipId] = equipped
+    this.save(d)
+    return true
+  }
+
+  static unequipModule(shipId: string, moduleId: string): void {
+    const d = this.load()
+    const equipped = d.equippedModules[shipId] ?? []
+    const idx = equipped.indexOf(moduleId)
+    if (idx !== -1) {
+      equipped.splice(idx, 1)
+      d.equippedModules[shipId] = equipped
+      this.save(d)
+    }
+  }
+
+  /** All owned modules NOT equipped on any ship */
+  static getStorageModules(): string[] {
+    const d = this.load()
+    const allEquipped = new Set<string>()
+    for (const arr of Object.values(d.equippedModules)) {
+      arr.forEach(id => allEquipped.add(id))
+    }
+    const owned = Object.keys(d.moduleInventory).filter(id => (d.moduleInventory[id] ?? 0) > 0)
+    // A module can be equipped ONCE per equip; track by position not id to handle duplicates
+    // For simplicity: storage = owned - equipped (remove one entry per equip)
+    const equippedList: string[] = []
+    for (const arr of Object.values(d.equippedModules)) equippedList.push(...arr)
+
+    const remaining = [...owned]
+    const storage: string[] = []
+    for (const id of remaining) {
+      const ei = equippedList.indexOf(id)
+      if (ei !== -1) {
+        equippedList.splice(ei, 1) // consume one equipped slot
+      } else {
+        storage.push(id)
+      }
+    }
+    return storage
+  }
+
+  // ─── Per-ship weapon loadout ───────────────────────────────────────────────────
 
   static getLoadout(shipId: string): { weapons: string[]; modules: string[] } | null {
     const d = this.load()
-    return d.loadouts?.[shipId] ?? null
+    const equipped = d.equippedModules?.[shipId]
+    const hasModules = equipped && equipped.length > 0
+    const hasWeapons = d.weaponInventory && d.weaponInventory.length > 0
+
+    if (!hasModules && !hasWeapons) return null
+
+    return {
+      weapons: d.weaponInventory.length > 0 ? d.weaponInventory : [],
+      modules: equipped ?? [],
+    }
   }
 
   static setLoadout(shipId: string, weapons: string[], modules: string[]): void {
     const d = this.load()
-    if (!d.loadouts) d.loadouts = {}
-    d.loadouts[shipId] = { weapons, modules }
+    d.equippedModules[shipId] = modules
     this.save(d)
   }
 }
