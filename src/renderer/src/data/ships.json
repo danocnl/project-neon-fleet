@@ -6,51 +6,24 @@
     "weightClass": "Light",
     "primaryFocus": "Evasion & Speed",
     "baseStats": {
-      "HULL": 900,
-      "ARMOR": 3,
-      "SHIELD_MAX": 800,
-      "SHIELD_REGEN": 120,
-      "SHIELD_DELAY": 4.0,
-      "TOP_SPEED": 580,
-      "ACCELERATION": 560,
-      "TURN_SPEED": 340,
-      "EVASION": 15,
-      "MASS": 1,
-      "SLOT_SMALL": 3,
-      "SLOT_MEDIUM": 1,
-      "SLOT_LARGE": 0,
-      "SLOT_XL": 0,
-      "CARGO_CAPACITY": 60,
-      "HEAT_DISSIPATION": 28,
-      "ENERGY_GRID": 120,
-      "REPAIR_RATE": 8
+      "HULL": 900, "ARMOR": 3,
+      "SHIELD_MAX": 800, "SHIELD_REGEN": 120, "SHIELD_DELAY": 4.0,
+      "TOP_SPEED": 580, "ACCELERATION": 560, "TURN_SPEED": 340,
+      "EVASION": 15, "MASS": 1,
+      "MODULE_SLOT_SMALL": 3, "MODULE_SLOT_MEDIUM": 1, "MODULE_SLOT_LARGE": 0, "MODULE_SLOT_XL": 0,
+      "WEAPON_SLOT_SMALL": 2, "WEAPON_SLOT_MEDIUM": 0, "WEAPON_SLOT_LARGE": 0,
+      "CARGO_CAPACITY": 60, "HEAT_DISSIPATION": 28, "ENERGY_GRID": 120, "REPAIR_RATE": 8
     },
-    "hardwareTags": {
-      "EVASION": 2,
-      "TOP_SPEED": 2,
-      "TURN_SPEED": 2
-    },
+    "hardwareTags": { "EVASION": 2, "TOP_SPEED": 2, "TURN_SPEED": 2 },
     "tagWeighting": {
-      "EVASION": 5,
-      "TOP_SPEED": 5,
-      "TURN_SPEED": 4,
-      "ACCELERATION": 4,
-      "PHASE": 3,
-      "BLINK": 3,
-      "SHIELD_REGEN": 2,
-      "SHIELD_DELAY": 2
+      "EVASION": 5, "TOP_SPEED": 5, "TURN_SPEED": 4, "ACCELERATION": 4,
+      "PHASE": 3, "BLINK": 3, "SHIELD_REGEN": 2, "SHIELD_DELAY": 2
     },
     "specialTags": ["PHASE"],
     "classSynergies": {
-      "chrono_architect": "S",
-      "quantum_entangler": "A",
-      "hyper_conductor": "C",
-      "graviton_weaver": "A",
-      "nanite_swarm_controller": "B",
-      "phase_weaver": "S",
-      "resonance_bard": "S",
-      "scrap_salvager": "C",
-      "vector_specialist": "S"
+      "chrono_architect": "S", "quantum_entangler": "A", "hyper_conductor": "C",
+      "graviton_weaver": "A", "nanite_swarm_controller": "B", "phase_weaver": "S",
+      "resonance_bard": "S", "scrap_salvager": "C", "vector_specialist": "S"
     }
   },
   {
@@ -60,51 +33,24 @@
     "weightClass": "Light",
     "primaryFocus": "Shield & Speed Balance",
     "baseStats": {
-      "HULL": 1200,
-      "ARMOR": 6,
-      "SHIELD_MAX": 1100,
-      "SHIELD_REGEN": 130,
-      "SHIELD_DELAY": 2.5,
-      "TOP_SPEED": 490,
-      "ACCELERATION": 450,
-      "TURN_SPEED": 260,
-      "EVASION": 8,
-      "MASS": 2,
-      "SLOT_SMALL": 2,
-      "SLOT_MEDIUM": 2,
-      "SLOT_LARGE": 1,
-      "SLOT_XL": 0,
-      "CARGO_CAPACITY": 90,
-      "HEAT_DISSIPATION": 24,
-      "ENERGY_GRID": 180,
-      "REPAIR_RATE": 14
+      "HULL": 1200, "ARMOR": 6,
+      "SHIELD_MAX": 1100, "SHIELD_REGEN": 130, "SHIELD_DELAY": 2.5,
+      "TOP_SPEED": 490, "ACCELERATION": 450, "TURN_SPEED": 260,
+      "EVASION": 8, "MASS": 2,
+      "MODULE_SLOT_SMALL": 2, "MODULE_SLOT_MEDIUM": 2, "MODULE_SLOT_LARGE": 1, "MODULE_SLOT_XL": 0,
+      "WEAPON_SLOT_SMALL": 2, "WEAPON_SLOT_MEDIUM": 1, "WEAPON_SLOT_LARGE": 0,
+      "CARGO_CAPACITY": 90, "HEAT_DISSIPATION": 24, "ENERGY_GRID": 180, "REPAIR_RATE": 14
     },
-    "hardwareTags": {
-      "SHIELD_MAX": 2,
-      "TOP_SPEED": 1,
-      "SLOT_MEDIUM": 1
-    },
+    "hardwareTags": { "SHIELD_MAX": 2, "TOP_SPEED": 1, "MODULE_SLOT_MEDIUM": 1 },
     "tagWeighting": {
-      "SHIELD_MAX": 4,
-      "SHIELD_REGEN": 3,
-      "TOP_SPEED": 3,
-      "ACCELERATION": 3,
-      "TURN_SPEED": 3,
-      "ENERGY_GRID": 2,
-      "HULL": 2,
-      "EVASION": 2
+      "SHIELD_MAX": 4, "SHIELD_REGEN": 3, "TOP_SPEED": 3, "ACCELERATION": 3,
+      "TURN_SPEED": 3, "ENERGY_GRID": 2, "HULL": 2, "EVASION": 2
     },
     "specialTags": ["ADAPTIVE_LOADOUT"],
     "classSynergies": {
-      "chrono_architect": "A",
-      "quantum_entangler": "A",
-      "hyper_conductor": "A",
-      "graviton_weaver": "B",
-      "nanite_swarm_controller": "B",
-      "phase_weaver": "A",
-      "resonance_bard": "A",
-      "scrap_salvager": "B",
-      "vector_specialist": "A"
+      "chrono_architect": "A", "quantum_entangler": "A", "hyper_conductor": "A",
+      "graviton_weaver": "B", "nanite_swarm_controller": "B", "phase_weaver": "A",
+      "resonance_bard": "A", "scrap_salvager": "B", "vector_specialist": "A"
     }
   },
   {
@@ -114,51 +60,24 @@
     "weightClass": "Light",
     "primaryFocus": "Max Velocity & Heat Dissipation",
     "baseStats": {
-      "HULL": 850,
-      "ARMOR": 3,
-      "SHIELD_MAX": 600,
-      "SHIELD_REGEN": 90,
-      "SHIELD_DELAY": 5.0,
-      "TOP_SPEED": 620,
-      "ACCELERATION": 600,
-      "TURN_SPEED": 130,
-      "EVASION": 6,
-      "MASS": 2,
-      "SLOT_SMALL": 2,
-      "SLOT_MEDIUM": 2,
-      "SLOT_LARGE": 1,
-      "SLOT_XL": 0,
-      "CARGO_CAPACITY": 60,
-      "HEAT_DISSIPATION": 55,
-      "ENERGY_GRID": 260,
-      "REPAIR_RATE": 6
+      "HULL": 850, "ARMOR": 3,
+      "SHIELD_MAX": 600, "SHIELD_REGEN": 90, "SHIELD_DELAY": 5.0,
+      "TOP_SPEED": 620, "ACCELERATION": 600, "TURN_SPEED": 130,
+      "EVASION": 6, "MASS": 2,
+      "MODULE_SLOT_SMALL": 2, "MODULE_SLOT_MEDIUM": 2, "MODULE_SLOT_LARGE": 1, "MODULE_SLOT_XL": 0,
+      "WEAPON_SLOT_SMALL": 2, "WEAPON_SLOT_MEDIUM": 0, "WEAPON_SLOT_LARGE": 0,
+      "CARGO_CAPACITY": 60, "HEAT_DISSIPATION": 55, "ENERGY_GRID": 260, "REPAIR_RATE": 6
     },
-    "hardwareTags": {
-      "HEAT_DISSIPATION": 3,
-      "TOP_SPEED": 2,
-      "RESOURCE_FEED": 1
-    },
+    "hardwareTags": { "HEAT_DISSIPATION": 3, "TOP_SPEED": 2, "RESOURCE_FEED": 1 },
     "tagWeighting": {
-      "TOP_SPEED": 5,
-      "ACCELERATION": 5,
-      "HEAT_DISSIPATION": 5,
-      "ENERGY_GRID": 4,
-      "HEAT_GEN": 3,
-      "RESOURCE_FEED": 3,
-      "VOLTAGE": 2,
-      "ON_OVERHEAT": 2
+      "TOP_SPEED": 5, "ACCELERATION": 5, "HEAT_DISSIPATION": 5, "ENERGY_GRID": 4,
+      "HEAT_GEN": 3, "RESOURCE_FEED": 3, "VOLTAGE": 2, "ON_OVERHEAT": 2
     },
     "specialTags": ["HEAT_VENTING"],
     "classSynergies": {
-      "chrono_architect": "B",
-      "quantum_entangler": "B",
-      "hyper_conductor": "A",
-      "graviton_weaver": "B",
-      "nanite_swarm_controller": "C",
-      "phase_weaver": "A",
-      "resonance_bard": "S",
-      "scrap_salvager": "C",
-      "vector_specialist": "A"
+      "chrono_architect": "B", "quantum_entangler": "B", "hyper_conductor": "A",
+      "graviton_weaver": "B", "nanite_swarm_controller": "C", "phase_weaver": "A",
+      "resonance_bard": "S", "scrap_salvager": "C", "vector_specialist": "A"
     }
   },
   {
@@ -168,51 +87,25 @@
     "weightClass": "Medium",
     "primaryFocus": "Drone Bays & Firepower",
     "baseStats": {
-      "HULL": 2500,
-      "ARMOR": 12,
-      "SHIELD_MAX": 1400,
-      "SHIELD_REGEN": 110,
-      "SHIELD_DELAY": 2.0,
-      "TOP_SPEED": 380,
-      "ACCELERATION": 300,
-      "TURN_SPEED": 170,
-      "EVASION": 3,
-      "MASS": 5,
-      "SLOT_SMALL": 2,
-      "SLOT_MEDIUM": 2,
-      "SLOT_LARGE": 1,
-      "SLOT_XL": 0,
-      "CARGO_CAPACITY": 110,
-      "HEAT_DISSIPATION": 22,
-      "ENERGY_GRID": 200,
-      "REPAIR_RATE": 18,
+      "HULL": 2500, "ARMOR": 12,
+      "SHIELD_MAX": 1400, "SHIELD_REGEN": 110, "SHIELD_DELAY": 2.0,
+      "TOP_SPEED": 380, "ACCELERATION": 300, "TURN_SPEED": 170,
+      "EVASION": 3, "MASS": 5,
+      "MODULE_SLOT_SMALL": 2, "MODULE_SLOT_MEDIUM": 2, "MODULE_SLOT_LARGE": 1, "MODULE_SLOT_XL": 0,
+      "WEAPON_SLOT_SMALL": 2, "WEAPON_SLOT_MEDIUM": 1, "WEAPON_SLOT_LARGE": 0,
+      "CARGO_CAPACITY": 110, "HEAT_DISSIPATION": 22, "ENERGY_GRID": 200, "REPAIR_RATE": 18,
       "DRONE_BAYS": 2
     },
-    "hardwareTags": {
-      "DRONE_COUNT": 3,
-      "DRONE_SPEED": 1
-    },
+    "hardwareTags": { "DRONE_COUNT": 3, "DRONE_SPEED": 1 },
     "tagWeighting": {
-      "DRONE_COUNT": 5,
-      "DRONE_DAMAGE": 4,
-      "DRONE_SPEED": 4,
-      "DRONE_HULL": 3,
-      "RESPAWN_RATE": 3,
-      "REPAIR_SWARM": 2,
-      "NANITE": 2,
-      "TARGETING_BEACON": 2
+      "DRONE_COUNT": 5, "DRONE_DAMAGE": 4, "DRONE_SPEED": 4, "DRONE_HULL": 3,
+      "RESPAWN_RATE": 3, "REPAIR_SWARM": 2, "NANITE": 2, "TARGETING_BEACON": 2
     },
     "specialTags": ["DRONE_COMMAND"],
     "classSynergies": {
-      "chrono_architect": "A",
-      "quantum_entangler": "B",
-      "hyper_conductor": "A",
-      "graviton_weaver": "A",
-      "nanite_swarm_controller": "S",
-      "phase_weaver": "B",
-      "resonance_bard": "A",
-      "scrap_salvager": "S",
-      "vector_specialist": "B"
+      "chrono_architect": "A", "quantum_entangler": "B", "hyper_conductor": "A",
+      "graviton_weaver": "A", "nanite_swarm_controller": "S", "phase_weaver": "B",
+      "resonance_bard": "A", "scrap_salvager": "S", "vector_specialist": "B"
     }
   },
   {
@@ -222,51 +115,24 @@
     "weightClass": "Medium",
     "primaryFocus": "Armor & Maneuverability",
     "baseStats": {
-      "HULL": 3500,
-      "ARMOR": 22,
-      "SHIELD_MAX": 700,
-      "SHIELD_REGEN": 70,
-      "SHIELD_DELAY": 3.5,
-      "TOP_SPEED": 350,
-      "ACCELERATION": 360,
-      "TURN_SPEED": 200,
-      "EVASION": 4,
-      "MASS": 7,
-      "SLOT_SMALL": 2,
-      "SLOT_MEDIUM": 3,
-      "SLOT_LARGE": 1,
-      "SLOT_XL": 0,
-      "CARGO_CAPACITY": 100,
-      "HEAT_DISSIPATION": 20,
-      "ENERGY_GRID": 160,
-      "REPAIR_RATE": 22
+      "HULL": 3500, "ARMOR": 22,
+      "SHIELD_MAX": 700, "SHIELD_REGEN": 70, "SHIELD_DELAY": 3.5,
+      "TOP_SPEED": 350, "ACCELERATION": 360, "TURN_SPEED": 200,
+      "EVASION": 4, "MASS": 7,
+      "MODULE_SLOT_SMALL": 2, "MODULE_SLOT_MEDIUM": 3, "MODULE_SLOT_LARGE": 1, "MODULE_SLOT_XL": 0,
+      "WEAPON_SLOT_SMALL": 3, "WEAPON_SLOT_MEDIUM": 1, "WEAPON_SLOT_LARGE": 0,
+      "CARGO_CAPACITY": 100, "HEAT_DISSIPATION": 20, "ENERGY_GRID": 160, "REPAIR_RATE": 22
     },
-    "hardwareTags": {
-      "ARMOR": 2,
-      "IMPACT": 2,
-      "MASS": 1
-    },
+    "hardwareTags": { "ARMOR": 2, "IMPACT": 2, "MASS": 1 },
     "tagWeighting": {
-      "ARMOR": 5,
-      "HULL": 4,
-      "MASS": 4,
-      "IMPACT": 4,
-      "TURN_SPEED": 3,
-      "KINETIC": 3,
-      "REPAIR_RATE": 2,
-      "CORROSIVE": 2
+      "ARMOR": 5, "HULL": 4, "MASS": 4, "IMPACT": 4,
+      "TURN_SPEED": 3, "KINETIC": 3, "REPAIR_RATE": 2, "CORROSIVE": 2
     },
     "specialTags": ["IMPACT_DRIVE"],
     "classSynergies": {
-      "chrono_architect": "B",
-      "quantum_entangler": "A",
-      "hyper_conductor": "C",
-      "graviton_weaver": "S",
-      "nanite_swarm_controller": "B",
-      "phase_weaver": "A",
-      "resonance_bard": "B",
-      "scrap_salvager": "S",
-      "vector_specialist": "C"
+      "chrono_architect": "B", "quantum_entangler": "A", "hyper_conductor": "C",
+      "graviton_weaver": "S", "nanite_swarm_controller": "B", "phase_weaver": "A",
+      "resonance_bard": "B", "scrap_salvager": "S", "vector_specialist": "C"
     }
   },
   {
@@ -276,51 +142,24 @@
     "weightClass": "Medium",
     "primaryFocus": "Hardpoint Count & Shields",
     "baseStats": {
-      "HULL": 3200,
-      "ARMOR": 15,
-      "SHIELD_MAX": 2200,
-      "SHIELD_REGEN": 130,
-      "SHIELD_DELAY": 2.0,
-      "TOP_SPEED": 280,
-      "ACCELERATION": 200,
-      "TURN_SPEED": 110,
-      "EVASION": 2,
-      "MASS": 7,
-      "SLOT_SMALL": 3,
-      "SLOT_MEDIUM": 3,
-      "SLOT_LARGE": 3,
-      "SLOT_XL": 1,
-      "CARGO_CAPACITY": 130,
-      "HEAT_DISSIPATION": 16,
-      "ENERGY_GRID": 160,
-      "REPAIR_RATE": 15
+      "HULL": 3200, "ARMOR": 15,
+      "SHIELD_MAX": 2200, "SHIELD_REGEN": 130, "SHIELD_DELAY": 2.0,
+      "TOP_SPEED": 280, "ACCELERATION": 200, "TURN_SPEED": 110,
+      "EVASION": 2, "MASS": 7,
+      "MODULE_SLOT_SMALL": 3, "MODULE_SLOT_MEDIUM": 3, "MODULE_SLOT_LARGE": 3, "MODULE_SLOT_XL": 1,
+      "WEAPON_SLOT_SMALL": 4, "WEAPON_SLOT_MEDIUM": 2, "WEAPON_SLOT_LARGE": 1,
+      "CARGO_CAPACITY": 130, "HEAT_DISSIPATION": 16, "ENERGY_GRID": 160, "REPAIR_RATE": 15
     },
-    "hardwareTags": {
-      "SLOT_LARGE": 2,
-      "SHIELD_MAX": 1,
-      "RATE_OF_FIRE": 1
-    },
+    "hardwareTags": { "MODULE_SLOT_LARGE": 2, "SHIELD_MAX": 1, "RATE_OF_FIRE": 1 },
     "tagWeighting": {
-      "SLOT_LARGE": 5,
-      "SLOT_MEDIUM": 4,
-      "SHIELD_MAX": 4,
-      "RATE_OF_FIRE": 4,
-      "ENERGY_GRID": 3,
-      "AMMO_CAPACITY": 3,
-      "PIERCE": 2,
-      "TETHER": 2
+      "MODULE_SLOT_LARGE": 5, "MODULE_SLOT_MEDIUM": 4, "SHIELD_MAX": 4, "RATE_OF_FIRE": 4,
+      "ENERGY_GRID": 3, "AMMO_CAPACITY": 3, "PIERCE": 2, "TETHER": 2
     },
     "specialTags": ["WEAPONS_PLATFORM"],
     "classSynergies": {
-      "chrono_architect": "A",
-      "quantum_entangler": "S",
-      "hyper_conductor": "S",
-      "graviton_weaver": "A",
-      "nanite_swarm_controller": "B",
-      "phase_weaver": "B",
-      "resonance_bard": "B",
-      "scrap_salvager": "A",
-      "vector_specialist": "A"
+      "chrono_architect": "A", "quantum_entangler": "S", "hyper_conductor": "S",
+      "graviton_weaver": "A", "nanite_swarm_controller": "B", "phase_weaver": "B",
+      "resonance_bard": "B", "scrap_salvager": "A", "vector_specialist": "A"
     }
   },
   {
@@ -330,51 +169,24 @@
     "weightClass": "Heavy",
     "primaryFocus": "Balanced Defense & Range",
     "baseStats": {
-      "HULL": 7500,
-      "ARMOR": 22,
-      "SHIELD_MAX": 4000,
-      "SHIELD_REGEN": 180,
-      "SHIELD_DELAY": 2.5,
-      "TOP_SPEED": 200,
-      "ACCELERATION": 130,
-      "TURN_SPEED": 60,
-      "EVASION": 1,
-      "MASS": 9,
-      "SLOT_SMALL": 2,
-      "SLOT_MEDIUM": 3,
-      "SLOT_LARGE": 2,
-      "SLOT_XL": 1,
-      "CARGO_CAPACITY": 180,
-      "HEAT_DISSIPATION": 26,
-      "ENERGY_GRID": 280,
-      "REPAIR_RATE": 30
+      "HULL": 7500, "ARMOR": 22,
+      "SHIELD_MAX": 4000, "SHIELD_REGEN": 180, "SHIELD_DELAY": 2.5,
+      "TOP_SPEED": 200, "ACCELERATION": 130, "TURN_SPEED": 60,
+      "EVASION": 1, "MASS": 9,
+      "MODULE_SLOT_SMALL": 2, "MODULE_SLOT_MEDIUM": 3, "MODULE_SLOT_LARGE": 2, "MODULE_SLOT_XL": 1,
+      "WEAPON_SLOT_SMALL": 2, "WEAPON_SLOT_MEDIUM": 2, "WEAPON_SLOT_LARGE": 1,
+      "CARGO_CAPACITY": 180, "HEAT_DISSIPATION": 26, "ENERGY_GRID": 280, "REPAIR_RATE": 30
     },
-    "hardwareTags": {
-      "HULL": 2,
-      "SHIELD_MAX": 2,
-      "RANGE": 1
-    },
+    "hardwareTags": { "HULL": 2, "SHIELD_MAX": 2, "RANGE": 1 },
     "tagWeighting": {
-      "HULL": 5,
-      "SHIELD_MAX": 5,
-      "REPAIR_RATE": 4,
-      "RANGE": 4,
-      "SHIELD_REGEN": 3,
-      "ENERGY_GRID": 3,
-      "AURA_RADIUS": 2,
-      "BROADCAST": 2
+      "HULL": 5, "SHIELD_MAX": 5, "REPAIR_RATE": 4, "RANGE": 4,
+      "SHIELD_REGEN": 3, "ENERGY_GRID": 3, "AURA_RADIUS": 2, "BROADCAST": 2
     },
     "specialTags": ["LONG_RANGE_TARGETING"],
     "classSynergies": {
-      "chrono_architect": "S",
-      "quantum_entangler": "A",
-      "hyper_conductor": "A",
-      "graviton_weaver": "A",
-      "nanite_swarm_controller": "B",
-      "phase_weaver": "S",
-      "resonance_bard": "S",
-      "scrap_salvager": "A",
-      "vector_specialist": "B"
+      "chrono_architect": "S", "quantum_entangler": "A", "hyper_conductor": "A",
+      "graviton_weaver": "A", "nanite_swarm_controller": "B", "phase_weaver": "S",
+      "resonance_bard": "S", "scrap_salvager": "A", "vector_specialist": "B"
     }
   },
   {
@@ -384,51 +196,24 @@
     "weightClass": "Heavy",
     "primaryFocus": "Massive Shields & Momentum",
     "baseStats": {
-      "HULL": 6000,
-      "ARMOR": 18,
-      "SHIELD_MAX": 5500,
-      "SHIELD_REGEN": 220,
-      "SHIELD_DELAY": 2.0,
-      "TOP_SPEED": 250,
-      "ACCELERATION": 160,
-      "TURN_SPEED": 70,
-      "EVASION": 1,
-      "MASS": 12,
-      "SLOT_SMALL": 2,
-      "SLOT_MEDIUM": 3,
-      "SLOT_LARGE": 2,
-      "SLOT_XL": 1,
-      "CARGO_CAPACITY": 140,
-      "HEAT_DISSIPATION": 20,
-      "ENERGY_GRID": 300,
-      "REPAIR_RATE": 22
+      "HULL": 6000, "ARMOR": 18,
+      "SHIELD_MAX": 5500, "SHIELD_REGEN": 220, "SHIELD_DELAY": 2.0,
+      "TOP_SPEED": 250, "ACCELERATION": 160, "TURN_SPEED": 70,
+      "EVASION": 1, "MASS": 12,
+      "MODULE_SLOT_SMALL": 2, "MODULE_SLOT_MEDIUM": 3, "MODULE_SLOT_LARGE": 2, "MODULE_SLOT_XL": 1,
+      "WEAPON_SLOT_SMALL": 2, "WEAPON_SLOT_MEDIUM": 2, "WEAPON_SLOT_LARGE": 1,
+      "CARGO_CAPACITY": 140, "HEAT_DISSIPATION": 20, "ENERGY_GRID": 300, "REPAIR_RATE": 22
     },
-    "hardwareTags": {
-      "SHIELD_MAX": 3,
-      "MASS": 2,
-      "IMPACT": 1
-    },
+    "hardwareTags": { "SHIELD_MAX": 3, "MASS": 2, "IMPACT": 1 },
     "tagWeighting": {
-      "SHIELD_MAX": 5,
-      "SHIELD_REGEN": 5,
-      "MASS": 4,
-      "IMPACT": 3,
-      "ENERGY_GRID": 3,
-      "HULL": 3,
-      "VOLTAGE": 2,
-      "INVULNERABILITY": 2
+      "SHIELD_MAX": 5, "SHIELD_REGEN": 5, "MASS": 4, "IMPACT": 3,
+      "ENERGY_GRID": 3, "HULL": 3, "VOLTAGE": 2, "INVULNERABILITY": 2
     },
     "specialTags": ["MOMENTUM_DRIVE", "SHIELD_WALL"],
     "classSynergies": {
-      "chrono_architect": "A",
-      "quantum_entangler": "B",
-      "hyper_conductor": "S",
-      "graviton_weaver": "B",
-      "nanite_swarm_controller": "C",
-      "phase_weaver": "S",
-      "resonance_bard": "A",
-      "scrap_salvager": "B",
-      "vector_specialist": "A"
+      "chrono_architect": "A", "quantum_entangler": "B", "hyper_conductor": "S",
+      "graviton_weaver": "B", "nanite_swarm_controller": "C", "phase_weaver": "S",
+      "resonance_bard": "A", "scrap_salvager": "B", "vector_specialist": "A"
     }
   },
   {
@@ -438,51 +223,24 @@
     "weightClass": "Heavy",
     "primaryFocus": "Extreme Armor & 360° Coverage",
     "baseStats": {
-      "HULL": 10000,
-      "ARMOR": 32,
-      "SHIELD_MAX": 1800,
-      "SHIELD_REGEN": 80,
-      "SHIELD_DELAY": 3.0,
-      "TOP_SPEED": 150,
-      "ACCELERATION": 100,
-      "TURN_SPEED": 45,
-      "EVASION": 0,
-      "MASS": 12,
-      "SLOT_SMALL": 2,
-      "SLOT_MEDIUM": 2,
-      "SLOT_LARGE": 3,
-      "SLOT_XL": 2,
-      "CARGO_CAPACITY": 160,
-      "HEAT_DISSIPATION": 24,
-      "ENERGY_GRID": 320,
-      "REPAIR_RATE": 35
+      "HULL": 10000, "ARMOR": 32,
+      "SHIELD_MAX": 1800, "SHIELD_REGEN": 80, "SHIELD_DELAY": 3.0,
+      "TOP_SPEED": 150, "ACCELERATION": 100, "TURN_SPEED": 45,
+      "EVASION": 0, "MASS": 12,
+      "MODULE_SLOT_SMALL": 2, "MODULE_SLOT_MEDIUM": 2, "MODULE_SLOT_LARGE": 3, "MODULE_SLOT_XL": 2,
+      "WEAPON_SLOT_SMALL": 2, "WEAPON_SLOT_MEDIUM": 2, "WEAPON_SLOT_LARGE": 2, "WEAPON_SLOT_XL": 1,
+      "CARGO_CAPACITY": 160, "HEAT_DISSIPATION": 24, "ENERGY_GRID": 320, "REPAIR_RATE": 35
     },
-    "hardwareTags": {
-      "ARMOR": 3,
-      "HULL": 2,
-      "STATUS_IMMUNITY": 1
-    },
+    "hardwareTags": { "ARMOR": 3, "HULL": 2, "STATUS_IMMUNITY": 1 },
     "tagWeighting": {
-      "ARMOR": 5,
-      "HULL": 5,
-      "SLOT_LARGE": 4,
-      "SLOT_XL": 4,
-      "ENERGY_GRID": 3,
-      "REPAIR_RATE": 3,
-      "GRAVITY": 2,
-      "SALVAGE": 2
+      "ARMOR": 5, "HULL": 5, "MODULE_SLOT_LARGE": 4, "MODULE_SLOT_XL": 4,
+      "ENERGY_GRID": 3, "REPAIR_RATE": 3, "GRAVITY": 2, "SALVAGE": 2
     },
     "specialTags": ["STATUS_IMMUNE", "TURRET_ARRAY"],
     "classSynergies": {
-      "chrono_architect": "A",
-      "quantum_entangler": "A",
-      "hyper_conductor": "C",
-      "graviton_weaver": "S",
-      "nanite_swarm_controller": "A",
-      "phase_weaver": "B",
-      "resonance_bard": "A",
-      "scrap_salvager": "S",
-      "vector_specialist": "S"
+      "chrono_architect": "A", "quantum_entangler": "A", "hyper_conductor": "C",
+      "graviton_weaver": "S", "nanite_swarm_controller": "A", "phase_weaver": "B",
+      "resonance_bard": "A", "scrap_salvager": "S", "vector_specialist": "S"
     }
   }
 ]

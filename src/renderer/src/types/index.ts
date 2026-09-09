@@ -14,10 +14,16 @@ export interface ShipBaseStats {
   TURN_SPEED: number      // °/s
   EVASION: number         // % per-hit dodge chance
   MASS: number            // Collision/momentum weight
-  SLOT_SMALL: number
-  SLOT_MEDIUM: number
-  SLOT_LARGE: number
-  SLOT_XL: number
+  // Module slots — passive/active equipment bays
+  MODULE_SLOT_SMALL: number
+  MODULE_SLOT_MEDIUM: number
+  MODULE_SLOT_LARGE: number
+  MODULE_SLOT_XL: number
+  // Weapon slots — hardpoints for offensive weapons
+  WEAPON_SLOT_SMALL: number
+  WEAPON_SLOT_MEDIUM: number
+  WEAPON_SLOT_LARGE: number
+  WEAPON_SLOT_XL?: number   // Heavy ordnance only
   CARGO_CAPACITY: number
   HEAT_DISSIPATION: number  // Heat units cooled per second
   ENERGY_GRID: number       // Total energy capacity

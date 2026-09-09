@@ -122,45 +122,88 @@
   {
     "category": "SHIP",
     "subCategory": "CAPACITY",
-    "tag": "SLOT_SMALL",
-    "description": "Capacity limit for small weapon and module hardpoints.",
-    "mechanic": "Each tag adds +1 small hardpoint slot.",
+    "tag": "MODULE_SLOT_SMALL",
+    "description": "Capacity for small passive/active module equipment (utility, sensors, minor boosters).",
+    "mechanic": "Each tag adds +1 small module slot.",
     "interactions": [
-      { "tag": "RATE_OF_FIRE", "effect": "Small slots often host rapid-fire weapons; RATE_OF_FIRE tags multiply their output." },
-      { "tag": "DRONE_COUNT", "effect": "Small slots can house drone launchers; more slots let a ship run multiple drone types simultaneously." }
+      { "tag": "ENERGY_GRID", "effect": "Small energy cells occupy small module slots; more slots allow larger energy builds." },
+      { "tag": "REPAIR_RATE", "effect": "Passive repair modules are small-sized; stacking them across small slots increases sustained repair." }
     ]
   },
   {
     "category": "SHIP",
     "subCategory": "CAPACITY",
-    "tag": "SLOT_MEDIUM",
-    "description": "Capacity limit for medium weapon and module hardpoints.",
-    "mechanic": "Each tag adds +1 medium hardpoint slot.",
+    "tag": "MODULE_SLOT_MEDIUM",
+    "description": "Capacity for medium passive/active module equipment (shield boosters, cooling systems).",
+    "mechanic": "Each tag adds +1 medium module slot.",
     "interactions": [
-      { "tag": "ENERGY_GRID", "effect": "Medium weapons draw moderate energy; more medium slots require a larger energy grid to sustain." },
-      { "tag": "HEAT_GEN", "effect": "Running multiple medium weapons generates significant heat; manage with HEAT_DISSIPATION." }
+      { "tag": "SHIELD_MAX", "effect": "Shield booster modules are medium-sized; more medium slots allow higher shield stacking." },
+      { "tag": "HEAT_DISSIPATION", "effect": "Cooling modules occupy medium slots; stack them to sustain high-heat weapon builds." }
     ]
   },
   {
     "category": "SHIP",
     "subCategory": "CAPACITY",
-    "tag": "SLOT_LARGE",
-    "description": "Capacity limit for large weapon and module hardpoints.",
-    "mechanic": "Each tag adds +1 large hardpoint slot.",
+    "tag": "MODULE_SLOT_LARGE",
+    "description": "Capacity for large passive/active module equipment (power cores, heavy armour plating).",
+    "mechanic": "Each tag adds +1 large module slot.",
     "interactions": [
-      { "tag": "ENERGY_GRID", "effect": "Large weapons are high energy consumers; insufficient grid causes brown-outs reducing fire rate." },
-      { "tag": "BLAST_RADIUS", "effect": "Large slots typically host explosive weapons; BLAST_RADIUS tags scale their AoE coverage." }
+      { "tag": "ENERGY_GRID", "effect": "Power cores are large modules; large slots allow the highest-tier energy grid upgrades." },
+      { "tag": "ARMOR", "effect": "Heavy armour plating occupies large slots; more large slots enable maximum armour builds." }
     ]
   },
   {
     "category": "SHIP",
     "subCategory": "CAPACITY",
-    "tag": "SLOT_XL",
-    "description": "Capacity limit for XL and heavy weapon hardpoints.",
-    "mechanic": "Each tag adds +1 XL hardpoint slot. XL weapons are the highest damage single emplacements in the game.",
+    "tag": "MODULE_SLOT_XL",
+    "description": "Capacity for XL module equipment (fusion cores, capital-class systems). Heavy ships only.",
+    "mechanic": "Each tag adds +1 XL module slot.",
     "interactions": [
-      { "tag": "ENERGY_GRID", "effect": "XL weapons are extreme energy draws; a dedicated energy grid build is required to fire them consistently." },
-      { "tag": "PIERCE", "effect": "XL weapons with pierce tags can cut through entire enemy formations in a single shot." }
+      { "tag": "ENERGY_GRID", "effect": "Fusion cores (XL) unlock the highest-tier energy capacity; XL slots are a prerequisite." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "CAPACITY",
+    "tag": "WEAPON_SLOT_SMALL",
+    "description": "Hardpoint for a small weapon (light cannons, rapid-fire turrets, beam emitters).",
+    "mechanic": "Each tag adds +1 small weapon hardpoint.",
+    "interactions": [
+      { "tag": "RATE_OF_FIRE", "effect": "Small weapons fire rapidly; ROF tags multiply their sustained DPS across all small slots." },
+      { "tag": "ENERGY", "effect": "Small energy weapons are efficient; ENERGY tags compound across multiple small hardpoints." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "CAPACITY",
+    "tag": "WEAPON_SLOT_MEDIUM",
+    "description": "Hardpoint for a medium weapon (plasma cannons, missile launchers, pulse arrays).",
+    "mechanic": "Each tag adds +1 medium weapon hardpoint.",
+    "interactions": [
+      { "tag": "HEAT_GEN", "effect": "Medium weapons generate significant heat; balance with HEAT_DISSIPATION tags." },
+      { "tag": "PIERCE", "effect": "Medium-class railguns carry pierce; more medium slots enable multi-line pierce builds." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "CAPACITY",
+    "tag": "WEAPON_SLOT_LARGE",
+    "description": "Hardpoint for a large weapon (heavy cannons, torpedo bays, beam arrays).",
+    "mechanic": "Each tag adds +1 large weapon hardpoint. Large weapons deal high damage at high energy cost.",
+    "interactions": [
+      { "tag": "ENERGY_GRID", "effect": "Large weapons drain energy rapidly; a large grid is required to fire them consistently." },
+      { "tag": "BLAST_RADIUS", "effect": "Torpedo bays occupy large slots; BLAST_RADIUS tags scale their AoE coverage." }
+    ]
+  },
+  {
+    "category": "SHIP",
+    "subCategory": "CAPACITY",
+    "tag": "WEAPON_SLOT_XL",
+    "description": "Hardpoint for an XL weapon (ordnance cannons, singularity projectors). Type-10 exclusive.",
+    "mechanic": "Each tag adds +1 XL weapon hardpoint. XL weapons deal the highest single-shot damage in the game.",
+    "interactions": [
+      { "tag": "ENERGY_GRID", "effect": "XL weapons are extreme energy draws; dedicated grid builds are required." },
+      { "tag": "PIERCE", "effect": "XL piercing ordnance cuts through entire compressed formations in one shot." }
     ]
   },
   {

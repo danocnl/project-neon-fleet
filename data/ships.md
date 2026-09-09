@@ -6,6 +6,11 @@
 - **Hardware Tags** — tag counts pre-loaded into the TagAggregator at loadout (affect keystone prerequisites)
 - **Tag Weighting** — draft bias weights (1 low → 5 core); these tags appear more frequently in upgrade card drafts
 
+**Slot types:**
+- **MODULE_SLOT_*** — bays for passive/active equipment (shield boosters, power cores, armour plating, cooling systems)
+- **WEAPON_SLOT_*** — hardpoints for offensive weapons (cannons, torpedoes, beam arrays, turrets)
+- **DRONE_BAYS** — dedicated construct launch bays, do not consume module or weapon slots (Krait only)
+
 **Stat units:** HULL/SHIELD in points · ARMOR in % reduction · speeds in units/s or °/s · SHIELD_DELAY in seconds (lower = faster regen) · HEAT_DISSIPATION in heat/s · REPAIR_RATE in HP/s
 
 **Synergy ratings:** S = exceptional · A = good · B = workable · C = poor
@@ -525,14 +530,14 @@ SALVAGE     2
 
 ## Quick Comparison
 
-| Ship | Class | HULL | ARMOR | SHIELD | SPEED | TURN | EVASION | Slots (S/M/L/XL) |
+| Ship | Class | HULL | ARMOR | SHIELD | SPEED | EVASION | Module Slots (S/M/L/XL) | Weapon Slots (S/M/L/XL) |
 |---|---|---|---|---|---|---|---|---|
-| Sidewinder | Light | 900 | 3% | 800 | 580 | 340° | 15% | 3/1/0/0 |
-| Cobra | Light | 1,200 | 6% | 1,100 | 490 | 260° | 8% | 2/2/1/0 |
-| Mamba | Light | 850 | 3% | 600 | 620 | 130° | 6% | 2/2/1/0 |
-| Krait | Medium | 2,500 | 12% | 1,400 | 380 | 170° | 3% | 2/2/1/0 + 2 drone bays |
-| Chieftain | Medium | 3,500 | 22% | 700 | 350 | 200° | 4% | 2/3/1/0 |
-| Python | Medium | 3,200 | 15% | 2,200 | 280 | 110° | 2% | 3/3/3/1 |
-| Anaconda | Heavy | 7,500 | 22% | 4,000 | 200 | 60° | 1% | 2/3/2/1 |
-| Cutter | Heavy | 6,000 | 18% | 5,500 | 250 | 70° | 1% | 2/3/2/1 |
-| Type-10 | Heavy | 10,000 | 32% | 1,800 | 150 | 45° | 0% | 2/2/3/2 |
+| Sidewinder | Light | 900 | 3% | 800 | 580 | 15% | 3/1/0/0 | 2/0/0/— |
+| Cobra | Light | 1,200 | 6% | 1,100 | 490 | 8% | 2/2/1/0 | 2/1/0/— |
+| Mamba | Light | 850 | 3% | 600 | 620 | 6% | 2/2/1/0 | 2/0/0/— |
+| Krait | Medium | 2,500 | 12% | 1,400 | 380 | 3% | 2/2/1/0 + 2 drone bays | 2/1/0/— |
+| Chieftain | Medium | 3,500 | 22% | 700 | 350 | 4% | 2/3/1/0 | 3/1/0/— |
+| Python | Medium | 3,200 | 15% | 2,200 | 280 | 2% | 3/3/3/1 | 4/2/1/— |
+| Anaconda | Heavy | 7,500 | 22% | 4,000 | 200 | 1% | 2/3/2/1 | 2/2/1/— |
+| Cutter | Heavy | 6,000 | 18% | 5,500 | 250 | 1% | 2/3/2/1 | 2/2/1/— |
+| Type-10 | Heavy | 10,000 | 32% | 1,800 | 150 | 0% | 2/2/3/2 | 2/2/2/1 |
