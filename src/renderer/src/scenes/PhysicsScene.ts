@@ -25,6 +25,7 @@ const GRID_SZ  = 60
 
 const KILLS_PER_LEVEL = 3
 const LOG_MAX = 6
+const MODULE_MAX_LEVEL = 20   // passiveBonuses in modules.json = the Lv20 target value
 
 const DEFAULT_LOADOUTS: Record<string, { weapons: string[]; modules: string[] }> = {
   sidewinder: { weapons: ['pulse_laser', 'pulse_laser'],       modules: ['thruster_pack_s', 'shield_booster_s', 'cooling_fin_s'] },
@@ -286,20 +287,25 @@ export class PhysicsScene extends Phaser.Scene {
       const mod = DataLoader.getModule(moduleId)
       const level = SaveManager.getModuleLevel(moduleId)
       if (!mod || level === 0) continue
+      // passiveBonuses represent the Lv20 target — divide by 20 so Lv1 is tiny
       const bonuses = mod.passiveBonuses as Record<string, number>
+      const scale = level / MODULE_MAX_LEVEL
       if (bonuses.HULL) {
-        this.combatState.maxHull += bonuses.HULL * level
+        const add = Math.round(bonuses.HULL * scale)
+        this.combatState.maxHull += add
         this.combatState.currentHull = this.combatState.maxHull
       }
       if (bonuses.SHIELD_MAX) {
-        this.combatState.maxShield += bonuses.SHIELD_MAX * level
+        const add = Math.round(bonuses.SHIELD_MAX * scale)
+        this.combatState.maxShield += add
         this.combatState.currentShield = this.combatState.maxShield
       }
       if (bonuses.HEAT_CAPACITY) {
-        this.combatState.maxHeat += bonuses.HEAT_CAPACITY * level
+        this.combatState.maxHeat += Math.round(bonuses.HEAT_CAPACITY * scale)
       }
       if (bonuses.ENERGY_GRID) {
-        this.combatState.maxEnergy += bonuses.ENERGY_GRID * level
+        const add = Math.round(bonuses.ENERGY_GRID * scale)
+        this.combatState.maxEnergy += add
         this.combatState.currentEnergy = this.combatState.maxEnergy
       }
     }

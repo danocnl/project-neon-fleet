@@ -6,7 +6,7 @@
     "category": "SHIELD",
     "description": "Compact shield capacitor. Straightforward SHIELD_MAX increase with no drawbacks. Fits any ship without breaking the weight budget.",
     "passiveBonuses": {
-      "SHIELD_MAX": 350
+      "SHIELD_MAX": 500
     },
     "passiveDrain": 0,
     "passiveHeat": 0,
@@ -23,8 +23,8 @@
     "category": "SHIELD",
     "description": "Combined shield pool expansion and regen boost. Makes shield-focused draft cards appear 40% more often in the card pool.",
     "passiveBonuses": {
-      "SHIELD_MAX": 700,
-      "SHIELD_REGEN": 25
+      "SHIELD_MAX": 800,
+      "SHIELD_REGEN": 40
     },
     "draftBonus": {
       "tags": [
@@ -51,7 +51,7 @@
     "category": "SHIELD",
     "description": "Passive shield boost plus an emergency burst when shields drop to zero. The reactive charge fires once then enters a 20s cooldown.",
     "passiveBonuses": {
-      "SHIELD_MAX": 300
+      "SHIELD_MAX": 600
     },
     "trigger": {
       "condition": "ON_SHIELD_DROP",
@@ -74,7 +74,7 @@
     "category": "HULL",
     "description": "Dense composite plating. Flat armor percentage increase. Heavy for its size \u2014 monitor weight budget on fast ships.",
     "passiveBonuses": {
-      "ARMOR": 6
+      "ARMOR": 8
     },
     "passiveDrain": 0,
     "passiveHeat": 0,
@@ -91,8 +91,8 @@
     "category": "HULL",
     "description": "Structural hull expansion plus additional armor lining. Makes armor and hull upgrade cards 30% more likely to appear in drafts.",
     "passiveBonuses": {
-      "HULL": 1200,
-      "ARMOR": 4
+      "HULL": 300,
+      "ARMOR": 5
     },
     "draftBonus": {
       "tags": [
@@ -119,8 +119,8 @@
     "category": "ENGINE",
     "description": "Compact supplementary thruster array. Speed and acceleration boost. Minimal weight \u2014 ideal for light ships staying within budget.",
     "passiveBonuses": {
-      "TOP_SPEED": 25,
-      "ACCELERATION": 20
+      "TOP_SPEED": 100,
+      "ACCELERATION": 80
     },
     "passiveDrain": 1,
     "passiveHeat": 0,
@@ -138,9 +138,9 @@
     "category": "ENGINE",
     "description": "Full mobility suite. Boosts all three mobility stats and makes speed/evasion draft cards 40% more likely.",
     "passiveBonuses": {
-      "TOP_SPEED": 50,
-      "ACCELERATION": 40,
-      "TURN_SPEED": 15
+      "TOP_SPEED": 160,
+      "ACCELERATION": 120,
+      "TURN_SPEED": 40
     },
     "draftBonus": {
       "tags": [
@@ -169,8 +169,8 @@
     "category": "POWER",
     "description": "Supplementary energy cell. Boosts both grid capacity and passive regen rate. Helps sustain beam weapons and drone fleets.",
     "passiveBonuses": {
-      "ENERGY_GRID": 60,
-      "ENERGY_REGEN": 8
+      "ENERGY_GRID": 200,
+      "ENERGY_REGEN": 30
     },
     "passiveDrain": 0,
     "passiveHeat": 0,
@@ -188,8 +188,8 @@
     "category": "POWER",
     "description": "Compact fusion reactor. Significant energy grid and regen boost. Makes energy and overclock draft cards 40% more likely.",
     "passiveBonuses": {
-      "ENERGY_GRID": 140,
-      "ENERGY_REGEN": 18
+      "ENERGY_GRID": 400,
+      "ENERGY_REGEN": 60
     },
     "draftBonus": {
       "tags": [
@@ -217,8 +217,8 @@
     "category": "POWER",
     "description": "High-output fusion core. Massive energy boost. Makes energy/overclock cards 50% more likely AND 20% more effective when drafted.",
     "passiveBonuses": {
-      "ENERGY_GRID": 300,
-      "ENERGY_REGEN": 40
+      "ENERGY_GRID": 800,
+      "ENERGY_REGEN": 120
     },
     "draftBonus": {
       "tags": [
@@ -247,7 +247,7 @@
     "category": "THERMAL",
     "description": "Passive heat sink. Increases dissipation rate \u2014 essential for heavy beam or multi-weapon builds.",
     "passiveBonuses": {
-      "HEAT_DISSIPATION": 10
+      "HEAT_DISSIPATION": 60
     },
     "passiveDrain": 0,
     "passiveHeat": 0,
@@ -264,8 +264,8 @@
     "category": "THERMAL",
     "description": "Active cryogenic cooling system. Boosts both dissipation and heat capacity. Makes heat management and Hyper-Conductor draft cards more likely.",
     "passiveBonuses": {
-      "HEAT_DISSIPATION": 22,
-      "HEAT_CAPACITY": 15
+      "HEAT_DISSIPATION": 100,
+      "HEAT_CAPACITY": 60
     },
     "draftBonus": {
       "tags": [
@@ -294,7 +294,7 @@
     "category": "REPAIR",
     "description": "Automated hull repair system. Consistent passive repair rate. Makes hull/repair draft cards more likely and 10% more effective.",
     "passiveBonuses": {
-      "REPAIR_RATE": 12
+      "REPAIR_RATE": 60
     },
     "draftBonus": {
       "tags": [
@@ -320,7 +320,9 @@
     "size": "SMALL",
     "category": "DRONE",
     "description": "Deploys 1 orbital combat drone with a light kinetic weapon. The drone's weapon benefits from KINETIC tags in the aggregator.",
-    "passiveBonuses": {},
+    "passiveBonuses": {
+      "DRONE_DAMAGE": 30
+    },
     "droneSpec": {
       "count": 1,
       "behavior": "ORBITAL",
@@ -363,7 +365,9 @@
     "size": "SMALL",
     "category": "DRONE",
     "description": "Deploys 1 repair drone that continuously restores hull HP to the parent ship or nearby allies. Stacks with base REPAIR_RATE.",
-    "passiveBonuses": {},
+    "passiveBonuses": {
+      "REPAIR_RATE": 30
+    },
     "droneSpec": {
       "count": 1,
       "behavior": "REPAIR_SWARM",
@@ -389,7 +393,9 @@
     "size": "MEDIUM",
     "category": "DRONE",
     "description": "Deploys 2 high-threat decoy drones that actively attract enemy targeting. Each detonates on destruction (KAMIKAZE). Enemies that destroy a decoy can trigger INFESTATION.",
-    "passiveBonuses": {},
+    "passiveBonuses": {
+      "THREAT_LEVEL": 4
+    },
     "droneSpec": {
       "count": 2,
       "behavior": "DECOY",
@@ -416,7 +422,9 @@
     "size": "MEDIUM",
     "category": "DRONE",
     "description": "Deploys 2 shield drones that project protective fields between the parent ship and incoming fire. Each drone has its own shield pool.",
-    "passiveBonuses": {},
+    "passiveBonuses": {
+      "DRONE_SHIELD": 400
+    },
     "droneSpec": {
       "count": 2,
       "behavior": "SHIELD_DRONE",
@@ -443,7 +451,9 @@
     "size": "SMALL",
     "category": "DRONE",
     "description": "Deploys 1 harvester drone that autonomously collects dropped items and debris within the ship's PICKUP_RADIUS. Feeds directly into Scrap Salvager DEBRIS_FIELD pools.",
-    "passiveBonuses": {},
+    "passiveBonuses": {
+      "PICKUP_RADIUS": 60
+    },
     "droneSpec": {
       "count": 1,
       "behavior": "HARVESTER",
@@ -470,7 +480,9 @@
     "size": "LARGE",
     "category": "DRONE",
     "description": "Deploys 3 orbital combat drones with energy beam weapons. Each drone's beam benefits from ENERGY and BEAM tags. High passive drain \u2014 requires good energy management.",
-    "passiveBonuses": {},
+    "passiveBonuses": {
+      "DRONE_DAMAGE": 60
+    },
     "droneSpec": {
       "count": 3,
       "behavior": "ORBITAL",
@@ -518,8 +530,8 @@
     "category": "UTILITY",
     "description": "Expanded cargo hold and improved salvage net. Boosts cargo capacity and item pickup radius simultaneously.",
     "passiveBonuses": {
-      "CARGO_CAPACITY": 40,
-      "PICKUP_RADIUS": 15
+      "CARGO_CAPACITY": 100,
+      "PICKUP_RADIUS": 60
     },
     "passiveDrain": 0,
     "passiveHeat": 0,
@@ -538,7 +550,7 @@
     "category": "UTILITY",
     "description": "Advanced load-balancing system that increases the ship's effective weight tolerance. Allows heavier weapon and module loadouts before the mobility penalty curve kicks in.",
     "passiveBonuses": {
-      "WEIGHT_CAPACITY": 45
+      "WEIGHT_CAPACITY": 100
     },
     "draftBonus": {
       "tags": [
@@ -564,7 +576,7 @@
     "category": "WEAPON_ENHANCEMENT",
     "description": "Predictive targeting computer. Reduces spread angle on all weapons by 3 degrees. Makes accuracy and velocity draft cards appear more often.",
     "passiveBonuses": {
-      "WEAPON_ACCURACY_MOD": -3
+      "WEAPON_ACCURACY_MOD": -12
     },
     "draftBonus": {
       "tags": [
@@ -592,7 +604,7 @@
     "category": "WEAPON_ENHANCEMENT",
     "description": "Thermal lining on all weapon housings reduces per-shot heat generation by 15%. Essential for sustained-fire builds. Makes heat management draft cards appear more frequently.",
     "passiveBonuses": {
-      "WEAPON_HEAT_GEN_MOD": -0.15
+      "WEAPON_HEAT_GEN_MOD": -0.6
     },
     "draftBonus": {
       "tags": [
@@ -620,7 +632,7 @@
     "category": "WEAPON_ENHANCEMENT",
     "description": "Extended ammo feed system. Adds 8 shots to every weapon's magazine before reload. Makes ammo and reload draft cards appear more often and 10% more effective.",
     "passiveBonuses": {
-      "WEAPON_AMMO_MOD": 8
+      "WEAPON_AMMO_MOD": 30
     },
     "draftBonus": {
       "tags": [
@@ -694,7 +706,7 @@
     "category": "PARTNER",
     "description": "Broadcasts a portion of your active AMPLIFICATION and speed bonuses to the partner ship when they are within AURA_RADIUS range. AURA_RADIUS tags extend effective broadcast range.",
     "passiveBonuses": {
-      "BROADCAST": 1
+      "BROADCAST": 5
     },
     "passiveDrain": 6,
     "passiveHeat": 0,
@@ -714,7 +726,7 @@
     "category": "PARTNER",
     "description": "Extends 50% of this ship's REPAIR_RATE as a passive heal to the partner ship when within range. Stacks with the partner's own repair stats.",
     "passiveBonuses": {
-      "REPAIR_RATE": 6
+      "REPAIR_RATE": 30
     },
     "passiveDrain": 3,
     "passiveHeat": 0,

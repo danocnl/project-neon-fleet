@@ -1,7 +1,7 @@
 import type { ShipFrame, WeaponSize } from '../types'
 
 const SAVE_KEY = 'neon_fleet_save_v1'
-const MODULE_MAX_LEVEL = 5
+const MODULE_MAX_LEVEL = 20
 
 export interface SaveData {
   credits:      number
@@ -168,14 +168,14 @@ export class SaveManager {
 
   static getModuleUpgradePrice(id: string, basePrice: number): number {
     const level = this.getModuleLevel(id)
-    return Math.round(basePrice * Math.pow(2, level))
+    return Math.round(basePrice * (1 + level * 0.5))
   }
 
   static buyOrUpgradeModule(id: string, basePrice: number): number | false {
     const d = this.load()
     const currentLevel = d.moduleInventory[id] ?? 0
     if (currentLevel >= MODULE_MAX_LEVEL) return false
-    const cost = Math.round(basePrice * Math.pow(2, currentLevel))
+    const cost = Math.round(basePrice * (1 + currentLevel * 0.5))
     if (d.credits < cost) return false
     d.credits -= cost
     d.moduleInventory[id] = currentLevel + 1
