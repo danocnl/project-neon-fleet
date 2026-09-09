@@ -148,66 +148,47 @@ export class BenchmarkScene extends Phaser.Scene {
     const BX  = W / 2 - BW - 10   // right edge at W/2 - 10
     const AX  = W / 2 + 10          // left edge at W/2 + 10
 
-    // RELAUNCH visual
-    const btnGfx = this.add.graphics()
-    const drawBtn = (hover: boolean) => {
-      btnGfx.clear()
-      btnGfx.fillStyle(ACCENT, hover ? 0.25 : 0.1)
-      btnGfx.fillRect(BX, BY, BW, BH)
-      btnGfx.lineStyle(1.5, ACCENT, hover ? 1.0 : 0.8)
-      btnGfx.strokeRect(BX, BY, BW, BH)
-    }
-    drawBtn(false)
-    this.add.text(BX + BW / 2, BY + BH / 2, 'RELAUNCH', {
-      fontSize: '14px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
-    }).setOrigin(0.5)
+    // Phaser draws the button visuals only — no text (HTML overlay provides text + click)
+    this.add.graphics()
+      .fillStyle(ACCENT, 0.08).fillRect(BX, BY, BW, BH)
+      .lineStyle(1.5, ACCENT, 0.9).strokeRect(BX, BY, BW, BH)
 
-    // ARMORY placeholder (locked)
+    // ARMORY placeholder
     this.add.graphics().lineStyle(1, 0x223322, 0.4).strokeRect(AX, BY, BW, BH)
     this.add.text(AX + BW / 2, BY + BH / 2, 'ARMORY  [SOON]', {
       fontSize: '11px', color: '#334433', fontFamily: 'monospace',
     }).setOrigin(0.5)
 
-    // HTML button — sits on top of the canvas in the DOM, completely outside
-    // Phaser's input system which has been intercepting all click events.
-    const htmlBtn = document.createElement('button')
-    htmlBtn.textContent = 'RELAUNCH'
-    htmlBtn.style.cssText = [
-      'position:fixed',
-      `left:${BX / W * 100}%`,
-      `top:${BY / H * 100}%`,
-      `width:${BW / W * 100}%`,
-      `height:${BH / H * 100}%`,
-      'background:rgba(0,34,51,0.85)',
-      'border:1.5px solid #00ffff',
-      'color:#00ffff',
-      'font-family:monospace',
-      'font-size:clamp(10px,1.1vw,16px)',
-      'font-weight:bold',
-      'letter-spacing:2px',
-      'cursor:pointer',
-      'z-index:9999',
-      'transform-origin:top left',
-    ].join(';')
-
-    const removeBtn = () => { if (document.body.contains(htmlBtn)) document.body.removeChild(htmlBtn) }
-
-    htmlBtn.onmouseenter = () => { htmlBtn.style.background = 'rgba(0,255,255,0.15)' }
-    htmlBtn.onmouseleave = () => { htmlBtn.style.background = 'rgba(0,34,51,0.85)' }
-    htmlBtn.onclick = () => {
-      removeBtn()
-      try { this.scene.start('SelectionScene') } catch { window.location.reload() }
+    // Transparent HTML div precisely positioned over the Phaser button.
+    // Uses getBoundingClientRect so it accounts for Scale.FIT letterboxing.
+    // onclick = window.location.reload() — guaranteed to work every time.
+    const overlay = document.createElement('div')
+    const updatePos = () => {
+      const r = this.sys.canvas.getBoundingClientRect()
+      const sx = r.width / W, sy = r.height / H
+      overlay.style.left   = `${r.left + BX * sx}px`
+      overlay.style.top    = `${r.top  + BY * sy}px`
+      overlay.style.width  = `${BW * sx}px`
+      overlay.style.height = `${BH * sy}px`
     }
+    overlay.style.cssText = 'position:fixed;z-index:9999;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#00ffff;font-family:monospace;font-weight:bold;letter-spacing:2px;font-size:14px;'
+    overlay.textContent = 'RELAUNCH'
+    updatePos()
 
-    document.body.appendChild(htmlBtn)
+    const removeOverlay = () => { if (document.body.contains(overlay)) document.body.removeChild(overlay) }
 
-    // Keyboard fallback
+    overlay.onmouseenter = () => { overlay.style.background = 'rgba(0,255,255,0.15)' }
+    overlay.onmouseleave = () => { overlay.style.background = '' }
+    overlay.onclick      = () => { removeOverlay(); window.location.reload() }
+
+    document.body.appendChild(overlay)
+
     const keyHandler = (e: KeyboardEvent) => {
-      if (['Enter', ' ', 'r', 'R'].includes(e.key)) { removeBtn(); window.removeEventListener('keydown', keyHandler); try { this.scene.start('SelectionScene') } catch { window.location.reload() } }
+      if (['Enter', ' ', 'r', 'R'].includes(e.key)) { removeOverlay(); window.removeEventListener('keydown', keyHandler); window.location.reload() }
     }
     window.addEventListener('keydown', keyHandler)
 
-    this.events.once('destroy', () => { removeBtn(); window.removeEventListener('keydown', keyHandler) })
+    this.events.once('destroy', () => { removeOverlay(); window.removeEventListener('keydown', keyHandler) })
 
     this.add.text(W / 2, 618, 'Credits carry over between runs. Spend them in the Armory for permanent weapons and modules.', {
       fontSize: '9px', color: '#1a3322', fontFamily: 'monospace',
