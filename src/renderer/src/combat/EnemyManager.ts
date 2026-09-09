@@ -93,6 +93,7 @@ export class EnemyManager {
     playerRadius: number,
     playerBody: PhysicsBody,
     weaponIds: string[],
+    targetPriority: 'any' | 'drones' | 'asteroids',
     onEnemyAttack: (damage: number) => void,
     onKill: (result: KillResult) => void
   ): void {
@@ -110,8 +111,8 @@ export class EnemyManager {
     // Collision detection — player vs enemies
     this.checkCollisions(playerX, playerY, playerRadius, playerBody, onEnemyAttack)
 
-    // Player attacks nearest in arc
-    const target = this.nearestAlive(playerX, playerY, playerRange, playerHeading, playerArc)
+    // Player attacks nearest in arc — priority determined by flight mode
+    const target = this.nearestAlive(playerX, playerY, playerRange, playerHeading, playerArc, targetPriority)
     this._currentTarget = target
     if (target) target.takeDamage(playerDps * dt)
 
@@ -302,23 +303,33 @@ export class EnemyManager {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
-  private nearestAlive(x: number, y: number, range: number, heading: number, arcDeg: number): EnemyEntity | null {
+  private nearestAlive(
+    x: number, y: number, range: number, heading: number, arcDeg: number,
+    priority: 'any' | 'drones' | 'asteroids' = 'any'
+  ): EnemyEntity | null {
     const halfArc = (arcDeg / 2) * (Math.PI / 180)
-    let best: EnemyEntity | null = null, bestDist = range
-    for (const e of this.entities) {
-      if (!e.alive) continue
-      const dx = e.x - x, dy = e.y - y
-      const dist = Math.hypot(dx, dy)
-      if (dist >= bestDist) continue
-      if (arcDeg < 360) {
-        const a = Math.atan2(dx, -dy)
-        let diff = Math.abs(a - heading)
-        if (diff > Math.PI) diff = Math.abs(diff - Math.PI * 2)
-        if (diff > halfArc) continue
+
+    const scan = (filter: (e: EnemyEntity) => boolean): EnemyEntity | null => {
+      let best: EnemyEntity | null = null, bestDist = range
+      for (const e of this.entities) {
+        if (!e.alive || !filter(e)) continue
+        const dx = e.x - x, dy = e.y - y
+        const dist = Math.hypot(dx, dy)
+        if (dist >= bestDist) continue
+        if (arcDeg < 360) {
+          const a = Math.atan2(dx, -dy)
+          let diff = Math.abs(a - heading)
+          if (diff > Math.PI) diff = Math.abs(diff - Math.PI * 2)
+          if (diff > halfArc) continue
+        }
+        best = e; bestDist = dist
       }
-      best = e; bestDist = dist
+      return best
     }
-    return best
+
+    if (priority === 'drones')    return scan(e => e.def.behavior !== 'DRIFT') ?? scan(() => true)
+    if (priority === 'asteroids') return scan(e => e.def.behavior === 'DRIFT') ?? scan(() => true)
+    return scan(() => true)
   }
 
   get count(): number { return this.entities.length }

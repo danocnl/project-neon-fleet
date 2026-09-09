@@ -13,7 +13,7 @@ import { ActionExecutor } from '../combat/ActionExecutor'
 import { CombatSimulator } from '../combat/CombatSimulator'
 import { EnemyManager } from '../combat/EnemyManager'
 import { ProjectileSystem } from '../combat/ProjectileSystem'
-import type { UpgradeCard } from '../types'
+import type { UpgradeCard, FlightMode } from '../types'
 
 // ─── World & layout constants ─────────────────────────────────────────────────
 const VIEW_W   = 1280
@@ -82,6 +82,8 @@ export class PhysicsScene extends Phaser.Scene {
   private pendingUpgrades = 0
   private runCredits      = 0
   private isDead          = false
+  private flightMode:     FlightMode = 'PATROL'
+  private modeChips:      { mode: FlightMode; gfx: Phaser.GameObjects.Graphics; text: Phaser.GameObjects.Text }[] = []
   private upgradeBtnGfx!: Phaser.GameObjects.Graphics
   private upgradeBtnText!: Phaser.GameObjects.Text
   private upgradeBtnZone!: Phaser.GameObjects.Zone
@@ -164,7 +166,9 @@ export class PhysicsScene extends Phaser.Scene {
 
     // Enemy update
     const loadout = DEFAULT_LOADOUTS[this.runData.shipId] ?? { weapons: [], modules: [] }
-    const playerRadius = this.getPlayerCollisionRadius()
+    const playerRadius   = this.getPlayerCollisionRadius()
+    const targetPriority = this.flightMode === 'HUNTER' ? 'drones'
+                         : this.flightMode === 'FARMER'  ? 'asteroids' : 'any'
     this.enemies.update(
       dt,
       this.actor.body.x, this.actor.body.y,
@@ -172,6 +176,7 @@ export class PhysicsScene extends Phaser.Scene {
       playerRadius,
       this.actor.body,
       loadout.weapons,
+      targetPriority,
       (damage) => this.combatState.takeDamage(damage),
       (result) => {
         this.runCredits += result.credits
@@ -396,11 +401,65 @@ export class PhysicsScene extends Phaser.Scene {
   // ─── Waypoint helpers ────────────────────────────────────────────────────
 
   private nextWaypoint(): { x: number; y: number } {
-    return this.randomWaypointFrom(this.actor.body.x, this.actor.body.y)
+    const bx = this.actor.body.x, by = this.actor.body.y
+    const entities = this.enemies.getEntities()
+
+    switch (this.flightMode) {
+      case 'EVASIVE': {
+        // Steer directly away from the nearest threat
+        const threats = entities.filter(e => e.def.behavior !== 'DRIFT' && e.alive)
+        if (threats.length > 0) {
+          const nearest = threats.reduce((a, b) =>
+            Math.hypot(a.x - bx, a.y - by) < Math.hypot(b.x - bx, b.y - by) ? a : b)
+          const awayAngle = Math.atan2(by - nearest.y, bx - nearest.x)
+          const dist = Phaser.Math.Between(500, 900)
+          return {
+            x: ((bx + Math.cos(awayAngle) * dist) % WORLD_W + WORLD_W) % WORLD_W,
+            y: ((by + Math.sin(awayAngle) * dist) % WORLD_H + WORLD_H) % WORLD_H,
+          }
+        }
+        return this.randomWaypointFrom(bx, by)
+      }
+
+      case 'HUNTER': {
+        // Head toward nearest drone/turret
+        const targets = entities.filter(e => e.def.behavior !== 'DRIFT' && e.alive)
+        if (targets.length > 0) {
+          const nearest = targets.reduce((a, b) =>
+            Math.hypot(a.x - bx, a.y - by) < Math.hypot(b.x - bx, b.y - by) ? a : b)
+          // Orbit slightly offset so we don't fly straight into the enemy
+          const orbitAngle = Math.atan2(by - nearest.y, bx - nearest.x) + (Math.random() - 0.5) * 1.2
+          const dist = 180 + nearest.def.stats.COLLISION_RADIUS
+          return {
+            x: ((nearest.x + Math.cos(orbitAngle) * dist) % WORLD_W + WORLD_W) % WORLD_W,
+            y: ((nearest.y + Math.sin(orbitAngle) * dist) % WORLD_H + WORLD_H) % WORLD_H,
+          }
+        }
+        return this.randomWaypointFrom(bx, by)
+      }
+
+      case 'FARMER': {
+        // Head toward the nearest asteroid
+        const rocks = entities.filter(e => e.def.behavior === 'DRIFT' && e.alive)
+        if (rocks.length > 0) {
+          const nearest = rocks.reduce((a, b) =>
+            Math.hypot(a.x - bx, a.y - by) < Math.hypot(b.x - bx, b.y - by) ? a : b)
+          const approach = Math.atan2(by - nearest.y, bx - nearest.x) + (Math.random() - 0.5) * 0.6
+          const dist = 120 + nearest.def.stats.COLLISION_RADIUS
+          return {
+            x: ((nearest.x + Math.cos(approach) * dist) % WORLD_W + WORLD_W) % WORLD_W,
+            y: ((nearest.y + Math.sin(approach) * dist) % WORLD_H + WORLD_H) % WORLD_H,
+          }
+        }
+        return this.randomWaypointFrom(bx, by)
+      }
+
+      default: // PATROL
+        return this.randomWaypointFrom(bx, by)
+    }
   }
 
   private randomWaypointFrom(fromX: number, fromY: number): { x: number; y: number } {
-    // Pick a point 500–1400 px away in a random direction, wrapping at world edges
     const angle = Math.random() * Math.PI * 2
     const dist  = Phaser.Math.Between(500, 1400)
     const x = ((fromX + Math.cos(angle) * dist) % WORLD_W + WORLD_W) % WORLD_W
@@ -522,6 +581,34 @@ export class PhysicsScene extends Phaser.Scene {
 
     this.speedText = this.add.text(14, 172, '', { fontSize: '10px', color: '#224433', fontFamily: 'monospace' }); add(this.speedText)
 
+    // Flight mode chips
+    const MODES: { mode: FlightMode; label: string; key: string }[] = [
+      { mode: 'PATROL',  label: 'PATROL',  key: '1' },
+      { mode: 'EVASIVE', label: 'EVASIVE', key: '2' },
+      { mode: 'HUNTER',  label: 'HUNTER',  key: '3' },
+      { mode: 'FARMER',  label: 'FARMER',  key: '4' },
+    ]
+    const CW = 74, CH = 18, CG = 4
+    MODES.forEach(({ mode, label }, i) => {
+      const cx = 14 + i * (CW + CG)
+      const cy = 190
+      const gfx = this.add.graphics().setScrollFactor(0).setDepth(50)
+      const text = this.add.text(cx + CW / 2, cy + CH / 2, label, {
+        fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold',
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(51)
+      const zone = this.add.zone(cx, cy, CW, CH).setOrigin(0, 0).setInteractive()
+        .setScrollFactor(0).setDepth(52)
+      zone.on('pointerdown', () => this.setFlightMode(mode))
+      this.modeChips.push({ mode, gfx, text })
+    })
+    this.updateModeChips()
+
+    // Keyboard shortcuts
+    this.input.keyboard!.on('keydown-ONE',   () => this.setFlightMode('PATROL'))
+    this.input.keyboard!.on('keydown-TWO',   () => this.setFlightMode('EVASIVE'))
+    this.input.keyboard!.on('keydown-THREE', () => this.setFlightMode('HUNTER'))
+    this.input.keyboard!.on('keydown-FOUR',  () => this.setFlightMode('FARMER'))
+
     // Trigger log
     add(this.add.text(14, VIEW_H - LOG_MAX * 18 - 30, 'TRIGGER LOG', {
       fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 3,
@@ -604,6 +691,32 @@ export class PhysicsScene extends Phaser.Scene {
       `${e.type.replace('_', ' ')} ${(e.remainingMs / 1000).toFixed(1)}s`
     )
     this.effectText.setText(effects.join('  '))
+  }
+
+  private setFlightMode(mode: FlightMode): void {
+    this.flightMode = mode
+    this.updateModeChips()
+    // Pick a fresh waypoint immediately so the mode change is felt at once
+    this.actor.waypoint = this.nextWaypoint()
+  }
+
+  private updateModeChips(): void {
+    const CW = 74, CH = 18, CG = 4
+    this.modeChips.forEach(({ mode, gfx, text }, i) => {
+      const cx = 14 + i * (CW + CG), cy = 190
+      const active = mode === this.flightMode
+      const color  = active ? 0x00ffff : 0x224433
+
+      gfx.clear()
+      if (active) {
+        gfx.fillStyle(0x00ffff, 0.15)
+        gfx.fillRect(cx, cy, CW, CH)
+      }
+      gfx.lineStyle(1, color, active ? 0.9 : 0.35)
+      gfx.strokeRect(cx, cy, CW, CH)
+
+      text.setColor(active ? '#00ffff' : '#335544')
+    })
   }
 
   private pulseUpgradeButton(dt: number): void {
