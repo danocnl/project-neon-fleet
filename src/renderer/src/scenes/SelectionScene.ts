@@ -424,7 +424,7 @@ export class SelectionScene extends Phaser.Scene {
         const locked  = !UNLOCKED_SHIPS.includes(id)
         if (!ship || !geo) continue
 
-        const color   = locked ? 0x1a2a2a : geo.color
+        const color   = locked ? 0x1a2a2a : ACCENT
         const alpha   = locked ? 0.25 : 0.4
         const hexCol  = `#${color.toString(16).padStart(6, '0')}`
 
@@ -520,8 +520,7 @@ export class SelectionScene extends Phaser.Scene {
   }
 
   private hoverShipItem(id: string, hover: boolean): void {
-    const geo   = getGeometry(id)
-    const color = geo?.color ?? ACCENT
+    const color = ACCENT
     const bg    = this.shipItemBgs.get(id)!
     const nameT = this.shipItemTexts.get(id)
     bg.clear()
@@ -542,18 +541,20 @@ export class SelectionScene extends Phaser.Scene {
     const cls  = DataLoader.getClass(this.selectedClassId)
     if (!ship || !geo) return
 
-    const color = geo.color
-    const hex   = `#${color.toString(16).padStart(6, '0')}`
+    const shipColor = geo.color   // used for wireframe only
+    const listColor = ACCENT      // consistent for all list items
+    const hex = `#${listColor.toString(16).padStart(6, '0')}`
 
     // Highlight selected
     const nameT = this.shipItemTexts.get(id)!
     nameT.setAlpha(1)
     const bg = this.shipItemBgs.get(id)!
     bg.clear()
-    bg.fillStyle(color, 0.1); bg.fillRect(0, nameT.y - 5, L, 36)
-    bg.lineStyle(1.5, color, 0.8); bg.strokeRect(0, nameT.y - 5, L, 36)
+    bg.fillStyle(listColor, 0.1); bg.fillRect(0, nameT.y - 5, L, 36)
+    bg.lineStyle(1.5, listColor, 0.8); bg.strokeRect(0, nameT.y - 5, L, 36)
 
-    this.s_name.setText(ship.name.replace(' Frame', '').toUpperCase()).setColor(hex).setStroke(hex, 1)
+    const shipHex = `#${shipColor.toString(16).padStart(6, '0')}`
+    this.s_name.setText(ship.name.replace(' Frame', '').toUpperCase()).setColor(shipHex).setStroke(shipHex, 1)
     this.s_sub.setText(`${ship.subtitle}  ·  ${ship.weightClass}`)
 
     // Synergy
@@ -595,7 +596,7 @@ export class SelectionScene extends Phaser.Scene {
     this.s_tagRow.removeAll(true)
     let tx = 0
     for (const [tag, count] of Object.entries(ship.hardwareTags)) {
-      const chip = addTagChip(this, tx, 0, `${tag}×${count}`, color)
+      const chip = addTagChip(this, tx, 0, `${tag}×${count}`, shipColor)
       this.s_tagRow.add(chip); tx += chip.width + 6
       if (tx > R_W - 60) break
     }
