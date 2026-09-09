@@ -49,9 +49,13 @@ interface ShipActor {
 
 export class PhysicsScene extends Phaser.Scene {
   private actor!:    ShipActor
-  private gridGfx!:  Phaser.GameObjects.Graphics   // screen-space virtual grid
-  private flashGfx!: Phaser.GameObjects.Graphics   // world-space flash
-  private minimapGfx!: Phaser.GameObjects.Graphics // screen-space minimap
+  private gridGfx!:      Phaser.GameObjects.Graphics
+  private flashGfx!:     Phaser.GameObjects.Graphics
+  private damageFlashGfx!: Phaser.GameObjects.Graphics
+  private minimapGfx!:   Phaser.GameObjects.Graphics
+
+  private shieldFlashTimer = 0   // 0–1, decays to 0
+  private hullFlashTimer   = 0
 
   // World centre — spawn and first waypoint reference
   private readonly wx = WORLD_W / 2
@@ -113,7 +117,8 @@ export class PhysicsScene extends Phaser.Scene {
     this.gridGfx = this.add.graphics().setScrollFactor(0).setDepth(0)
 
     // World-space flash (follows camera naturally)
-    this.flashGfx = this.add.graphics().setDepth(10)
+    this.flashGfx      = this.add.graphics().setDepth(10)
+    this.damageFlashGfx = this.add.graphics().setDepth(9)
 
     // Minimap — screen-space overlay
     this.minimapGfx = this.add.graphics().setScrollFactor(0).setDepth(100)
@@ -152,6 +157,10 @@ export class PhysicsScene extends Phaser.Scene {
     this.actor.gfx.clear()
     drawNeonShip(this.actor.gfx, this.actor.body, this.actor.geometry, clsColor, phaseAlpha)
 
+    // Snapshot combat state before enemy damage so we detect what was hit
+    const shieldBefore = this.combatState.currentShield
+    const hullBefore   = this.combatState.currentHull
+
     // Enemy update
     const loadout = DEFAULT_LOADOUTS[this.runData.shipId] ?? { weapons: [], modules: [] }
     const playerRadius = this.getPlayerCollisionRadius()
@@ -179,10 +188,41 @@ export class PhysicsScene extends Phaser.Scene {
     )
     this.projectiles.draw()
 
+    // Trigger damage flashes
+    if (this.combatState.currentShield < shieldBefore) this.shieldFlashTimer = 1.0
+    if (this.combatState.currentHull   < hullBefore)   this.hullFlashTimer   = 1.0
+    this.shieldFlashTimer = Math.max(0, this.shieldFlashTimer - dt / 0.22)
+    this.hullFlashTimer   = Math.max(0, this.hullFlashTimer   - dt / 0.18)
+    this.drawDamageFlash()
+
     this.updateGrid()
     this.updateMinimap(clsColor)
     this.updateHUD()
     this.pulseUpgradeButton(dt)
+  }
+
+  private drawDamageFlash(): void {
+    const g = this.damageFlashGfx
+    g.clear()
+    const { x, y } = this.actor.body
+
+    if (this.shieldFlashTimer > 0) {
+      const t = this.shieldFlashTimer
+      const r = 46 + (1 - t) * 22     // ring expands outward as it fades
+      g.lineStyle(3.5, 0x4488ff, t * 0.7)
+      g.strokeCircle(x, y, r)
+      g.fillStyle(0x2255ff, t * 0.12)
+      g.fillCircle(x, y, r)
+    }
+
+    if (this.hullFlashTimer > 0) {
+      const t = this.hullFlashTimer
+      const r = 36 + (1 - t) * 18
+      g.lineStyle(3, 0xffffff, t * 0.85)
+      g.strokeCircle(x, y, r)
+      g.fillStyle(0xffffff, t * 0.08)
+      g.fillCircle(x, y, r)
+    }
   }
 
   // ─── Build ───────────────────────────────────────────────────────────────
