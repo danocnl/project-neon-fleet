@@ -121,6 +121,62 @@ export interface GameSession {
 
 export type ComputedStats = ShipBaseStats
 
+// ─── Modules ─────────────────────────────────────────────────────────────────
+
+export type ModuleCategory =
+  | 'SHIELD' | 'HULL' | 'ENGINE' | 'POWER' | 'THERMAL' | 'REPAIR'
+  | 'DRONE' | 'UTILITY' | 'WEAPON_ENHANCEMENT' | 'PARTNER' | 'ACTIVE'
+
+export interface ModuleDraftBonus {
+  tags:              string[]  // which upgrade card categories get boosted
+  weightMultiplier:  number    // e.g. 1.5 = 50% more likely to appear in draft
+  rarityBonus:       number    // tiers easier to unlock (1 = T3 at T2 threshold)
+  effectMultiplier:  number    // drafted cards in these tags are this much stronger
+}
+
+export interface DroneWeapon {
+  damageType:    DamageType
+  baseStats:     Partial<WeaponBaseStats>
+  behaviors:     WeaponBehaviors
+  statusEffects: WeaponStatusEffects
+  tags:          string[]
+}
+
+export interface DroneSpec {
+  count:      number    // active drones this module deploys
+  behavior:   string    // ORBITAL | REPAIR_SWARM | SHIELD_DRONE | DECOY | ESCORT | HARVESTER | MINE_LAYER
+  droneStats: {
+    DRONE_HULL:     number
+    DRONE_SHIELD?:  number
+    DRONE_SPEED:    number
+    DRONE_DAMAGE?:  number
+    THREAT_LEVEL?:  number
+  }
+  weapon?:    DroneWeapon
+}
+
+export interface ModuleTrigger {
+  condition: string   // ON_SHIELD_DROP | ON_KILL | ON_OVERHEAT | PROXIMITY | TIMER
+  action:    string   // human-readable description
+  cooldown:  number   // seconds between firings
+}
+
+export interface Module {
+  id:            string
+  name:          string
+  size:          WeaponSize      // reuses SMALL | MEDIUM | LARGE | XL
+  category:      ModuleCategory
+  description:   string
+  passiveBonuses: Record<string, number>  // stat key → value. WEAPON_ prefix = weapon-wide mods
+  draftBonus?:   ModuleDraftBonus
+  droneSpec?:    DroneSpec
+  trigger?:      ModuleTrigger
+  passiveDrain:  number   // energy/s while active
+  passiveHeat:   number   // heat/s while active
+  weight:        number   // contributes to WEIGHT_CAPACITY
+  tags:          string[] // upgrade categories this module interacts with
+}
+
 // ─── Weapons ─────────────────────────────────────────────────────────────────
 
 export type WeaponSize   = 'SMALL' | 'MEDIUM' | 'LARGE' | 'XL'

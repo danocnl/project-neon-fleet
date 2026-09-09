@@ -1,0 +1,312 @@
+[
+  {
+    "id": "shield_booster_s",
+    "name": "Shield Booster",
+    "size": "SMALL", "category": "SHIELD",
+    "description": "Compact shield capacitor. Straightforward SHIELD_MAX increase with no drawbacks. Fits any ship without breaking the weight budget.",
+    "passiveBonuses": { "SHIELD_MAX": 350 },
+    "passiveDrain": 0, "passiveHeat": 0, "weight": 15,
+    "tags": ["SHIELD_MAX"]
+  },
+  {
+    "id": "shield_capacitor_m",
+    "name": "Shield Capacitor",
+    "size": "MEDIUM", "category": "SHIELD",
+    "description": "Combined shield pool expansion and regen boost. Makes shield-focused draft cards appear 40% more often in the card pool.",
+    "passiveBonuses": { "SHIELD_MAX": 700, "SHIELD_REGEN": 25 },
+    "draftBonus": { "tags": ["SHIELD_MAX", "SHIELD_REGEN"], "weightMultiplier": 1.4, "rarityBonus": 0, "effectMultiplier": 1.0 },
+    "passiveDrain": 3, "passiveHeat": 0, "weight": 32,
+    "tags": ["SHIELD_MAX", "SHIELD_REGEN"]
+  },
+  {
+    "id": "emergency_shield_cell_m",
+    "name": "Emergency Shield Cell",
+    "size": "MEDIUM", "category": "SHIELD",
+    "description": "Passive shield boost plus an emergency burst when shields drop to zero. The reactive charge fires once then enters a 20s cooldown.",
+    "passiveBonuses": { "SHIELD_MAX": 300 },
+    "trigger": { "condition": "ON_SHIELD_DROP", "action": "Instantly restore 500 SP", "cooldown": 20 },
+    "passiveDrain": 2, "passiveHeat": 0, "weight": 28,
+    "tags": ["SHIELD_MAX", "ON_SHIELD_DROP"]
+  },
+  {
+    "id": "armor_plate_s",
+    "name": "Armor Plate",
+    "size": "SMALL", "category": "HULL",
+    "description": "Dense composite plating. Flat armor percentage increase. Heavy for its size — monitor weight budget on fast ships.",
+    "passiveBonuses": { "ARMOR": 6 },
+    "passiveDrain": 0, "passiveHeat": 0, "weight": 22,
+    "tags": ["ARMOR"]
+  },
+  {
+    "id": "hull_reinforcement_m",
+    "name": "Hull Reinforcement",
+    "size": "MEDIUM", "category": "HULL",
+    "description": "Structural hull expansion plus additional armor lining. Makes armor and hull upgrade cards 30% more likely to appear in drafts.",
+    "passiveBonuses": { "HULL": 1200, "ARMOR": 4 },
+    "draftBonus": { "tags": ["HULL", "ARMOR"], "weightMultiplier": 1.3, "rarityBonus": 0, "effectMultiplier": 1.0 },
+    "passiveDrain": 0, "passiveHeat": 0, "weight": 40,
+    "tags": ["HULL", "ARMOR"]
+  },
+  {
+    "id": "thruster_pack_s",
+    "name": "Thruster Pack",
+    "size": "SMALL", "category": "ENGINE",
+    "description": "Compact supplementary thruster array. Speed and acceleration boost. Minimal weight — ideal for light ships staying within budget.",
+    "passiveBonuses": { "TOP_SPEED": 25, "ACCELERATION": 20 },
+    "passiveDrain": 1, "passiveHeat": 0, "weight": 10,
+    "tags": ["TOP_SPEED", "ACCELERATION"]
+  },
+  {
+    "id": "drive_array_m",
+    "name": "Drive Array",
+    "size": "MEDIUM", "category": "ENGINE",
+    "description": "Full mobility suite. Boosts all three mobility stats and makes speed/evasion draft cards 40% more likely.",
+    "passiveBonuses": { "TOP_SPEED": 50, "ACCELERATION": 40, "TURN_SPEED": 15 },
+    "draftBonus": { "tags": ["TOP_SPEED", "EVASION", "TURN_SPEED"], "weightMultiplier": 1.4, "rarityBonus": 0, "effectMultiplier": 1.0 },
+    "passiveDrain": 2, "passiveHeat": 0, "weight": 22,
+    "tags": ["TOP_SPEED", "ACCELERATION", "TURN_SPEED"]
+  },
+  {
+    "id": "power_cell_s",
+    "name": "Power Cell",
+    "size": "SMALL", "category": "POWER",
+    "description": "Supplementary energy cell. Boosts both grid capacity and passive regen rate. Helps sustain beam weapons and drone fleets.",
+    "passiveBonuses": { "ENERGY_GRID": 60, "ENERGY_REGEN": 8 },
+    "passiveDrain": 0, "passiveHeat": 0, "weight": 8,
+    "tags": ["ENERGY_GRID", "ENERGY_REGEN"]
+  },
+  {
+    "id": "reactor_m",
+    "name": "Reactor Module",
+    "size": "MEDIUM", "category": "POWER",
+    "description": "Compact fusion reactor. Significant energy grid and regen boost. Makes energy and overclock draft cards 40% more likely.",
+    "passiveBonuses": { "ENERGY_GRID": 140, "ENERGY_REGEN": 18 },
+    "draftBonus": { "tags": ["ENERGY_GRID", "ENERGY_REGEN", "OVERCLOCK"], "weightMultiplier": 1.4, "rarityBonus": 0, "effectMultiplier": 1.0 },
+    "passiveDrain": 0, "passiveHeat": 0, "weight": 20,
+    "tags": ["ENERGY_GRID", "ENERGY_REGEN"]
+  },
+  {
+    "id": "fusion_core_l",
+    "name": "Fusion Core",
+    "size": "LARGE", "category": "POWER",
+    "description": "High-output fusion core. Massive energy boost. Makes energy/overclock cards 50% more likely AND 20% more effective when drafted.",
+    "passiveBonuses": { "ENERGY_GRID": 300, "ENERGY_REGEN": 40 },
+    "draftBonus": { "tags": ["ENERGY_GRID", "ENERGY_REGEN", "VOLTAGE", "OVERCLOCK"], "weightMultiplier": 1.5, "rarityBonus": 1, "effectMultiplier": 1.2 },
+    "passiveDrain": 0, "passiveHeat": 2, "weight": 55,
+    "tags": ["ENERGY_GRID", "ENERGY_REGEN"]
+  },
+  {
+    "id": "cooling_fin_s",
+    "name": "Cooling Fin",
+    "size": "SMALL", "category": "THERMAL",
+    "description": "Passive heat sink. Increases dissipation rate — essential for heavy beam or multi-weapon builds.",
+    "passiveBonuses": { "HEAT_DISSIPATION": 10 },
+    "passiveDrain": 0, "passiveHeat": 0, "weight": 8,
+    "tags": ["HEAT_DISSIPATION"]
+  },
+  {
+    "id": "cryo_module_m",
+    "name": "Cryo Module",
+    "size": "MEDIUM", "category": "THERMAL",
+    "description": "Active cryogenic cooling system. Boosts both dissipation and heat capacity. Makes heat management and Hyper-Conductor draft cards more likely.",
+    "passiveBonuses": { "HEAT_DISSIPATION": 22, "HEAT_CAPACITY": 15 },
+    "draftBonus": { "tags": ["HEAT_DISSIPATION", "HEAT_GEN", "VOLTAGE", "ON_OVERHEAT"], "weightMultiplier": 1.3, "rarityBonus": 0, "effectMultiplier": 1.0 },
+    "passiveDrain": 2, "passiveHeat": 0, "weight": 18,
+    "tags": ["HEAT_DISSIPATION", "HEAT_CAPACITY"]
+  },
+  {
+    "id": "auto_repair_bay_m",
+    "name": "Auto-Repair Bay",
+    "size": "MEDIUM", "category": "REPAIR",
+    "description": "Automated hull repair system. Consistent passive repair rate. Makes hull/repair draft cards more likely and 10% more effective.",
+    "passiveBonuses": { "REPAIR_RATE": 12 },
+    "draftBonus": { "tags": ["REPAIR_RATE", "HULL", "NANITE"], "weightMultiplier": 1.3, "rarityBonus": 0, "effectMultiplier": 1.1 },
+    "passiveDrain": 2, "passiveHeat": 0, "weight": 25,
+    "tags": ["REPAIR_RATE"]
+  },
+  {
+    "id": "combat_drone_bay_s",
+    "name": "Combat Drone Bay",
+    "size": "SMALL", "category": "DRONE",
+    "description": "Deploys 1 orbital combat drone with a light kinetic weapon. The drone's weapon benefits from KINETIC tags in the aggregator.",
+    "passiveBonuses": {},
+    "droneSpec": {
+      "count": 1,
+      "behavior": "ORBITAL",
+      "droneStats": { "DRONE_HULL": 250, "DRONE_SPEED": 200, "DRONE_DAMAGE": 15, "THREAT_LEVEL": 1 },
+      "weapon": {
+        "damageType": "KINETIC",
+        "baseStats": { "DAMAGE": 15, "RATE_OF_FIRE": 2.0, "RANGE": 180, "ENERGY_COST": 2, "HEAT_GEN": 1 },
+        "behaviors": {},
+        "statusEffects": {},
+        "tags": ["KINETIC", "RATE_OF_FIRE"]
+      }
+    },
+    "passiveDrain": 4, "passiveHeat": 0, "weight": 18,
+    "tags": ["DRONE_COUNT", "DRONE_DAMAGE", "KINETIC"]
+  },
+  {
+    "id": "repair_drone_bay_s",
+    "name": "Repair Drone Bay",
+    "size": "SMALL", "category": "DRONE",
+    "description": "Deploys 1 repair drone that continuously restores hull HP to the parent ship or nearby allies. Stacks with base REPAIR_RATE.",
+    "passiveBonuses": {},
+    "droneSpec": {
+      "count": 1,
+      "behavior": "REPAIR_SWARM",
+      "droneStats": { "DRONE_HULL": 180, "DRONE_SPEED": 240, "THREAT_LEVEL": 0 }
+    },
+    "passiveDrain": 3, "passiveHeat": 0, "weight": 14,
+    "tags": ["DRONE_COUNT", "REPAIR_SWARM", "REPAIR_RATE"]
+  },
+  {
+    "id": "decoy_drone_bay_m",
+    "name": "Decoy Drone Bay",
+    "size": "MEDIUM", "category": "DRONE",
+    "description": "Deploys 2 high-threat decoy drones that actively attract enemy targeting. Each detonates on destruction (KAMIKAZE). Enemies that destroy a decoy can trigger INFESTATION.",
+    "passiveBonuses": {},
+    "droneSpec": {
+      "count": 2,
+      "behavior": "DECOY",
+      "droneStats": { "DRONE_HULL": 400, "DRONE_SPEED": 160, "THREAT_LEVEL": 4 }
+    },
+    "passiveDrain": 5, "passiveHeat": 0, "weight": 28,
+    "tags": ["DRONE_COUNT", "DECOY", "THREAT_LEVEL", "KAMIKAZE"]
+  },
+  {
+    "id": "shield_drone_bay_m",
+    "name": "Shield Drone Bay",
+    "size": "MEDIUM", "category": "DRONE",
+    "description": "Deploys 2 shield drones that project protective fields between the parent ship and incoming fire. Each drone has its own shield pool.",
+    "passiveBonuses": {},
+    "droneSpec": {
+      "count": 2,
+      "behavior": "SHIELD_DRONE",
+      "droneStats": { "DRONE_HULL": 200, "DRONE_SHIELD": 300, "DRONE_SPEED": 180, "THREAT_LEVEL": 1 }
+    },
+    "passiveDrain": 6, "passiveHeat": 0, "weight": 30,
+    "tags": ["DRONE_COUNT", "SHIELD_DRONE", "DRONE_SHIELD"]
+  },
+  {
+    "id": "harvester_drone_bay_s",
+    "name": "Harvester Drone Bay",
+    "size": "SMALL", "category": "DRONE",
+    "description": "Deploys 1 harvester drone that autonomously collects dropped items and debris within the ship's PICKUP_RADIUS. Feeds directly into Scrap Salvager DEBRIS_FIELD pools.",
+    "passiveBonuses": {},
+    "droneSpec": {
+      "count": 1,
+      "behavior": "HARVESTER",
+      "droneStats": { "DRONE_HULL": 150, "DRONE_SPEED": 280, "THREAT_LEVEL": 0 }
+    },
+    "passiveDrain": 2, "passiveHeat": 0, "weight": 12,
+    "tags": ["DRONE_COUNT", "HARVESTER", "PICKUP_RADIUS", "SALVAGE"]
+  },
+  {
+    "id": "heavy_drone_bay_l",
+    "name": "Heavy Drone Bay",
+    "size": "LARGE", "category": "DRONE",
+    "description": "Deploys 3 orbital combat drones with energy beam weapons. Each drone's beam benefits from ENERGY and BEAM tags. High passive drain — requires good energy management.",
+    "passiveBonuses": {},
+    "droneSpec": {
+      "count": 3,
+      "behavior": "ORBITAL",
+      "droneStats": { "DRONE_HULL": 400, "DRONE_SPEED": 160, "DRONE_DAMAGE": 30, "THREAT_LEVEL": 2 },
+      "weapon": {
+        "damageType": "ENERGY",
+        "baseStats": { "DAMAGE": 25, "RATE_OF_FIRE": 3.0, "RANGE": 220, "ENERGY_COST": 3, "HEAT_GEN": 2 },
+        "behaviors": { "BEAM": true },
+        "statusEffects": {},
+        "tags": ["ENERGY", "BEAM", "RATE_OF_FIRE"]
+      }
+    },
+    "passiveDrain": 10, "passiveHeat": 0, "weight": 60,
+    "tags": ["DRONE_COUNT", "DRONE_DAMAGE", "ENERGY", "BEAM"]
+  },
+  {
+    "id": "cargo_expander_s",
+    "name": "Cargo Expander",
+    "size": "SMALL", "category": "UTILITY",
+    "description": "Expanded cargo hold and improved salvage net. Boosts cargo capacity and item pickup radius simultaneously.",
+    "passiveBonuses": { "CARGO_CAPACITY": 40, "PICKUP_RADIUS": 15 },
+    "passiveDrain": 0, "passiveHeat": 0, "weight": 10,
+    "tags": ["CARGO_CAPACITY", "PICKUP_RADIUS", "SALVAGE"]
+  },
+  {
+    "id": "mass_reducer_m",
+    "name": "Mass Reducer",
+    "size": "MEDIUM", "category": "UTILITY",
+    "description": "Advanced load-balancing system that increases the ship's effective weight tolerance. Allows heavier weapon and module loadouts before the mobility penalty curve kicks in.",
+    "passiveBonuses": { "WEIGHT_CAPACITY": 45 },
+    "draftBonus": { "tags": ["SALVAGE", "CARGO_CAPACITY"], "weightMultiplier": 1.3, "rarityBonus": 0, "effectMultiplier": 1.0 },
+    "passiveDrain": 0, "passiveHeat": 0, "weight": 15,
+    "tags": ["WEIGHT_CAPACITY"]
+  },
+  {
+    "id": "target_tracker_s",
+    "name": "Target Tracking Array",
+    "size": "SMALL", "category": "WEAPON_ENHANCEMENT",
+    "description": "Predictive targeting computer. Reduces spread angle on all weapons by 3 degrees. Makes accuracy and velocity draft cards appear more often.",
+    "passiveBonuses": { "WEAPON_ACCURACY_MOD": -3 },
+    "draftBonus": { "tags": ["ACCURACY", "VELOCITY", "RANGE"], "weightMultiplier": 1.4, "rarityBonus": 0, "effectMultiplier": 1.0 },
+    "passiveDrain": 1, "passiveHeat": 0, "weight": 12,
+    "tags": ["ACCURACY", "VELOCITY"]
+  },
+  {
+    "id": "heat_jacket_s",
+    "name": "Weapon Heat Jacket",
+    "size": "SMALL", "category": "WEAPON_ENHANCEMENT",
+    "description": "Thermal lining on all weapon housings reduces per-shot heat generation by 15%. Essential for sustained-fire builds. Makes heat management draft cards appear more frequently.",
+    "passiveBonuses": { "WEAPON_HEAT_GEN_MOD": -0.15 },
+    "draftBonus": { "tags": ["HEAT_DISSIPATION", "HEAT_GEN", "ON_OVERHEAT"], "weightMultiplier": 1.3, "rarityBonus": 0, "effectMultiplier": 1.0 },
+    "passiveDrain": 0, "passiveHeat": 0, "weight": 10,
+    "tags": ["HEAT_GEN", "HEAT_DISSIPATION"]
+  },
+  {
+    "id": "ammo_hopper_s",
+    "name": "Ammunition Hopper",
+    "size": "SMALL", "category": "WEAPON_ENHANCEMENT",
+    "description": "Extended ammo feed system. Adds 8 shots to every weapon's magazine before reload. Makes ammo and reload draft cards appear more often and 10% more effective.",
+    "passiveBonuses": { "WEAPON_AMMO_MOD": 8 },
+    "draftBonus": { "tags": ["AMMO_CAPACITY", "RELOAD_SPEED", "RATE_OF_FIRE"], "weightMultiplier": 1.3, "rarityBonus": 0, "effectMultiplier": 1.1 },
+    "passiveDrain": 0, "passiveHeat": 0, "weight": 14,
+    "tags": ["AMMO_CAPACITY", "RELOAD_SPEED"]
+  },
+  {
+    "id": "mine_launcher_m",
+    "name": "Mine Launcher",
+    "size": "MEDIUM", "category": "ACTIVE",
+    "description": "Automated mine deployment system. Deploys one proximity mine every 8 seconds at a random point in the ship's flight path. Mines auto-detonate when an enemy enters 60u.",
+    "passiveBonuses": {},
+    "trigger": { "condition": "TIMER", "action": "Deploy 1 MINE construct (EXPLOSIVE, DAMAGE 80, BLAST_RADIUS 50, detection 60u)", "cooldown": 8 },
+    "passiveDrain": 5, "passiveHeat": 0, "weight": 35,
+    "tags": ["MINE", "EXPLOSIVE", "BLAST_RADIUS", "PERSISTENCE", "GLOBAL_RADIUS"]
+  },
+  {
+    "id": "kill_surge_s",
+    "name": "Kill Surge",
+    "size": "SMALL", "category": "ACTIVE",
+    "description": "Neural-link combat stimulator. ON_KILL: temporarily boosts top speed and fire rate by 30% for 2.5 seconds. Stacks with existing speed/ROF upgrades.",
+    "passiveBonuses": {},
+    "trigger": { "condition": "ON_KILL", "action": "+30% TOP_SPEED and +30% RATE_OF_FIRE for 2.5s", "cooldown": 0 },
+    "passiveDrain": 0, "passiveHeat": 0, "weight": 12,
+    "tags": ["ON_KILL", "TOP_SPEED", "RATE_OF_FIRE"]
+  },
+  {
+    "id": "link_relay_m",
+    "name": "Link Relay",
+    "size": "MEDIUM", "category": "PARTNER",
+    "description": "Broadcasts a portion of your active AMPLIFICATION and speed bonuses to the partner ship when they are within AURA_RADIUS range. AURA_RADIUS tags extend effective broadcast range.",
+    "passiveBonuses": { "BROADCAST": 1 },
+    "passiveDrain": 6, "passiveHeat": 0, "weight": 25,
+    "tags": ["BROADCAST", "AMPLIFICATION", "AURA_RADIUS", "RESOURCE_FEED"]
+  },
+  {
+    "id": "repair_beacon_s",
+    "name": "Repair Beacon",
+    "size": "SMALL", "category": "PARTNER",
+    "description": "Extends 50% of this ship's REPAIR_RATE as a passive heal to the partner ship when within range. Stacks with the partner's own repair stats.",
+    "passiveBonuses": { "REPAIR_RATE": 6 },
+    "passiveDrain": 3, "passiveHeat": 0, "weight": 14,
+    "tags": ["REPAIR_RATE", "BROADCAST", "ALLY_LOW_HP"]
+  }
+]
