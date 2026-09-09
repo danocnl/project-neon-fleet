@@ -170,7 +170,7 @@
     "weapon": {
       "damageType": "ENERGY",
       "damage": 8,
-      "rateOfFire": 0.5,
+      "rateOfFire": 1.0,
       "range": 200,
       "isBeam": false
     },
@@ -207,7 +207,7 @@
     "weapon": {
       "damageType": "KINETIC",
       "damage": 22,
-      "rateOfFire": 0.33,
+      "rateOfFire": 0.5,
       "range": 280,
       "isBeam": false
     },
