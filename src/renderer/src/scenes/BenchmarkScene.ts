@@ -168,49 +168,46 @@ export class BenchmarkScene extends Phaser.Scene {
       fontSize: '11px', color: '#334433', fontFamily: 'monospace',
     }).setOrigin(0.5)
 
-    let launched = false
-    const doRelaunch = () => {
-      if (launched) return
-      launched = true
-      cleanup()
-      try {
-        this.scene.start('SelectionScene')
-      } catch {
-        // If scene.start fails for any reason, reload the page
-        window.location.reload()
-      }
+    // HTML button — sits on top of the canvas in the DOM, completely outside
+    // Phaser's input system which has been intercepting all click events.
+    const htmlBtn = document.createElement('button')
+    htmlBtn.textContent = 'RELAUNCH'
+    htmlBtn.style.cssText = [
+      'position:fixed',
+      `left:${BX / W * 100}%`,
+      `top:${BY / H * 100}%`,
+      `width:${BW / W * 100}%`,
+      `height:${BH / H * 100}%`,
+      'background:rgba(0,34,51,0.85)',
+      'border:1.5px solid #00ffff',
+      'color:#00ffff',
+      'font-family:monospace',
+      'font-size:clamp(10px,1.1vw,16px)',
+      'font-weight:bold',
+      'letter-spacing:2px',
+      'cursor:pointer',
+      'z-index:9999',
+      'transform-origin:top left',
+    ].join(';')
+
+    const removeBtn = () => { if (document.body.contains(htmlBtn)) document.body.removeChild(htmlBtn) }
+
+    htmlBtn.onmouseenter = () => { htmlBtn.style.background = 'rgba(0,255,255,0.15)' }
+    htmlBtn.onmouseleave = () => { htmlBtn.style.background = 'rgba(0,34,51,0.85)' }
+    htmlBtn.onclick = () => {
+      removeBtn()
+      try { this.scene.start('SelectionScene') } catch { window.location.reload() }
     }
 
-    // Use window-level click with manual game-coord conversion
-    // (bypasses all Phaser input and Scale Manager issues)
-    const clickHandler = (e: MouseEvent) => {
-      const rect   = this.sys.canvas.getBoundingClientRect()
-      const gx     = (e.clientX - rect.left) * (W / rect.width)
-      const gy     = (e.clientY - rect.top)  * (H / rect.height)
-      if (gx >= BX && gx <= BX + BW && gy >= BY && gy <= BY + BH) doRelaunch()
-    }
-    const moveHandler = (e: MouseEvent) => {
-      const rect = this.sys.canvas.getBoundingClientRect()
-      const gx   = (e.clientX - rect.left) * (W / rect.width)
-      const gy   = (e.clientY - rect.top)  * (H / rect.height)
-      drawBtn(gx >= BX && gx <= BX + BW && gy >= BY && gy <= BY + BH)
-    }
+    document.body.appendChild(htmlBtn)
+
+    // Keyboard fallback
     const keyHandler = (e: KeyboardEvent) => {
-      if (['Enter', ' ', 'r', 'R'].includes(e.key)) doRelaunch()
+      if (['Enter', ' ', 'r', 'R'].includes(e.key)) { removeBtn(); window.removeEventListener('keydown', keyHandler); try { this.scene.start('SelectionScene') } catch { window.location.reload() } }
     }
+    window.addEventListener('keydown', keyHandler)
 
-    const cleanup = () => {
-      window.removeEventListener('click',     clickHandler)
-      window.removeEventListener('mousemove', moveHandler)
-      window.removeEventListener('keydown',   keyHandler)
-    }
-
-    // Listen on WINDOW not canvas — avoids any canvas pointer-events CSS issues
-    window.addEventListener('click',     clickHandler)
-    window.addEventListener('mousemove', moveHandler)
-    window.addEventListener('keydown',   keyHandler)
-
-    this.events.once('destroy', cleanup)
+    this.events.once('destroy', () => { removeBtn(); window.removeEventListener('keydown', keyHandler) })
 
     this.add.text(W / 2, 618, 'Credits carry over between runs. Spend them in the Armory for permanent weapons and modules.', {
       fontSize: '9px', color: '#1a3322', fontFamily: 'monospace',
