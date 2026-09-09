@@ -120,3 +120,58 @@ export interface GameSession {
 }
 
 export type ComputedStats = ShipBaseStats
+
+// ─── Weapons ─────────────────────────────────────────────────────────────────
+
+export type WeaponSize   = 'SMALL' | 'MEDIUM' | 'LARGE' | 'XL'
+export type DamageType   = 'ENERGY' | 'KINETIC' | 'EXPLOSIVE' | 'PSIONIC' | 'BIOLOGICAL' | 'CORROSIVE'
+
+export interface WeaponBaseStats {
+  DAMAGE: number           // damage per hit (beams: DPS)
+  RATE_OF_FIRE: number     // shots/s (0 for continuous beams)
+  RELOAD_SPEED: number     // seconds to reload (0 = no reload)
+  AMMO_CAPACITY: number    // shots before reload (0 = infinite)
+  RANGE: number            // effective range in units
+  ACCURACY: number         // spread angle in degrees (0 = perfect)
+  VELOCITY: number         // projectile speed u/s (0 = instant/beam)
+  BLAST_RADIUS: number     // AoE radius (0 = no AoE)
+  ENERGY_COST: number      // energy drained per shot
+  HEAT_GEN: number         // heat generated per shot
+  PASSIVE_DRAIN: number    // energy/s drained while active
+  PASSIVE_HEAT: number     // heat/s generated while running
+  WEIGHT: number           // contributes to ship WEIGHT_CAPACITY
+  CHARGE_TIME: number      // seconds to charge before firing (0 = instant)
+  PROJECTILE_COUNT: number // simultaneous projectiles per shot
+}
+
+export interface WeaponBehaviors {
+  BEAM?:             boolean
+  PIERCE?:           number
+  RICOCHET?:         number
+  CHAIN?:            number
+  SPLIT?:            number
+  PULSE?:            boolean
+  RETURN?:           boolean
+  PULSE_RADIUS?:     number  // radius for PULSE weapons (units)
+  PULSE_INTERVAL?:   number  // seconds between pulses
+}
+
+export interface WeaponStatusEffects {
+  BURN?:             number  // thermal DPS
+  FREEZE?:           number  // enemy speed reduction %
+  EMP?:              number  // disable duration seconds
+  CRITICAL_CHANCE?:  number  // crit % bonus from this weapon
+  CORROSIVE?:        number  // armor strip stacks
+}
+
+export interface Weapon {
+  id:            string
+  name:          string
+  size:          WeaponSize
+  damageType:    DamageType
+  description:   string
+  baseStats:     WeaponBaseStats
+  behaviors:     WeaponBehaviors
+  statusEffects: WeaponStatusEffects
+  tags:          string[]  // upgrade categories that boost this weapon
+}
