@@ -2,7 +2,8 @@ import shipsData from '../data/ships.json'
 import classesData from '../data/classes.json'
 import tagsData from '../data/tags.json'
 import upgradesData from '../data/upgrades.json'
-import type { ShipFrame, ClassSpecialization, Tag, UpgradeCard } from '../types'
+import enemiesData from '../data/enemies.json'
+import type { ShipFrame, ClassSpecialization, Tag, UpgradeCard, Enemy } from '../types'
 
 export class DataLoader {
   private static ships: Map<string, ShipFrame>
@@ -10,6 +11,8 @@ export class DataLoader {
   private static tags: Map<string, Tag>
   private static upgrades: Map<string, UpgradeCard>
   private static upgradeList: UpgradeCard[]
+  private static enemies: Map<string, Enemy>
+  private static enemyList: Enemy[]
   private static ready = false
 
   static init(): void {
@@ -18,6 +21,8 @@ export class DataLoader {
     this.tags     = new Map((tagsData     as unknown as Tag[])                 .map(t => [t.tag, t]))
     this.upgradeList = upgradesData as unknown as UpgradeCard[]
     this.upgrades = new Map(this.upgradeList.map(u => [u.id, u]))
+    this.enemyList = enemiesData as unknown as Enemy[]
+    this.enemies  = new Map(this.enemyList.map(e => [e.id, e]))
     this.ready = true
   }
 
@@ -29,6 +34,8 @@ export class DataLoader {
   static getAllShips(): ShipFrame[]             { return [...this.ships.values()]   }
   static getAllClasses(): ClassSpecialization[] { return [...this.classes.values()] }
   static getAllUpgrades(): UpgradeCard[]        { return this.upgradeList           }
+  static getAllEnemies():  Enemy[]              { return this.enemyList             }
+  static getEnemy(id: string): Enemy | undefined { return this.enemies.get(id)    }
 
   static isReady(): boolean { return this.ready }
 }

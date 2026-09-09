@@ -11,6 +11,7 @@ import { EventDispatcher } from '../combat/EventDispatcher'
 import { TriggerEvaluator } from '../combat/TriggerEvaluator'
 import { ActionExecutor } from '../combat/ActionExecutor'
 import { CombatSimulator } from '../combat/CombatSimulator'
+import { EnemyManager } from '../combat/EnemyManager'
 import type { UpgradeCard } from '../types'
 
 // ─── World & layout constants ─────────────────────────────────────────────────
@@ -22,6 +23,12 @@ const GRID_SZ  = 60
 
 const KILLS_PER_LEVEL = 3
 const LOG_MAX = 6
+
+const DEFAULT_LOADOUTS: Record<string, { weapons: string[]; modules: string[] }> = {
+  sidewinder: { weapons: ['light_chaingun', 'light_chaingun'], modules: ['thruster_pack_s', 'shield_booster_s', 'cooling_fin_s'] },
+  cobra:      { weapons: ['pulse_laser', 'chaingun'],          modules: ['shield_capacitor_m', 'shield_booster_s', 'power_cell_s'] },
+  mamba:      { weapons: ['light_chaingun', 'light_chaingun'], modules: ['cryo_module_m', 'cooling_fin_s', 'thruster_pack_s'] },
+}
 
 // Minimap (screen-space, top-right)
 const MM_X = 1042
@@ -57,6 +64,7 @@ export class PhysicsScene extends Phaser.Scene {
   private evaluator!:      TriggerEvaluator
   private executor!:       ActionExecutor
   private simulator!:      CombatSimulator
+  private enemies!:        EnemyManager
   private playerState!:    PlayerState
   private draftedCards:    UpgradeCard[] = []
   private readonly mgr = new LoadoutManager()
@@ -65,6 +73,7 @@ export class PhysicsScene extends Phaser.Scene {
   private killCount  = 0
   private level      = 1
   private drafting   = false
+  private runCredits = 0
   private killCounterText!:  Phaser.GameObjects.Text
   private levelText!:        Phaser.GameObjects.Text
   private modulesContainer!: Phaser.GameObjects.Container
@@ -104,6 +113,7 @@ export class PhysicsScene extends Phaser.Scene {
 
     this.buildActor()
     this.buildCombatSystems()
+    this.buildEnemies()
     this.buildHUD()
   }
 
@@ -134,6 +144,19 @@ export class PhysicsScene extends Phaser.Scene {
 
     this.actor.gfx.clear()
     drawNeonShip(this.actor.gfx, this.actor.body, this.actor.geometry, clsColor, phaseAlpha)
+
+    // Enemy update
+    const loadout = DEFAULT_LOADOUTS[this.runData.shipId] ?? { weapons: [], modules: [] }
+    this.enemies.update(
+      dt,
+      this.actor.body.x, this.actor.body.y,
+      loadout.weapons,
+      (damage) => this.combatState.takeDamage(damage),
+      (result) => {
+        this.runCredits += result.credits
+        this.dispatcher.emit({ type: 'ON_KILL', sourceId: this.runData.shipId, value: 1, timestamp: performance.now() })
+      }
+    )
 
     this.updateGrid()
     this.updateMinimap(clsColor)
@@ -202,8 +225,15 @@ export class PhysicsScene extends Phaser.Scene {
       })
     }
 
+    // Simulator still fires hits/heat for ambient combat feel — kill events now come from EnemyManager
     this.simulator = new CombatSimulator(this, this.combatState, this.dispatcher)
     this.simulator.start()
+  }
+
+  private buildEnemies(): void {
+    this.enemies = new EnemyManager()
+    this.enemies.init(this)
+    this.enemies.spawnInitial()
   }
 
   private triggerDraft(): void {
@@ -382,6 +412,7 @@ export class PhysicsScene extends Phaser.Scene {
     this.killCounterText = this.add.text(VIEW_W - 14, 32, `KILLS  0 / ${KILLS_PER_LEVEL}`, {
       fontSize: '10px', color: '#335544', fontFamily: 'monospace',
     }).setOrigin(1, 0); add(this.killCounterText)
+
 
     // Minimap label
     add(this.add.text(MM_X, MM_Y - 14, 'SECTOR MAP', {
