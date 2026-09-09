@@ -216,12 +216,22 @@ export class EnemyManager {
       case 'CHASE': {
         const dx = px - e.x, dy = py - e.y
         const dist = Math.hypot(dx, dy)
-        if (dist > 1) {
+        const aggroRange = e.def.aggroRange ?? Infinity
+
+        if (dist <= aggroRange && dist > 1) {
+          // Active pursuit — steer toward player
           const accel = e.def.stats.ACCELERATION
           e.vx += (dx / dist) * accel * dt
           e.vy += (dy / dist) * accel * dt
           const spd = Math.hypot(e.vx, e.vy)
-          if (spd > e.def.stats.SPEED) { e.vx = (e.vx / spd) * e.def.stats.SPEED; e.vy = (e.vy / spd) * e.def.stats.SPEED }
+          if (spd > e.def.stats.SPEED) {
+            e.vx = (e.vx / spd) * e.def.stats.SPEED
+            e.vy = (e.vy / spd) * e.def.stats.SPEED
+          }
+        } else {
+          // Outside aggro range — coast and decelerate
+          e.vx *= Math.pow(0.92, dt * 60)
+          e.vy *= Math.pow(0.92, dt * 60)
         }
         e.x += e.vx * dt; e.y += e.vy * dt
         if (Math.hypot(e.vx, e.vy) > 3) e.heading = Math.atan2(e.vx, -e.vy)

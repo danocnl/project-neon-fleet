@@ -165,12 +165,13 @@ export interface Enemy {
   tier:        number
   size:        EnemySize
   behavior:    EnemyBehavior
+  aggroRange?: number      // CHASE enemies activate only within this distance (u)
   stats:       EnemyStats
   weapon:      EnemyWeapon | null
   drops:       EnemyDrops
-  breakdown:   EnemyBreakdown | null   // asteroid cascade etc.
-  vulnerableTo: string[]   // damage type / status tags that are extra effective
-  immuneTo:    string[]    // tags with no effect on this enemy
+  breakdown:   EnemyBreakdown | null
+  vulnerableTo: string[]
+  immuneTo:    string[]
   description: string
 }
 

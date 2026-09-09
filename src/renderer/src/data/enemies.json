@@ -184,7 +184,8 @@
       "EMP"
     ],
     "immuneTo": [],
-    "xpValue": 3
+    "xpValue": 3,
+    "aggroRange": 900
   },
   {
     "id": "attack_drone",
@@ -220,7 +221,8 @@
       "CORROSIVE"
     ],
     "immuneTo": [],
-    "xpValue": 6
+    "xpValue": 6,
+    "aggroRange": 750
   },
   {
     "id": "turret",
