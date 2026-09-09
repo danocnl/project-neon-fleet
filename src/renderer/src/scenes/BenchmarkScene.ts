@@ -153,11 +153,10 @@ export class BenchmarkScene extends Phaser.Scene {
       .fillStyle(ACCENT, 0.08).fillRect(BX, BY, BW, BH)
       .lineStyle(1.5, ACCENT, 0.9).strokeRect(BX, BY, BW, BH)
 
-    // ARMORY placeholder
-    this.add.graphics().lineStyle(1, 0x223322, 0.4).strokeRect(AX, BY, BW, BH)
-    this.add.text(AX + BW / 2, BY + BH / 2, 'ARMORY  [SOON]', {
-      fontSize: '11px', color: '#334433', fontFamily: 'monospace',
-    }).setOrigin(0.5)
+    // ARMORY button Phaser visual
+    this.add.graphics()
+      .fillStyle(0x00aa44, 0.08).fillRect(AX, BY, BW, BH)
+      .lineStyle(1, 0x00aa44, 0.7).strokeRect(AX, BY, BW, BH)
 
     // Transparent HTML div precisely positioned over the Phaser button.
     // Uses getBoundingClientRect so it accounts for Scale.FIT letterboxing.
@@ -189,12 +188,46 @@ export class BenchmarkScene extends Phaser.Scene {
 
     document.body.appendChild(overlay)
 
+    // ARMORY overlay
+    const armoryOverlay = document.createElement('div')
+    const updateArmoryPos = () => {
+      const r = this.sys.canvas.getBoundingClientRect()
+      const sx = r.width / W, sy = r.height / H
+      armoryOverlay.style.left   = `${r.left + AX * sx}px`
+      armoryOverlay.style.top    = `${r.top  + BY * sy}px`
+      armoryOverlay.style.width  = `${BW * sx}px`
+      armoryOverlay.style.height = `${BH * sy}px`
+    }
+    armoryOverlay.style.cssText = 'position:fixed;z-index:9999;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#00cc44;font-family:monospace;font-weight:bold;letter-spacing:2px;font-size:13px;'
+    armoryOverlay.textContent = 'ARMORY'
+    updateArmoryPos()
+    armoryOverlay.onmouseenter = () => { armoryOverlay.style.background = 'rgba(0,200,68,0.15)' }
+    armoryOverlay.onmouseleave = () => { armoryOverlay.style.background = '' }
+    armoryOverlay.onclick = () => {
+      removeOverlay()
+      if (document.body.contains(armoryOverlay)) document.body.removeChild(armoryOverlay)
+      SaveManager.setArmoryPending(pilot, shipId, classId)
+      window.location.reload()
+    }
+    document.body.appendChild(armoryOverlay)
+
+    const removeAll = () => {
+      removeOverlay()
+      if (document.body.contains(armoryOverlay)) document.body.removeChild(armoryOverlay)
+    }
+
     const keyHandler = (e: KeyboardEvent) => {
       if (['Enter', ' ', 'r', 'R'].includes(e.key)) { window.removeEventListener('keydown', keyHandler); relaunch() }
+      if (e.key === 'a' || e.key === 'A') {
+        window.removeEventListener('keydown', keyHandler)
+        removeAll()
+        SaveManager.setArmoryPending(pilot, shipId, classId)
+        window.location.reload()
+      }
     }
     window.addEventListener('keydown', keyHandler)
 
-    this.events.once('destroy', () => { removeOverlay(); window.removeEventListener('keydown', keyHandler) })
+    this.events.once('destroy', () => { removeAll(); window.removeEventListener('keydown', keyHandler) })
 
     this.add.text(W / 2, 618, 'Credits carry over between runs. Spend them in the Armory for permanent weapons and modules.', {
       fontSize: '9px', color: '#1a3322', fontFamily: 'monospace',

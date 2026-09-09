@@ -13,6 +13,7 @@ import { ActionExecutor } from '../combat/ActionExecutor'
 import { CombatSimulator } from '../combat/CombatSimulator'
 import { EnemyManager } from '../combat/EnemyManager'
 import { ProjectileSystem } from '../combat/ProjectileSystem'
+import { SaveManager } from '../systems/SaveManager'
 import type { UpgradeCard, FlightMode } from '../types'
 
 // ─── World & layout constants ─────────────────────────────────────────────────
@@ -167,8 +168,10 @@ export class PhysicsScene extends Phaser.Scene {
     const shieldBefore = this.combatState.currentShield
     const hullBefore   = this.combatState.currentHull
 
-    // Enemy update
-    const loadout = DEFAULT_LOADOUTS[this.runData.shipId] ?? { weapons: [], modules: [] }
+    // Enemy update — use saved loadout if available, else hardcoded defaults
+    const loadout = SaveManager.getLoadout(this.runData.shipId)
+              ?? DEFAULT_LOADOUTS[this.runData.shipId]
+              ?? { weapons: [], modules: [] }
     const playerRadius   = this.getPlayerCollisionRadius()
     const targetPriority = this.flightMode === 'HUNTER' ? 'drones'
                          : this.flightMode === 'FARMER'  ? 'asteroids' : 'any'
@@ -343,7 +346,9 @@ export class PhysicsScene extends Phaser.Scene {
     this.enemies.init(this)
     this.enemies.spawnInitial()
 
-    const loadout = DEFAULT_LOADOUTS[this.runData.shipId] ?? { weapons: [], modules: [] }
+    const loadout = SaveManager.getLoadout(this.runData.shipId)
+              ?? DEFAULT_LOADOUTS[this.runData.shipId]
+              ?? { weapons: [], modules: [] }
     this.projectiles = new ProjectileSystem()
     this.projectiles.init(this, loadout.weapons)
   }

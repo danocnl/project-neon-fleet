@@ -32,10 +32,14 @@ export class BootScene extends Phaser.Scene {
       fontSize: '12px', color: '#333333', fontFamily: 'monospace'
     }).setOrigin(0.5)
 
-    // If a previous run was saved (player relaunched from benchmark),
-    // skip selection and go straight back into the sector after 500ms.
-    const lastRun = SaveManager.getLastRun()
-    if (lastRun) {
+    // Check navigation intent stored before reload
+    const armoryData = SaveManager.getArmoryPending()
+    const lastRun    = SaveManager.getLastRun()
+
+    if (armoryData) {
+      SaveManager.clearArmoryPending()
+      this.time.delayedCall(300, () => this.scene.start('ArmoryScene', armoryData))
+    } else if (lastRun) {
       SaveManager.clearLastRun()
       this.time.delayedCall(500, () => this.scene.start('PhysicsScene', lastRun))
     } else {

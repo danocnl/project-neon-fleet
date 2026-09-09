@@ -32,7 +32,8 @@
       "AMMO_CAPACITY",
       "ACCURACY",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 60
   },
   {
     "id": "chaingun",
@@ -67,7 +68,8 @@
       "AMMO_CAPACITY",
       "ACCURACY",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 120
   },
   {
     "id": "heavy_chaingun",
@@ -101,7 +103,8 @@
       "RATE_OF_FIRE",
       "AMMO_CAPACITY",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 250
   },
   {
     "id": "rotary_cannon",
@@ -135,7 +138,8 @@
       "RATE_OF_FIRE",
       "AMMO_CAPACITY",
       "ACCURACY"
-    ]
+    ],
+    "price": 800
   },
   {
     "id": "pulse_laser",
@@ -172,7 +176,8 @@
       "RATE_OF_FIRE",
       "RANGE",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 80
   },
   {
     "id": "beam_laser",
@@ -209,7 +214,8 @@
       "RANGE",
       "HEAT_DISSIPATION",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 160
   },
   {
     "id": "heavy_beam",
@@ -246,7 +252,8 @@
       "RANGE",
       "HEAT_DISSIPATION",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 380
   },
   {
     "id": "railgun",
@@ -283,7 +290,8 @@
       "VELOCITY",
       "RANGE",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 220
   },
   {
     "id": "gauss_cannon",
@@ -320,7 +328,8 @@
       "VELOCITY",
       "RANGE",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 450
   },
   {
     "id": "micro_missile",
@@ -355,7 +364,8 @@
       "AMMO_CAPACITY",
       "GLOBAL_RADIUS",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 90
   },
   {
     "id": "torpedo",
@@ -390,7 +400,8 @@
       "AMMO_CAPACITY",
       "GLOBAL_RADIUS",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 200
   },
   {
     "id": "emp_cannon",
@@ -426,7 +437,8 @@
       "EMP",
       "RATE_OF_FIRE",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 150
   },
   {
     "id": "arc_cannon",
@@ -463,7 +475,8 @@
       "TETHER",
       "DAMAGE_SHARE",
       "FIRING_ARC"
-    ]
+    ],
+    "price": 175
   },
   {
     "id": "shockwave_emitter",
@@ -502,6 +515,7 @@
       "PULSE_RADIUS",
       "AURA_RADIUS",
       "GLOBAL_RADIUS"
-    ]
+    ],
+    "price": 200
   }
 ]

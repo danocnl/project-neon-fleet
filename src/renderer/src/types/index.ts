@@ -222,6 +222,7 @@ export interface Module {
   passiveHeat:   number   // heat/s while active
   weight:        number   // contributes to WEIGHT_CAPACITY
   tags:          string[] // upgrade categories this module interacts with
+  price:         number   // credits to purchase in the Armory
 }
 
 // ─── Weapons ─────────────────────────────────────────────────────────────────
@@ -280,4 +281,5 @@ export interface Weapon {
   behaviors:     WeaponBehaviors
   statusEffects: WeaponStatusEffects
   tags:          string[]
+  price:         number   // credits to purchase in the Armory
 }
