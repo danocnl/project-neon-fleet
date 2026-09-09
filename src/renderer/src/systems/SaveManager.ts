@@ -1,14 +1,18 @@
 const SAVE_KEY = 'neon_fleet_save_v1'
 
 export interface SaveData {
-  credits:    number
-  totalKills: number
-  totalRuns:  number
+  credits:      number
+  totalKills:   number
+  totalRuns:    number
   highestLevel: number
+  // Last run — used to skip selection screen on quick relaunch
+  lastPilot?:   string
+  lastShipId?:  string
+  lastClassId?: string
 }
 
 const DEFAULTS: SaveData = {
-  credits:      200,   // starting credits — enough to cover the first repair
+  credits:      200,
   totalKills:   0,
   totalRuns:    0,
   highestLevel: 0,
@@ -45,9 +49,29 @@ export class SaveManager {
     return { success: true, data: d }
   }
 
-  // Repair cost = 5% of ship max hull
-  // Intentionally low — economy is driven by Armory purchases, not repair friction
   static repairCost(maxHull: number): number {
     return Math.round(maxHull * 0.05)
+  }
+
+  static saveLastRun(pilot: string, shipId: string, classId: string): void {
+    const d = this.load()
+    d.lastPilot   = pilot
+    d.lastShipId  = shipId
+    d.lastClassId = classId
+    this.save(d)
+  }
+
+  static getLastRun(): { pilot: string; shipId: string; classId: string } | null {
+    const d = this.load()
+    if (d.lastPilot && d.lastShipId && d.lastClassId) {
+      return { pilot: d.lastPilot, shipId: d.lastShipId, classId: d.lastClassId }
+    }
+    return null
+  }
+
+  static clearLastRun(): void {
+    const d = this.load()
+    delete d.lastPilot; delete d.lastShipId; delete d.lastClassId
+    this.save(d)
   }
 }

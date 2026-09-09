@@ -179,12 +179,18 @@ export class BenchmarkScene extends Phaser.Scene {
 
     overlay.onmouseenter = () => { overlay.style.background = 'rgba(0,255,255,0.15)' }
     overlay.onmouseleave = () => { overlay.style.background = '' }
-    overlay.onclick      = () => { removeOverlay(); window.location.reload() }
+    const relaunch = () => {
+      removeOverlay()
+      SaveManager.saveLastRun(pilot, shipId, classId)
+      window.location.reload()
+    }
+
+    overlay.onclick = () => relaunch()
 
     document.body.appendChild(overlay)
 
     const keyHandler = (e: KeyboardEvent) => {
-      if (['Enter', ' ', 'r', 'R'].includes(e.key)) { removeOverlay(); window.removeEventListener('keydown', keyHandler); window.location.reload() }
+      if (['Enter', ' ', 'r', 'R'].includes(e.key)) { window.removeEventListener('keydown', keyHandler); relaunch() }
     }
     window.addEventListener('keydown', keyHandler)
 

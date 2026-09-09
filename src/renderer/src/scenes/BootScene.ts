@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { DataLoader } from '../systems/DataLoader'
 import { LoadoutManager } from '../systems/LoadoutManager'
+import { SaveManager } from '../systems/SaveManager'
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -31,7 +32,15 @@ export class BootScene extends Phaser.Scene {
       fontSize: '12px', color: '#333333', fontFamily: 'monospace'
     }).setOrigin(0.5)
 
-    this.time.delayedCall(3000, () => this.scene.start('SelectionScene'))
+    // If a previous run was saved (player relaunched from benchmark),
+    // skip selection and go straight back into the sector after 500ms.
+    const lastRun = SaveManager.getLastRun()
+    if (lastRun) {
+      SaveManager.clearLastRun()
+      this.time.delayedCall(500, () => this.scene.start('PhysicsScene', lastRun))
+    } else {
+      this.time.delayedCall(3000, () => this.scene.start('SelectionScene'))
+    }
   }
 
   private runSystemCheck(): string[] {
