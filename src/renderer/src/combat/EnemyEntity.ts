@@ -8,26 +8,31 @@ export class EnemyEntity {
 
   x = 0; y = 0
   vx = 0; vy = 0
-  heading = 0          // radians — visual rotation
+  heading = 0
 
+  readonly maxHull:   number
+  readonly maxShield: number
   currentHull:   number
   currentShield: number
-  shieldDelayMs = 0    // ms since last damage hit
+  shieldDelayMs = 0
 
-  // Pre-generated polygon (relative to centre, before rotation)
   readonly shape: [number, number][]
 
   alive = true
-  attackCooldownMs = 0  // ms until next enemy attack
+  attackCooldownMs = 0
 
-  constructor(def: Enemy, x: number, y: number, driftAngle: number) {
+  constructor(def: Enemy, x: number, y: number, driftAngle: number, sectorScale = 1.0) {
     this.def        = def
     this.instanceId = `${def.id}_${++_idCounter}`
     this.x = x; this.y = y
-    this.heading    = driftAngle
-    this.currentHull   = def.stats.HULL
-    this.currentShield = def.stats.SHIELD_MAX
-    this.shape      = buildShape(def.id, def.size, _idCounter)
+    this.heading = driftAngle
+
+    this.maxHull   = Math.round(def.stats.HULL   * sectorScale)
+    this.maxShield = Math.round(def.stats.SHIELD_MAX * sectorScale)
+    this.currentHull   = this.maxHull
+    this.currentShield = this.maxShield
+
+    this.shape = buildShape(def.id, def.size, _idCounter)
 
     if (def.behavior === 'DRIFT') {
       this.vx = Math.cos(driftAngle) * def.stats.SPEED
@@ -54,12 +59,11 @@ export class EnemyEntity {
   }
 
   tick(deltaMs: number): void {
-    // Shield regen after delay
-    if (this.def.stats.SHIELD_MAX > 0 && this.currentShield < this.def.stats.SHIELD_MAX) {
+    if (this.maxShield > 0 && this.currentShield < this.maxShield) {
       this.shieldDelayMs += deltaMs
       if (this.shieldDelayMs >= this.def.stats.SHIELD_DELAY * 1000) {
         this.currentShield = Math.min(
-          this.def.stats.SHIELD_MAX,
+          this.maxShield,
           this.currentShield + this.def.stats.SHIELD_REGEN * (deltaMs / 1000)
         )
       }
@@ -67,10 +71,8 @@ export class EnemyEntity {
     if (this.attackCooldownMs > 0) this.attackCooldownMs -= deltaMs
   }
 
-  get hullRatio():   number { return this.currentHull / this.def.stats.HULL }
-  get shieldRatio(): number {
-    return this.def.stats.SHIELD_MAX > 0 ? this.currentShield / this.def.stats.SHIELD_MAX : 0
-  }
+  get hullRatio():   number { return this.currentHull  / this.maxHull }
+  get shieldRatio(): number { return this.maxShield > 0 ? this.currentShield / this.maxShield : 0 }
 }
 
 // ─── Shape generation ────────────────────────────────────────────────────────

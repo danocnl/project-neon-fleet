@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { EnemyEntity } from './EnemyEntity'
 import { DataLoader } from '../systems/DataLoader'
+import { SectorManager } from '../systems/SectorManager'
 import type { Enemy } from '../types'
 import type { PhysicsBody } from '../physics/PhysicsBody'
 
@@ -77,10 +78,10 @@ export class EnemyManager {
     spawn('turret',          1, 800)
   }
 
-  spawnEnemy(id: string, x: number, y: number, angle: number): EnemyEntity | null {
+  spawnEnemy(id: string, x: number, y: number, angle: number, sectorScale = 1.0): EnemyEntity | null {
     const def = this.defs.get(id)
     if (!def) return null
-    const e = new EnemyEntity(def, x, y, angle)
+    const e = new EnemyEntity(def, x, y, angle, sectorScale)
     this.entities.push(e)
     return e
   }
@@ -95,6 +96,7 @@ export class EnemyManager {
     playerBody: PhysicsBody,
     weaponIds: string[],
     targetPriority: 'any' | 'drones' | 'asteroids',
+    sector: SectorManager,
     onEnemyAttack: (damage: number) => void,
     onKill: (result: KillResult) => void
   ): void {
@@ -105,7 +107,7 @@ export class EnemyManager {
     for (const e of this.entities) {
       if (!e.alive) continue
       e.tick(deltaMs)
-      this.updateBehavior(e, dt, playerX, playerY)
+      this.updateBehavior(e, dt, playerX, playerY, sector)
       wrapEntity(e)
     }
 
@@ -127,9 +129,9 @@ export class EnemyManager {
 
       const isBeam = weapon.behaviors?.BEAM === true
       if (isBeam) {
-        onEnemyAttack(weapon.baseStats.DAMAGE * dt)
+        onEnemyAttack(weapon.baseStats.DAMAGE * dt * sector.rofScale)
       } else {
-        const rof = weapon.baseStats.RATE_OF_FIRE
+        const rof = weapon.baseStats.RATE_OF_FIRE * sector.rofScale
         if (e.attackCooldownMs <= 0 && rof > 0) {
           onEnemyAttack(weapon.baseStats.DAMAGE)
           e.attackCooldownMs = (1 / rof) * 1000
@@ -172,7 +174,23 @@ export class EnemyManager {
       })
     }
 
+    this.respawnIfNeeded(sector, playerX, playerY)
     this.draw(playerX, playerY)
+  }
+
+  private respawnIfNeeded(sector: SectorManager, playerX: number, playerY: number): void {
+    if (this.entities.length >= 6) return
+    const wave = sector.getSpawnWave()
+    for (const { id, count } of wave) {
+      for (let i = 0; i < count; i++) {
+        let x: number, y: number
+        do {
+          x = Math.random() * WORLD_W
+          y = Math.random() * WORLD_H
+        } while (Math.hypot(x - playerX, y - playerY) < 800)
+        this.spawnEnemy(id, x, y, Math.random() * Math.PI * 2, sector.hpScale)
+      }
+    }
   }
 
   // ─── Collision ───────────────────────────────────────────────────────────
@@ -219,7 +237,7 @@ export class EnemyManager {
 
   // ─── AI ─────────────────────────────────────────────────────────────────
 
-  private updateBehavior(e: EnemyEntity, dt: number, px: number, py: number): void {
+  private updateBehavior(e: EnemyEntity, dt: number, px: number, py: number, sector: SectorManager): void {
     switch (e.def.behavior) {
       case 'DRIFT':
         e.x += e.vx * dt; e.y += e.vy * dt
@@ -231,14 +249,15 @@ export class EnemyManager {
         const aggroRange = e.def.leash ?? Infinity
 
         if (dist <= (e.def.leash ?? Infinity) && dist > 1) {
-          // Active pursuit — steer toward player
-          const accel = e.def.stats.ACCELERATION
+          // Active pursuit — steer toward player (speed scaled by sector)
+          const accel    = e.def.stats.ACCELERATION
+          const maxSpeed = e.def.stats.SPEED * sector.speedScale
           e.vx += (dx / dist) * accel * dt
           e.vy += (dy / dist) * accel * dt
           const spd = Math.hypot(e.vx, e.vy)
-          if (spd > e.def.stats.SPEED) {
-            e.vx = (e.vx / spd) * e.def.stats.SPEED
-            e.vy = (e.vy / spd) * e.def.stats.SPEED
+          if (spd > maxSpeed) {
+            e.vx = (e.vx / spd) * maxSpeed
+            e.vy = (e.vy / spd) * maxSpeed
           }
         } else {
           // Outside aggro range — coast and decelerate

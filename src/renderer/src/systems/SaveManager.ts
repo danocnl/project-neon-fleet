@@ -4,10 +4,11 @@ const SAVE_KEY = 'neon_fleet_save_v1'
 const MODULE_MAX_LEVEL = 20
 
 export interface SaveData {
-  credits:      number
-  totalKills:   number
-  totalRuns:    number
-  highestLevel: number
+  credits:        number
+  totalKills:     number
+  totalRuns:      number
+  highestLevel:   number
+  highestSector?: number
   // Quick-relaunch
   lastPilot?:   string
   lastShipId?:  string
@@ -71,12 +72,13 @@ export class SaveManager {
 
   // ─── Run results ─────────────────────────────────────────────────────────────
 
-  static applyRunResult(creditsEarned: number, kills: number, levelReached: number): SaveData {
+  static applyRunResult(creditsEarned: number, kills: number, levelReached: number, sectorReached = 1): SaveData {
     const d = this.load()
     d.credits      += creditsEarned
-    d.totalKills   += kills
-    d.totalRuns    += 1
-    d.highestLevel  = Math.max(d.highestLevel, levelReached)
+    d.totalKills    += kills
+    d.totalRuns     += 1
+    d.highestLevel   = Math.max(d.highestLevel, levelReached)
+    d.highestSector  = Math.max(d.highestSector ?? 1, sectorReached)
     this.save(d)
     return d
   }

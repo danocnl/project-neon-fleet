@@ -14,6 +14,7 @@ import { CombatSimulator } from '../combat/CombatSimulator'
 import { EnemyManager } from '../combat/EnemyManager'
 import { ProjectileSystem } from '../combat/ProjectileSystem'
 import { SaveManager } from '../systems/SaveManager'
+import { SectorManager } from '../systems/SectorManager'
 import type { UpgradeCard, FlightMode } from '../types'
 
 // ─── World & layout constants ─────────────────────────────────────────────────
@@ -77,6 +78,9 @@ export class PhysicsScene extends Phaser.Scene {
   private draftedCards:    UpgradeCard[] = []
   private readonly mgr = new LoadoutManager()
 
+  // Sector progression
+  private sector = new SectorManager()
+
   // Progression
   private killCount       = 0
   private level           = 1
@@ -92,6 +96,7 @@ export class PhysicsScene extends Phaser.Scene {
   private upgradePulse    = 0   // phase for sine pulse
   private killCounterText!:  Phaser.GameObjects.Text
   private levelText!:        Phaser.GameObjects.Text
+  private sectorText!:       Phaser.GameObjects.Text
   private modulesContainer!: Phaser.GameObjects.Container
 
   // HUD bars
@@ -184,9 +189,11 @@ export class PhysicsScene extends Phaser.Scene {
       this.actor.body,
       loadout.weapons,
       targetPriority,
+      this.sector,
       (damage) => this.combatState.takeDamage(damage),
       (result) => {
         this.runCredits += result.credits
+        this.sector.addKill()
         this.dispatcher.emit({ type: 'ON_KILL', sourceId: this.runData.shipId, value: 1, timestamp: performance.now() })
       }
     )
@@ -365,6 +372,7 @@ export class PhysicsScene extends Phaser.Scene {
           killsThisRun:   this.killCount,
           creditsThisRun: this.runCredits,
           levelReached:   this.level,
+          sectorReached:  this.sector.sector,
           maxHull:        ship?.baseStats.HULL ?? 900,
         })
       })
@@ -668,6 +676,10 @@ export class PhysicsScene extends Phaser.Scene {
       fontSize: '10px', color: '#335544', fontFamily: 'monospace',
     }).setOrigin(1, 0); add(this.killCounterText)
 
+    this.sectorText = this.add.text(VIEW_W - 14, 48, 'SECTOR 1', {
+      fontSize: '10px', color: '#aaaaff', fontFamily: 'monospace',
+    }).setOrigin(1, 0); add(this.sectorText)
+
     // Upgrade ready button — visible only when pendingUpgrades > 0
     const BW = 210, BH = 32
     const BX = VIEW_W / 2 - BW / 2
@@ -836,6 +848,8 @@ export class PhysicsScene extends Phaser.Scene {
     const progress = this.killCount % KILLS_PER_LEVEL
     this.killCounterText?.setText(`KILLS  ${progress} / ${KILLS_PER_LEVEL}`)
     this.levelText?.setText(`LV ${this.level}`)
+    const pct = Math.round(this.sector.sectorProgress * 100)
+    this.sectorText?.setText(`SECTOR ${this.sector.sector}  ${pct}%`)
   }
 
   private updateModulesDisplay(): void {

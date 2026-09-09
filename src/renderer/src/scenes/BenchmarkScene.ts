@@ -13,6 +13,7 @@ export interface BenchmarkData {
   killsThisRun:   number
   creditsThisRun: number
   levelReached:   number
+  sectorReached:  number
   maxHull:        number
 }
 
@@ -36,7 +37,7 @@ export class BenchmarkScene extends Phaser.Scene {
   }
 
   private buildContent(): void {
-    const { pilot, shipId, classId, killsThisRun, creditsThisRun, levelReached, maxHull } = this.runData
+    const { pilot, shipId, classId, killsThisRun, creditsThisRun, levelReached, sectorReached, maxHull } = this.runData
     const ship      = DataLoader.getShip(shipId)
     const cls       = DataLoader.getClass(classId)
     const clsColor  = CLASS_COLORS[classId] ?? ACCENT
@@ -46,7 +47,7 @@ export class BenchmarkScene extends Phaser.Scene {
     // Apply run result to save — credits may go negative if first run
     const save = SaveManager.load()
     const creditsAfterEarn = save.credits + creditsThisRun
-    SaveManager.applyRunResult(creditsThisRun, killsThisRun, levelReached)
+    SaveManager.applyRunResult(creditsThisRun, killsThisRun, levelReached, sectorReached)
     const totalAfterRepair = creditsAfterEarn - repairCost
     SaveManager.save({ ...SaveManager.load(), credits: Math.max(0, totalAfterRepair) })
 
@@ -91,6 +92,7 @@ export class BenchmarkScene extends Phaser.Scene {
 
     const stats: [string, string][] = [
       ['KILLS',          `${killsThisRun}`],
+      ['SECTOR REACHED', `${sectorReached}`],
       ['LEVEL REACHED',  `${levelReached}`],
       ['CREDITS EARNED', `${creditsThisRun} ⬡`],
     ]
@@ -135,7 +137,7 @@ export class BenchmarkScene extends Phaser.Scene {
     // ── Lifetime stats ──────────────────────────────────────────────────────
 
     const finalSave = SaveManager.load()
-    this.add.text(100, 480, `TOTAL RUNS: ${finalSave.totalRuns}   ·   ALL-TIME KILLS: ${finalSave.totalKills}   ·   HIGHEST LEVEL: ${finalSave.highestLevel}`, {
+    this.add.text(100, 480, `TOTAL RUNS: ${finalSave.totalRuns}   ·   ALL-TIME KILLS: ${finalSave.totalKills}   ·   HIGHEST LEVEL: ${finalSave.highestLevel}   ·   HIGHEST SECTOR: ${finalSave.highestSector ?? 1}`, {
       fontSize: '9px', color: '#1a3322', fontFamily: 'monospace', letterSpacing: 2,
     })
 
