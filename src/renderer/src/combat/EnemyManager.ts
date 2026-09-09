@@ -34,10 +34,13 @@ export interface KillResult {
 }
 
 export class EnemyManager {
-  private entities: EnemyEntity[] = []
-  private defs     = new Map<string, Enemy>()
-  private gfx!:    Phaser.GameObjects.Graphics
-  private attackGfx!: Phaser.GameObjects.Graphics
+  private entities:      EnemyEntity[] = []
+  private defs           = new Map<string, Enemy>()
+  private gfx!:          Phaser.GameObjects.Graphics
+  private attackGfx!:    Phaser.GameObjects.Graphics
+  private _currentTarget: EnemyEntity | null = null
+
+  get currentTarget(): EnemyEntity | null { return this._currentTarget }
 
   init(scene: Phaser.Scene): void {
     this.gfx       = scene.add.graphics().setDepth(4)
@@ -100,6 +103,7 @@ export class EnemyManager {
 
     // Player attacks nearest enemy within weapon range AND firing arc
     const target = this.nearestAlive(playerX, playerY, playerRange, playerHeading, playerArc)
+    this._currentTarget = target
     if (target) {
       target.takeDamage(playerDps * dt)
     }
@@ -147,7 +151,7 @@ export class EnemyManager {
       })
     }
 
-    this.draw(playerX, playerY, target)
+    this.draw()
   }
 
   // ─── AI behavior ────────────────────────────────────────────────────────
@@ -189,18 +193,11 @@ export class EnemyManager {
 
   // ─── Drawing ─────────────────────────────────────────────────────────────
 
-  private draw(px: number, py: number, target: EnemyEntity | null): void {
+  private draw(): void {
     this.gfx.clear()
     this.attackGfx.clear()
-
     for (const e of this.entities) {
       this.drawEnemy(e)
-    }
-
-    // Attack line from player to target
-    if (target) {
-      this.attackGfx.lineStyle(1, 0x00ffff, 0.4)
-      this.attackGfx.lineBetween(px, py, target.x, target.y)
     }
   }
 

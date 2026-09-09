@@ -12,6 +12,7 @@ import { TriggerEvaluator } from '../combat/TriggerEvaluator'
 import { ActionExecutor } from '../combat/ActionExecutor'
 import { CombatSimulator } from '../combat/CombatSimulator'
 import { EnemyManager } from '../combat/EnemyManager'
+import { ProjectileSystem } from '../combat/ProjectileSystem'
 import type { UpgradeCard } from '../types'
 
 // ─── World & layout constants ─────────────────────────────────────────────────
@@ -65,6 +66,7 @@ export class PhysicsScene extends Phaser.Scene {
   private executor!:       ActionExecutor
   private simulator!:      CombatSimulator
   private enemies!:        EnemyManager
+  private projectiles!:    ProjectileSystem
   private playerState!:    PlayerState
   private draftedCards:    UpgradeCard[] = []
   private readonly mgr = new LoadoutManager()
@@ -159,6 +161,16 @@ export class PhysicsScene extends Phaser.Scene {
       }
     )
 
+    // Projectiles
+    const tgt = this.enemies.currentTarget
+    this.projectiles.update(
+      dt,
+      this.actor.body.x, this.actor.body.y, this.actor.body.heading,
+      tgt?.x ?? 0, tgt?.y ?? 0,
+      tgt !== null
+    )
+    this.projectiles.draw()
+
     this.updateGrid()
     this.updateMinimap(clsColor)
     this.updateHUD()
@@ -235,6 +247,10 @@ export class PhysicsScene extends Phaser.Scene {
     this.enemies = new EnemyManager()
     this.enemies.init(this)
     this.enemies.spawnInitial()
+
+    const loadout = DEFAULT_LOADOUTS[this.runData.shipId] ?? { weapons: [], modules: [] }
+    this.projectiles = new ProjectileSystem()
+    this.projectiles.init(this, loadout.weapons)
   }
 
   private triggerDraft(): void {
