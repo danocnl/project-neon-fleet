@@ -75,6 +75,7 @@ export class PhysicsScene extends Phaser.Scene {
   private heatBar!:    Phaser.GameObjects.Graphics
   private energyBar!:  Phaser.GameObjects.Graphics
   private effectText!: Phaser.GameObjects.Text
+  private speedText!:  Phaser.GameObjects.Text
   private logEntries:  Phaser.GameObjects.Text[] = []
   private hullText!:   Phaser.GameObjects.Text
   private shieldText!: Phaser.GameObjects.Text
@@ -359,6 +360,8 @@ export class PhysicsScene extends Phaser.Scene {
 
     this.effectText = this.add.text(14, 154, '', { fontSize: '10px', color: '#ffcc00', fontFamily: 'monospace' }); add(this.effectText)
 
+    this.speedText = this.add.text(14, 172, '', { fontSize: '10px', color: '#224433', fontFamily: 'monospace' }); add(this.speedText)
+
     // Trigger log
     add(this.add.text(14, VIEW_H - LOG_MAX * 18 - 30, 'TRIGGER LOG', {
       fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 3,
@@ -418,6 +421,10 @@ export class PhysicsScene extends Phaser.Scene {
     this.shieldText.setText(`${Math.round(cs.currentShield)} / ${cs.maxShield}`)
     this.heatText.setText(`${Math.round(cs.currentHeat)} / ${cs.maxHeat}${cs.isOverheated ? ' OVERHEAT' : ''}`)
     this.energyText.setText(`${Math.round(cs.currentEnergy)} / ${cs.maxEnergy}`)
+
+    const currentSpeed = Math.round(Math.hypot(this.actor.body.vx, this.actor.body.vy))
+    const maxSpeed     = DataLoader.getShip(this.runData.shipId)?.baseStats.TOP_SPEED ?? 0
+    this.speedText.setText(`SPD  ${currentSpeed} / ${maxSpeed} u/s`)
 
     const effects = cs.activeEffects.map(e =>
       `${e.type.replace('_', ' ')} ${(e.remainingMs / 1000).toFixed(1)}s`

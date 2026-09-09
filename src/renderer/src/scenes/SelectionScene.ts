@@ -466,39 +466,38 @@ export class SelectionScene extends Phaser.Scene {
       fontSize: '11px', color: '#335566', fontFamily: 'monospace',
     }).setOrigin(0.5), 3) as Phaser.GameObjects.Text
 
-    this.reg(this.add.text(R_X + 30, previewY + 172, 'CLASS SYNERGY', {
+    // Performance stats (replaces synergy)
+    this.reg(this.add.text(R_X + 30, previewY + 172, 'PERFORMANCE', {
       fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
     }), 3)
 
     this.s_synergy = this.reg(this.add.text(R_X + 30, previewY + 188, '', {
-      fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold', color: '#ffcc00',
-      stroke: '#ffcc00', strokeThickness: 1,
-      shadow: { offsetX: 0, offsetY: 0, color: '#ffcc00', blur: 10, fill: true },
+      fontSize: '11px', color: '#336655', fontFamily: 'monospace', lineSpacing: 4,
     }), 3) as Phaser.GameObjects.Text
 
     // Slot display
-    this.reg(this.add.text(R_X + 30, previewY + 222, 'LOADOUT SLOTS', {
+    this.reg(this.add.text(R_X + 30, previewY + 248, 'LOADOUT SLOTS', {
       fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
     }), 3)
 
-    this.s_slots = this.reg(this.add.text(R_X + 30, previewY + 238, '', {
+    this.s_slots = this.reg(this.add.text(R_X + 30, previewY + 264, '', {
       fontSize: '10px', color: '#336655', fontFamily: 'monospace', lineSpacing: 4,
     }), 3) as Phaser.GameObjects.Text
 
     // Default loadout
-    this.reg(this.add.text(R_X + 30, previewY + 300, 'DEFAULT LOADOUT', {
+    this.reg(this.add.text(R_X + 30, previewY + 326, 'DEFAULT LOADOUT', {
       fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
     }), 3)
 
-    this.s_loadout = this.reg(this.add.text(R_X + 30, previewY + 316, '', {
+    this.s_loadout = this.reg(this.add.text(R_X + 30, previewY + 342, '', {
       fontSize: '10px', color: '#336655', fontFamily: 'monospace', lineSpacing: 4,
     }), 3) as Phaser.GameObjects.Text
 
-    this.reg(this.add.text(R_X + 30, previewY + 388, 'STARTING TAGS', {
+    this.reg(this.add.text(R_X + 30, previewY + 410, 'STARTING TAGS', {
       fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
     }), 3)
 
-    this.s_tagRow = this.reg(this.add.container(R_X + 30, previewY + 404), 3) as Phaser.GameObjects.Container
+    this.s_tagRow = this.reg(this.add.container(R_X + 30, previewY + 426), 3) as Phaser.GameObjects.Container
 
     // Bottom bar
     const back3 = addButton(this, 14, BTM_Y + 14, 160, 40, '← BACK', 0x334455, () => { if (this.step === 3) this.showStep(2) })
@@ -557,11 +556,14 @@ export class SelectionScene extends Phaser.Scene {
     this.s_name.setText(ship.name.replace(' Frame', '').toUpperCase()).setColor(shipHex).setStroke(shipHex, 1)
     this.s_sub.setText(`${ship.subtitle}  ·  ${ship.weightClass}`)
 
-    // Synergy
-    const rating = (ship.classSynergies as Record<string, string>)[this.selectedClassId] ?? '?'
-    const sc = synergyColor(rating)
-    const sh = `#${sc.toString(16).padStart(6, '0')}`
-    this.s_synergy.setText(synergyLabel(rating)).setColor(sh).setStroke(sh, 1)
+    // Performance stats
+    const st = ship.baseStats
+    this.s_synergy.setText(
+      `TOP SPEED    ${st.TOP_SPEED} u/s\n` +
+      `ACCELERATION ${st.ACCELERATION} u/s²\n` +
+      `TURN SPEED   ${st.TURN_SPEED} °/s\n` +
+      `EVASION      ${st.EVASION}%   ·   MASS  ${st.MASS}`
+    )
 
     // Slot display
     const s = ship.baseStats as unknown as Record<string, number>
