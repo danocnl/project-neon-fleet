@@ -52,9 +52,12 @@ export interface ClassSpecialization {
   name: string
   roleCategory: string
   description: string
-  primaryTags: string[]    // Unique tags belonging only to this class
-  secondaryTags: string[]  // Shared tags (max 3 classes per tag)
-  tagWeighting: Record<string, number>  // Draft probability weights (1 low → 5 core)
+  isBase: boolean          // true = starter class (Architect/Conductor/Weaver)
+  subclasses?: string[]    // base classes only: IDs of the 3 specialisation options
+  parentClass?: string     // subclasses only: ID of the base class this belongs to
+  primaryTags: string[]
+  secondaryTags: string[]
+  tagWeighting: Record<string, number>
   coopSynergyMechanism: string
   recursiveDraftFocus: string
   recommendedShips: string[]

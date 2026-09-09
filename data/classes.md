@@ -1,8 +1,94 @@
 # Class Specializations — Project Neon Fleet
 
-9 class specializations acting as the software logic layer on top of a ship chassis.
-Each class has unique primary tags, shared secondary tags (max 3 classes per tag),
-and draft tag weightings (1 = occasional, 5 = core class identity).
+**12 total classes: 3 base classes + 9 subclasses.**
+
+## Class Progression
+
+Players start with 3 base classes (Architect, Conductor, Weaver). At a milestone in the run — reaching a certain power level or sector — they permanently specialise into **ONE** of the 3 subclasses within their chosen base. This is a one-time, irreversible commitment per playthrough.
+
+```
+ARCHITECT  →  pick one:  Chrono Architect · Resonance Bard · Scrap Salvager
+CONDUCTOR  →  pick one:  Hyper-Conductor  · Graviton Weaver · Quantum Entangler
+WEAVER     →  pick one:  Phase Weaver     · Nanite Swarm Controller · Vector Specialist
+```
+
+The base class is replaced entirely by the subclass on specialisation — the full tag set, primary tags, and mechanics of the subclass take over.
+
+---
+
+## Base Classes
+
+### Architect
+**Role:** Builder / Utility
+**Identity:** Persistent systems that compound over time. Auras expand, cooldowns shorten, structures last longer.
+
+**Primary Tags:** COOLDOWN · AURA_RADIUS · PERSISTENCE
+**Secondary Tags:** FREQUENCY · BROADCAST · ON_KILL
+
+```
+COOLDOWN    4  (core)
+AURA_RADIUS 4  (core)
+PERSISTENCE 4  (core)
+FREQUENCY   3
+BROADCAST   3
+ON_KILL     2
+```
+
+Co-op: Creates persistent field effects that grow over time and benefit nearby allies.
+Specialise into: Chrono Architect · Resonance Bard · Scrap Salvager
+Best starting ships: Sidewinder · Cobra
+
+---
+
+### Conductor
+**Role:** Force Channeler
+**Identity:** Converts one resource into amplified output through a connected system. Heat becomes damage. Gravity becomes compression. A hit becomes a networked echo.
+
+**Primary Tags:** ENERGY_GRID · DISPLACEMENT · TETHER
+**Secondary Tags:** ON_OVERHEAT · COMPRESSION · DAMAGE_SHARE
+
+```
+ENERGY_GRID  4  (core)
+DISPLACEMENT 4  (core)
+TETHER       3
+ON_OVERHEAT  3
+COMPRESSION  2
+DAMAGE_SHARE 2
+```
+
+Co-op: One ship's heat feeds the other's electrical output. One ship's gravity cluster feeds the other's AoE.
+Specialise into: Hyper-Conductor · Graviton Weaver · Quantum Entangler
+Best starting ships: Mamba · Cobra
+
+---
+
+### Weaver
+**Role:** Reality Bender
+**Identity:** Works through, around, or with the environment rather than meeting force with force. Phases, infects, bends light.
+
+**Primary Tags:** EVASION · PHASE · REFLECTION
+**Secondary Tags:** BIOLOGICAL · MIRROR · ON_SHIELD_DROP
+
+```
+EVASION        4  (core)
+PHASE          4  (core)
+REFLECTION     3
+BIOLOGICAL     2
+MIRROR         2
+ON_SHIELD_DROP 2
+```
+
+Co-op: Phases allies through lethal hits, spreads biological effects across enemy groups, redirects partner beam fire through mirror geometry.
+Specialise into: Phase Weaver · Nanite Swarm Controller · Vector Specialist
+Best starting ships: Sidewinder · Cobra
+
+---
+
+## Subclasses
+
+9 subclasses — available after specialising from a base class. Each entry shows which base class it branches from.
+
+Tag weightings (1 = occasional, 5 = core class identity).
 
 Synergy ratings: S = exceptional · A = good · B = workable · C = poor
 
