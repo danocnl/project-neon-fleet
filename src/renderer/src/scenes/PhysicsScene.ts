@@ -15,6 +15,8 @@ import { EnemyManager } from '../combat/EnemyManager'
 import { ProjectileSystem } from '../combat/ProjectileSystem'
 import { SaveManager } from '../systems/SaveManager'
 import { SectorManager } from '../systems/SectorManager'
+import { network } from '../systems/NetworkManager'
+import type { RemoteShipState, RemoteEnemyState, GameStateSnapshot } from '../systems/NetworkManager'
 import type { UpgradeCard, FlightMode } from '../types'
 
 // ─── World & layout constants ─────────────────────────────────────────────────
@@ -121,13 +123,34 @@ export class PhysicsScene extends Phaser.Scene {
   private heatText!:   Phaser.GameObjects.Text
   private energyText!: Phaser.GameObjects.Text
 
+  // ─── Multiplayer ──────────────────────────────────────────────────────────
+  private netRole:        'solo' | 'host' | 'guest' = 'solo'
+  private actor2?:        ShipActor
+  private combatState2?:  CombatState
+  private actor2Waypoint: { x: number; y: number } = { x: 0, y: 0 }
+  private guestFlightMode: FlightMode = 'PATROL'
+  private netSendTimer  = 0
+  private remoteEnemies: RemoteEnemyState[] = []
+  private remoteP1?:     RemoteShipState
+  private remoteGfx?:    Phaser.GameObjects.Graphics
+  private p2HullBar?:    Phaser.GameObjects.Graphics
+  private p2ShieldBar?:  Phaser.GameObjects.Graphics
+  private p2NameText?:   Phaser.GameObjects.Text
+
   constructor() { super({ key: 'PhysicsScene' }) }
 
-  init(data: RunData): void {
+  init(data: RunData & { netRole?: string; guestPilot?: string; guestShipId?: string; guestClassId?: string }): void {
     this.runData = {
       pilot:   data?.pilot   ?? 'PILOT',
       shipId:  data?.shipId  ?? 'sidewinder',
       classId: data?.classId ?? 'chrono_architect',
+    }
+    this.netRole = (data?.netRole as 'host' | 'guest' | undefined) ?? 'solo'
+    // Store guest info for host to use in create()
+    if (this.netRole === 'host') {
+      ;(this as any)._guestShipId  = data?.guestShipId  ?? 'sidewinder'
+      ;(this as any)._guestClassId = data?.guestClassId ?? 'chrono_architect'
+      ;(this as any)._guestPilot   = data?.guestPilot   ?? 'CO-PILOT'
     }
   }
 
@@ -150,6 +173,10 @@ export class PhysicsScene extends Phaser.Scene {
     this.buildCombatSystems()
     this.buildEnemies()
     this.buildHUD()
+
+    if (this.netRole === 'host') this.setupHostNet()
+    if (this.netRole === 'guest') this.setupGuestNet()
+    if (this.netRole !== 'solo') this.buildP2HUD()
   }
 
   update(_t: number, delta: number): void {
@@ -194,28 +221,68 @@ export class PhysicsScene extends Phaser.Scene {
     const playerRadius   = this.getPlayerCollisionRadius()
     const targetPriority = this.flightMode === 'HUNTER' ? 'drones'
                          : this.flightMode === 'FARMER'  ? 'asteroids' : 'any'
-    this.enemies.update(
-      dt,
-      this.actor.body.x, this.actor.body.y,
-      this.actor.body.heading,
-      playerRadius,
-      this.actor.body,
-      loadout.weapons,
-      targetPriority,
-      this.sector,
-      (damage) => this.combatState.takeDamage(damage),
-      (result) => {
-        this.runCredits += result.credits
-        this.sector.addKill()
-        this.dispatcher.emit({ type: 'ON_KILL', sourceId: this.runData.shipId, value: 1, timestamp: performance.now() })
-        // When the last enemy in the sector dies, advance to the next sector
-        if (!this.isDead && !this.sector.atMaxSector && this.enemies.count === 0) {
-          const newSector = this.sector.advance()
-          this.onSectorAdvance(newSector)
-        }
-        this.updateKillCounter()
+
+    // Guest: skip local enemy simulation — render from host state instead
+    if (this.netRole !== 'guest') {
+      // Build optional player2 arg for co-op host
+      const p2 = (this.netRole === 'host' && this.actor2 && this.combatState2) ? {
+        x: this.actor2.body.x, y: this.actor2.body.y,
+        heading: this.actor2.body.heading,
+        radius: 16,
+        body: this.actor2.body,
+        weaponIds: DEFAULT_LOADOUTS[(this as any)._guestShipId ?? 'sidewinder']?.weapons ?? [],
+        targetPriority: this.guestFlightMode === 'HUNTER' ? 'drones' as const
+                      : this.guestFlightMode === 'FARMER'  ? 'asteroids' as const : 'any' as const,
+        onEnemyAttack: (damage: number) => this.combatState2!.takeDamage(damage),
+      } : undefined
+
+      this.enemies.update(
+        dt,
+        this.actor.body.x, this.actor.body.y,
+        this.actor.body.heading,
+        playerRadius,
+        this.actor.body,
+        loadout.weapons,
+        targetPriority,
+        this.sector,
+        (damage) => this.combatState.takeDamage(damage),
+        (result) => {
+          this.runCredits += result.credits
+          this.sector.addKill()
+          this.dispatcher.emit({ type: 'ON_KILL', sourceId: this.runData.shipId, value: 1, timestamp: performance.now() })
+          if (!this.isDead && !this.sector.atMaxSector && this.enemies.count === 0) {
+            const newSector = this.sector.advance()
+            this.onSectorAdvance(newSector)
+          }
+          this.updateKillCounter()
+        },
+        p2
+      )
+    } else {
+      // Guest: draw remote entities only
+      this.drawRemoteEntities()
+    }
+
+    // Host: update P2 ship and broadcast state
+    if (this.netRole === 'host' && this.actor2) {
+      this.updateActor2(dt)
+      if (this.combatState2) {
+        const ship2 = DataLoader.getShip((this as any)._guestShipId ?? 'sidewinder')
+        if (ship2) this.combatState2.tick(delta, ship2.baseStats.SHIELD_REGEN / 1000)
+        this.actor2.gfx.clear()
+        drawNeonShip(this.actor2.gfx, this.actor2.body, this.actor2.geometry, 0xff88ff, 1)
       }
-    )
+      this.netSendTimer += delta
+      if (this.netSendTimer >= 50) {
+        this.netSendTimer = 0
+        this.broadcastGameState()
+      }
+    }
+
+    // Guest: send flight mode changes are handled by setFlightMode override
+    if (this.netRole === 'guest') {
+      this.updateP2HUD()
+    }
 
     // Projectiles
     const tgt = this.enemies.currentTarget
@@ -425,6 +492,7 @@ export class PhysicsScene extends Phaser.Scene {
 
   private triggerBenchmarkWarp(): void {
     this.simulator.stop()
+    if (this.netRole !== 'solo') network.disconnect()
 
     // White flash then fade to black → BenchmarkScene
     this.cameras.main.flash(250, 255, 255, 255)
@@ -585,6 +653,218 @@ export class PhysicsScene extends Phaser.Scene {
     const x = ((fromX + Math.cos(angle) * dist) % WORLD_W + WORLD_W) % WORLD_W
     const y = ((fromY + Math.sin(angle) * dist) % WORLD_H + WORLD_H) % WORLD_H
     return { x, y }
+  }
+
+  // ─── Multiplayer methods ──────────────────────────────────────────────────
+
+  private setupHostNet(): void {
+    network.on('FLIGHT_MODE', (msg) => {
+      this.guestFlightMode = msg.mode as FlightMode
+    })
+    network.on('PEER_DISCONNECTED', () => {
+      this.guestFlightMode = 'PATROL'
+      this.p2NameText?.setText('CO-PILOT DISCONNECTED')
+    })
+
+    const guestShipId  = (this as any)._guestShipId  ?? 'sidewinder'
+    const guestClassId = (this as any)._guestClassId ?? 'chrono_architect'
+    this.buildActor2(guestShipId)
+    this.buildCombatState2(guestShipId, guestClassId)
+  }
+
+  private setupGuestNet(): void {
+    this.remoteGfx = this.add.graphics().setDepth(5)
+    network.on('GAME_STATE', (msg) => {
+      const snap = msg as unknown as GameStateSnapshot
+      this.remoteP1    = snap.p1
+      this.remoteEnemies = snap.enemies
+      // Authoritative P2 state from host
+      if (this.combatState && snap.p2) {
+        this.combatState.currentHull   = snap.p2.hullRatio   * this.combatState.maxHull
+        this.combatState.currentShield = snap.p2.shieldRatio * (this.combatState.maxShield || 1)
+      }
+    })
+    network.on('PEER_DISCONNECTED', () => {
+      this.p2NameText?.setText('HOST DISCONNECTED')
+    })
+  }
+
+  private buildActor2(shipId: string): void {
+    const geo  = getGeometry(shipId)
+    const ship = DataLoader.getShip(shipId)
+    if (!geo || !ship) return
+
+    const maxSpeed = remap(ship.baseStats.TOP_SPEED,    150, 620, 35, 150)
+    const accel    = remap(ship.baseStats.ACCELERATION, 100, 600, 25,  90)
+    const mass     = ship.baseStats.MASS
+    const drag     = remap(mass, 1, 12, 0.82, 0.94)
+
+    const body = createBody(
+      this.wx + 320 + Phaser.Math.Between(-100, 100),
+      this.wy + Phaser.Math.Between(-100, 100),
+      maxSpeed, accel, mass, drag
+    )
+
+    this.actor2 = {
+      geometry: geo,
+      body,
+      gfx: this.add.graphics().setDepth(5),
+      waypoint: this.randomWaypointFrom(this.wx + 320, this.wy),
+      arrivalR: 120,
+    }
+    this.actor2Waypoint = this.actor2.waypoint
+  }
+
+  private buildCombatState2(shipId: string, classId: string): void {
+    const ship = DataLoader.getShip(shipId)
+    if (!ship) return
+    this.combatState2 = new CombatState(ship, classId)
+  }
+
+  private updateActor2(dt: number): void {
+    if (!this.actor2) return
+    const body = this.actor2.body
+    const dx = this.actor2Waypoint.x - body.x
+    const dy = this.actor2Waypoint.y - body.y
+    if (Math.hypot(dx, dy) < 120) {
+      this.actor2Waypoint = this.nextWaypointFor(body.x, body.y, this.guestFlightMode)
+    }
+    // Wrapped waypoint
+    let wdx = this.actor2Waypoint.x - body.x
+    let wdy = this.actor2Waypoint.y - body.y
+    if (wdx >  WORLD_W / 2) wdx -= WORLD_W
+    if (wdx < -WORLD_W / 2) wdx += WORLD_W
+    if (wdy >  WORLD_H / 2) wdy -= WORLD_H
+    if (wdy < -WORLD_H / 2) wdy += WORLD_H
+    const wp2 = { x: body.x + wdx, y: body.y + wdy }
+    const { fx, fy } = chase(body, wp2.x, wp2.y)
+    stepPhysics(body, fx, fy, dt)
+    wrapBounds(body, WORLD_W, WORLD_H)
+  }
+
+  private nextWaypointFor(fromX: number, fromY: number, mode: FlightMode): { x: number; y: number } {
+    const entities = this.enemies.getEntities()
+
+    if (mode === 'HUNTER') {
+      const drones = entities.filter(e => e.def.behavior !== 'DRIFT' && e.alive)
+      if (drones.length > 0) {
+        const nearest = drones.reduce((a, b) =>
+          Math.hypot(a.x - fromX, a.y - fromY) < Math.hypot(b.x - fromX, b.y - fromY) ? a : b)
+        const angle = Math.atan2(nearest.y - fromY, nearest.x - fromX)
+        const side  = Math.random() > 0.5 ? 1 : -1
+        const orbitAngle = angle + side * (Math.PI * 0.5 + (Math.random() - 0.5) * 0.6)
+        return {
+          x: ((nearest.x + Math.cos(orbitAngle) * 160) % WORLD_W + WORLD_W) % WORLD_W,
+          y: ((nearest.y + Math.sin(orbitAngle) * 160) % WORLD_H + WORLD_H) % WORLD_H,
+        }
+      }
+    }
+    if (mode === 'FARMER') {
+      const rocks = entities.filter(e => e.def.behavior === 'DRIFT' && e.alive)
+      if (rocks.length > 0) {
+        const nearest = rocks.reduce((a, b) =>
+          Math.hypot(a.x - fromX, a.y - fromY) < Math.hypot(b.x - fromX, b.y - fromY) ? a : b)
+        const approach = Math.atan2(fromY - nearest.y, fromX - nearest.x) + (Math.random() - 0.5) * 0.6
+        return {
+          x: ((nearest.x + Math.cos(approach) * 120) % WORLD_W + WORLD_W) % WORLD_W,
+          y: ((nearest.y + Math.sin(approach) * 120) % WORLD_H + WORLD_H) % WORLD_H,
+        }
+      }
+    }
+    return this.randomWaypointFrom(fromX, fromY)
+  }
+
+  private broadcastGameState(): void {
+    const p1 = this.actor.body
+    const p2 = this.actor2?.body
+    const cs  = this.combatState
+    const cs2 = this.combatState2
+
+    const shipState = (body: typeof p1, s: CombatState): RemoteShipState => ({
+      x: body.x, y: body.y, vx: body.vx, vy: body.vy, heading: body.heading,
+      hullRatio:   s.currentHull   / s.maxHull,
+      shieldRatio: s.currentShield / (s.maxShield || 1),
+      heatRatio:   s.currentHeat   / s.maxHeat,
+      energyRatio: s.energyRatio,
+    })
+
+    const snap: GameStateSnapshot = {
+      tick:    Date.now(),
+      p1:      shipState(p1, cs),
+      p2:      p2 && cs2 ? shipState(p2, cs2) : shipState(p1, cs),
+      enemies: this.enemies.getRemoteStates(),
+      sector:  this.sector.sector,
+      kills:   this.killCount,
+    }
+    network.sendState(snap)
+  }
+
+  private drawRemoteEntities(): void {
+    const g = this.remoteGfx
+    if (!g) return
+    g.clear()
+
+    // Remote P1 (host ship)
+    if (this.remoteP1) {
+      const { x, y, heading } = this.remoteP1
+      const cos = Math.cos(heading), sin = Math.sin(heading)
+      g.lineStyle(6, 0x00ffff, 0.08); g.strokeTriangle(x + cos * 14, y + sin * 14, x - cos * 8 + sin * 8, y - sin * 8 - cos * 8, x - cos * 8 - sin * 8, y - sin * 8 + cos * 8)
+      g.lineStyle(2, 0x00ffff, 0.8);  g.strokeTriangle(x + cos * 14, y + sin * 14, x - cos * 8 + sin * 8, y - sin * 8 - cos * 8, x - cos * 8 - sin * 8, y - sin * 8 + cos * 8)
+    }
+
+    // Remote enemies
+    for (const e of this.remoteEnemies) {
+      const color = e.defId.startsWith('asteroid') ? 0x8899aa
+                  : e.defId === 'turret' ? 0xdd1100
+                  : e.defId === 'attack_drone' ? 0xff2200 : 0xff4422
+      const cos = Math.cos(e.heading), sin = Math.sin(e.heading)
+      const r = 12
+      g.lineStyle(1.5, color, 1)
+      g.strokeTriangle(
+        e.x + cos * r, e.y + sin * r,
+        e.x - cos * r * 0.6 + sin * r * 0.8, e.y - sin * r * 0.6 - cos * r * 0.8,
+        e.x - cos * r * 0.6 - sin * r * 0.8, e.y - sin * r * 0.6 + cos * r * 0.8
+      )
+      if (e.hullRatio < 1) {
+        const bw = 24, bx = e.x - bw / 2, by = e.y - r - 10
+        g.fillStyle(0x111111, 0.8); g.fillRect(bx, by, bw, 4)
+        g.fillStyle(color, 1);      g.fillRect(bx, by, bw * e.hullRatio, 4)
+      }
+    }
+  }
+
+  private buildP2HUD(): void {
+    const addHUD = (obj: Phaser.GameObjects.GameObject) =>
+      (obj as any).setScrollFactor(0).setDepth(50)
+
+    const guestPilot = (this as any)._guestPilot ?? 'CO-PILOT'
+    this.p2NameText = this.add.text(VIEW_W - 14, 214, guestPilot.toUpperCase(), {
+      fontSize: '11px', color: '#ff88ff', fontFamily: 'monospace', fontStyle: 'bold',
+    }).setOrigin(1, 0); addHUD(this.p2NameText)
+
+    this.add.text(VIEW_W - 14, 230, 'CO-PILOT', {
+      fontSize: '9px', color: '#553355', fontFamily: 'monospace',
+    }).setOrigin(1, 0).setScrollFactor(0).setDepth(50)
+
+    this.p2HullBar   = this.add.graphics(); addHUD(this.p2HullBar)
+    this.p2ShieldBar = this.add.graphics(); addHUD(this.p2ShieldBar)
+
+    this.add.text(VIEW_W - 222, 246, 'HULL',   { fontSize: '9px', color: '#553355', fontFamily: 'monospace' }).setScrollFactor(0).setDepth(50)
+    this.add.text(VIEW_W - 222, 262, 'SHIELD', { fontSize: '9px', color: '#553355', fontFamily: 'monospace' }).setScrollFactor(0).setDepth(50)
+  }
+
+  private updateP2HUD(): void {
+    if (!this.p2HullBar || !this.p2ShieldBar || !this.combatState) return
+    const cs = this.combatState  // guest: our own combat state updated from host
+    const BAR_X = VIEW_W - 175, BAR_W = 130, BAR_H = 6
+
+    const drawBar = (gfx: Phaser.GameObjects.Graphics, y: number, ratio: number, color: number) => {
+      gfx.clear()
+      gfx.fillStyle(0x111111, 0.8); gfx.fillRect(BAR_X, y, BAR_W, BAR_H)
+      gfx.fillStyle(color, 1);      gfx.fillRect(BAR_X, y, BAR_W * Math.max(0, Math.min(1, ratio)), BAR_H)
+    }
+    drawBar(this.p2HullBar,   246, cs.currentHull   / cs.maxHull,    0xcc44ff)
+    drawBar(this.p2ShieldBar, 262, cs.currentShield / (cs.maxShield || 1), 0x8844ff)
   }
 
   // ─── Background ──────────────────────────────────────────────────────────
@@ -955,8 +1235,9 @@ export class PhysicsScene extends Phaser.Scene {
   private setFlightMode(mode: FlightMode): void {
     this.flightMode = mode
     this.updateModeChips()
-    // Pick a fresh waypoint immediately so the mode change is felt at once
     this.actor.waypoint = this.nextWaypoint()
+    // Guest: broadcast flight mode to host
+    if (this.netRole === 'guest') network.sendFlightMode(mode)
   }
 
   private updateModeChips(): void {

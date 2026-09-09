@@ -113,23 +113,30 @@ export class EnemyManager {
     targetPriority: 'any' | 'drones' | 'asteroids',
     sector: SectorManager,
     onEnemyAttack: (damage: number) => void,
-    onKill: (result: KillResult) => void
+    onKill: (result: KillResult) => void,
+    player2?: {
+      x: number; y: number; heading: number; radius: number
+      body: PhysicsBody; weaponIds: string[]
+      targetPriority: 'any' | 'drones' | 'asteroids'
+      onEnemyAttack: (damage: number) => void
+    }
   ): void {
     const { dps: playerDps, range: playerRange, arc: playerArc } = computeLoadout(weaponIds)
     const deltaMs = dt * 1000
 
-    // Update entities
+    // Update entities — CHASE enemies target whichever player is closer
     for (const e of this.entities) {
       if (!e.alive) continue
       e.tick(deltaMs)
-      this.updateBehavior(e, dt, playerX, playerY, sector)
+      this.updateBehavior(e, dt, playerX, playerY, sector, player2 ? { x: player2.x, y: player2.y } : undefined)
       wrapEntity(e)
     }
 
-    // Collision detection — player vs enemies
+    // Collision detection — both players
     this.checkCollisions(playerX, playerY, playerRadius, playerBody, onEnemyAttack)
+    if (player2) this.checkCollisions(player2.x, player2.y, player2.radius, player2.body, player2.onEnemyAttack)
 
-    // Player attacks nearest in arc — priority determined by flight mode
+    // P1 attacks nearest in arc
     const target = this.nearestAlive(playerX, playerY, playerRange, playerHeading, playerArc, targetPriority)
     this._currentTarget = target
     if (target) {
@@ -137,19 +144,36 @@ export class EnemyManager {
       this.spawnHitSparks(target.x, target.y, target.def.stats.COLLISION_RADIUS)
     }
 
-    // Enemy attacks + spawn visual projectiles (weapon looked up from DataLoader)
+    // P2 attacks nearest in arc (independent target)
+    if (player2) {
+      const { dps: p2Dps, range: p2Range, arc: p2Arc } = computeLoadout(player2.weaponIds)
+      const p2Target = this.nearestAlive(player2.x, player2.y, p2Range, player2.heading, p2Arc, player2.targetPriority)
+      if (p2Target) {
+        p2Target.takeDamage(p2Dps * dt)
+        this.spawnHitSparks(p2Target.x, p2Target.y, p2Target.def.stats.COLLISION_RADIUS)
+      }
+    }
+
+    // Enemy attacks — target whichever player is closer and in range
     for (const e of this.entities) {
       if (!e.alive || !e.def.weaponId) continue
       const weapon = DataLoader.getWeapon(e.def.weaponId)
       if (!weapon) continue
-      const dist = Math.hypot(e.x - playerX, e.y - playerY)
+
+      // Pick closest player in range
+      const d1 = Math.hypot(e.x - playerX, e.y - playerY)
+      const d2 = player2 ? Math.hypot(e.x - player2.x, e.y - player2.y) : Infinity
+      const useP2 = player2 && d2 < d1 && d2 <= weapon.baseStats.RANGE
+      const tgtX = useP2 ? player2!.x : playerX
+      const tgtY = useP2 ? player2!.y : playerY
+      const tgtAttack = useP2 ? player2!.onEnemyAttack : onEnemyAttack
+      const dist = Math.min(d1, d2)
       if (dist > weapon.baseStats.RANGE) continue
 
-      // CHASE drones must be roughly facing the player before they can fire.
-      // Scout: ±50°, Attack: ±38°. Turrets (STATIC) always face the player — no arc check.
+      // Firing arc check for CHASE drones
       if (e.def.behavior === 'CHASE') {
         const facingAngle   = Math.atan2(e.vy, e.vx)
-        const toPlayerAngle = Math.atan2(playerY - e.y, playerX - e.x)
+        const toPlayerAngle = Math.atan2(tgtY - e.y, tgtX - e.x)
         let diff = Math.abs(toPlayerAngle - facingAngle)
         if (diff > Math.PI) diff = Math.PI * 2 - diff
         const halfArc = (e.def.id === 'scout_drone' ? 50 : 38) * (Math.PI / 180)
@@ -158,13 +182,13 @@ export class EnemyManager {
 
       const isBeam = weapon.behaviors?.BEAM === true
       if (isBeam) {
-        onEnemyAttack(weapon.baseStats.DAMAGE * dt * sector.rofScale)
+        tgtAttack(weapon.baseStats.DAMAGE * dt * sector.rofScale)
       } else {
         const rof = weapon.baseStats.RATE_OF_FIRE * sector.rofScale
         if (e.attackCooldownMs <= 0 && rof > 0) {
-          onEnemyAttack(weapon.baseStats.DAMAGE)
+          tgtAttack(weapon.baseStats.DAMAGE)
           e.attackCooldownMs = (1 / rof) * 1000
-          const dx = playerX - e.x, dy = playerY - e.y
+          const dx = tgtX - e.x, dy = tgtY - e.y
           const d  = Math.hypot(dx, dy)
           const spd = weapon.behaviors?.BEAM ? 0 : 280
           this.enemyProjs.push({
@@ -253,37 +277,39 @@ export class EnemyManager {
 
   // ─── AI ─────────────────────────────────────────────────────────────────
 
-  private updateBehavior(e: EnemyEntity, dt: number, px: number, py: number, sector: SectorManager): void {
+  private updateBehavior(
+    e: EnemyEntity, dt: number, px: number, py: number, sector: SectorManager,
+    p2?: { x: number; y: number }
+  ): void {
     switch (e.def.behavior) {
       case 'DRIFT':
         e.x += e.vx * dt; e.y += e.vy * dt
         e.heading = Math.atan2(e.vx, -e.vy)
         break
       case 'CHASE': {
-        const dx = px - e.x, dy = py - e.y
+        // Chase whichever player is closer within leash range
+        const leash = e.def.leash ?? Infinity
+        const d1 = Math.hypot(px - e.x, py - e.y)
+        const d2 = p2 ? Math.hypot(p2.x - e.x, p2.y - e.y) : Infinity
+        const tgtX = (p2 && d2 < d1 && d2 <= leash) ? p2.x : px
+        const tgtY = (p2 && d2 < d1 && d2 <= leash) ? p2.y : py
+        const dx = tgtX - e.x, dy = tgtY - e.y
         const dist = Math.hypot(dx, dy)
 
-        if (dist <= (e.def.leash ?? Infinity) && dist > 1) {
+        if (dist <= leash && dist > 1) {
           const accel    = e.def.stats.ACCELERATION
           const maxSpeed = e.def.stats.SPEED * sector.speedScale
-
-          // Rate-limited steering — drones can't pivot instantly (creates turning circles).
-          // Scout turns faster than the heavier attack drone.
-          const turnRateRad = e.def.id === 'scout_drone' ? 2.2 : 1.2   // rad/s
+          const turnRateRad = e.def.id === 'scout_drone' ? 2.2 : 1.2
           const curAngle     = Math.atan2(e.vy, e.vx)
           const desiredAngle = Math.atan2(dy, dx)
           let angleDiff = desiredAngle - curAngle
           if (angleDiff >  Math.PI) angleDiff -= Math.PI * 2
           if (angleDiff < -Math.PI) angleDiff += Math.PI * 2
           const steerAngle = curAngle + Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), turnRateRad * dt)
-
           e.vx += Math.cos(steerAngle) * accel * dt
           e.vy += Math.sin(steerAngle) * accel * dt
           const spd = Math.hypot(e.vx, e.vy)
-          if (spd > maxSpeed) {
-            e.vx = (e.vx / spd) * maxSpeed
-            e.vy = (e.vy / spd) * maxSpeed
-          }
+          if (spd > maxSpeed) { e.vx = (e.vx / spd) * maxSpeed; e.vy = (e.vy / spd) * maxSpeed }
         } else {
           e.vx *= Math.pow(0.92, dt * 60)
           e.vy *= Math.pow(0.92, dt * 60)
@@ -293,7 +319,12 @@ export class EnemyManager {
         break
       }
       case 'STATIC':
-        e.heading = Math.atan2(px - e.x, -(py - e.y))
+        // Face whichever player is closer
+        if (p2 && Math.hypot(p2.x - e.x, p2.y - e.y) < Math.hypot(px - e.x, py - e.y)) {
+          e.heading = Math.atan2(p2.x - e.x, -(p2.y - e.y))
+        } else {
+          e.heading = Math.atan2(px - e.x, -(py - e.y))
+        }
         break
     }
   }
@@ -505,6 +536,16 @@ export class EnemyManager {
   get count(): number { return this.entities.length }
 
   getEntities(): readonly EnemyEntity[] { return this.entities }
+
+  getRemoteStates(): Array<{ instanceId: string; defId: string; x: number; y: number; heading: number; hullRatio: number; shieldRatio: number }> {
+    return this.entities.map(e => ({
+      instanceId: e.instanceId,
+      defId:      e.def.id,
+      x: e.x, y: e.y, heading: e.heading,
+      hullRatio:   e.hullRatio,
+      shieldRatio: e.shieldRatio,
+    }))
+  }
 }
 
 // ─── Utility ─────────────────────────────────────────────────────────────────

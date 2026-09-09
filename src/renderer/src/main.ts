@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { SaveSlotScene } from './scenes/SaveSlotScene'
 import { BootScene } from './scenes/BootScene'
+import { LobbyScene } from './scenes/LobbyScene'
 import { PhysicsScene } from './scenes/PhysicsScene'
 import { SelectionScene } from './scenes/SelectionScene'
 import { DraftScene } from './scenes/DraftScene'
@@ -19,7 +20,7 @@ const config: Phaser.Types.Core.GameConfig = {
     width: 1280,
     height: 720,
   },
-  scene: [SaveSlotScene, BootScene, SelectionScene, PhysicsScene, DraftScene, BenchmarkScene, ArmoryScene],
+  scene: [SaveSlotScene, BootScene, LobbyScene, SelectionScene, PhysicsScene, DraftScene, BenchmarkScene, ArmoryScene],
 }
 
 async function bootstrap(): Promise<void> {

@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { SaveManager } from '../systems/SaveManager'
 import type { SaveData } from '../systems/SaveManager'
+import { network } from '../systems/NetworkManager'
 
 const W = 1280
 const H = 720
@@ -43,9 +44,63 @@ export class SaveSlotScene extends Phaser.Scene {
     const slots = SaveManager.getAllSlots()
     slots.forEach((data, i) => this.buildCard(i, START_X + i * (CARD_W + GAP), CARD_Y, data))
 
-    this.add.text(W / 2, H - 24, 'click a slot to begin  ·  [×] to wipe save data', {
-      fontSize: '10px', color: '#223322', fontFamily: 'monospace',
+    this.buildJoinSection()
+
+    this.add.text(W / 2, H - 12, 'click a slot to play solo  ·  HOST to invite a co-pilot  ·  JOIN to enter a room code', {
+      fontSize: '9px', color: '#1a2a1a', fontFamily: 'monospace',
     }).setOrigin(0.5)
+  }
+
+  private buildJoinSection(): void {
+    const sectionY = CARD_Y + CARD_H + 28
+
+    this.add.text(W / 2, sectionY, 'JOIN A SESSION', {
+      fontSize: '10px', color: '#224433', fontFamily: 'monospace', letterSpacing: 5,
+    }).setOrigin(0.5)
+
+    // Code input display
+    let joinCode = ''
+    const codeDisplay = this.add.text(W / 2, sectionY + 28, '______', {
+      fontSize: '24px', color: '#335544', fontFamily: 'monospace', fontStyle: 'bold', letterSpacing: 8,
+    }).setOrigin(0.5)
+
+    const refreshCode = () => {
+      const shown = joinCode.padEnd(6, '_').substring(0, 6)
+      codeDisplay.setText(shown)
+      codeDisplay.setColor(joinCode.length > 0 ? '#00ffcc' : '#335544')
+    }
+
+    this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
+      const char = e.key.toUpperCase()
+      if (e.key === 'Backspace') { joinCode = joinCode.slice(0, -1); refreshCode() }
+      else if (/^[A-Z0-9]$/.test(char) && joinCode.length < 6) { joinCode += char; refreshCode() }
+      else if (e.key === 'Enter' && joinCode.length === 6) { doJoin() }
+    })
+
+    // JOIN button
+    const jbx = W / 2 + 80, jby = sectionY + 20, jbw = 90, jbh = 32
+    const jGfx = this.add.graphics()
+    jGfx.lineStyle(1, 0x224433, 0.6); jGfx.strokeRect(jbx, jby, jbw, jbh)
+    const jLabel = this.add.text(jbx + jbw / 2, jby + jbh / 2, 'JOIN →', {
+      fontSize: '11px', color: '#335544', fontFamily: 'monospace', fontStyle: 'bold',
+    }).setOrigin(0.5)
+
+    const doJoin = () => {
+      if (joinCode.length < 6) return
+      jLabel.setText('…')
+      network.joinRoom(joinCode).then(() => {
+        this.scene.start('LobbyScene', { role: 'guest' })
+      }).catch(() => {
+        jLabel.setText('JOIN →')
+        codeDisplay.setColor('#ff2200')
+        this.time.delayedCall(800, () => { joinCode = ''; refreshCode() })
+      })
+    }
+
+    const jZone = this.add.zone(jbx, jby, jbw, jbh).setOrigin(0).setInteractive({ useHandCursor: true })
+    jZone.on('pointerover', () => { jGfx.clear(); jGfx.lineStyle(1.5, 0x00ffcc, 0.9); jGfx.strokeRect(jbx, jby, jbw, jbh); jLabel.setColor('#00ffcc') })
+    jZone.on('pointerout',  () => { jGfx.clear(); jGfx.lineStyle(1, 0x224433, 0.6); jGfx.strokeRect(jbx, jby, jbw, jbh); jLabel.setColor('#335544') })
+    jZone.on('pointerdown', doJoin)
   }
 
   private buildCard(slot: number, x: number, y: number, data: SaveData | null): void {
@@ -107,6 +162,37 @@ export class SaveSlotScene extends Phaser.Scene {
           fontSize: '9px', color: '#1a3333', fontFamily: 'monospace',
         }).setOrigin(0.5)
       }
+
+      // HOST button — bottom left of card
+      const hbx = x + 10, hby = y + CARD_H - 30, hbw = 62, hbh = 20
+      const hostGfx = this.add.graphics()
+      hostGfx.lineStyle(1, 0x224433, 0.6); hostGfx.strokeRect(hbx, hby, hbw, hbh)
+      const hostLabel = this.add.text(hbx + hbw / 2, hby + hbh / 2, 'HOST', {
+        fontSize: '9px', color: '#335544', fontFamily: 'monospace', fontStyle: 'bold', letterSpacing: 2,
+      }).setOrigin(0.5)
+
+      const hostZone = this.add.zone(hbx, hby, hbw, hbh).setOrigin(0).setInteractive()
+      hostZone.on('pointerover', () => {
+        hostGfx.clear(); hostGfx.lineStyle(1.5, 0x00ffcc, 0.9); hostGfx.strokeRect(hbx, hby, hbw, hbh)
+        hostLabel.setColor('#00ffcc')
+      })
+      hostZone.on('pointerout', () => {
+        hostGfx.clear(); hostGfx.lineStyle(1, 0x224433, 0.6); hostGfx.strokeRect(hbx, hby, hbw, hbh)
+        hostLabel.setColor('#335544')
+      })
+      hostZone.on('pointerdown', () => {
+        SaveManager.setActiveSlot(slot)
+        hostLabel.setText('…')
+        network.createRoom().then(() => {
+          const config = SaveManager.getSavedConfig()
+          this.scene.start('LobbyScene', {
+            role:    'host',
+            pilot:   config?.pilot   ?? 'PILOT',
+            shipId:  config?.shipId  ?? 'sidewinder',
+            classId: config?.classId ?? 'chrono_architect',
+          })
+        }).catch(() => { hostLabel.setText('HOST') })
+      })
 
       // Delete button — top right corner
       const delX = x + CARD_W - 28, delY = y + 10
