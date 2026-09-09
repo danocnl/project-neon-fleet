@@ -13,11 +13,23 @@ import { ActionExecutor } from '../combat/ActionExecutor'
 import { CombatSimulator } from '../combat/CombatSimulator'
 import type { UpgradeCard } from '../types'
 
-interface RunData {
-  pilot:   string
-  shipId:  string
-  classId: string
-}
+// ─── World & layout constants ─────────────────────────────────────────────────
+const VIEW_W   = 1280
+const VIEW_H   = 720
+const WORLD_W  = VIEW_W * 5   // 6400
+const WORLD_H  = VIEW_H * 5   // 3600
+const GRID_SZ  = 60
+
+const KILLS_PER_LEVEL = 3
+const LOG_MAX = 6
+
+// Minimap (screen-space, top-right)
+const MM_X = 1042
+const MM_Y = 60
+const MM_W = 228
+const MM_H = 128
+
+interface RunData { pilot: string; shipId: string; classId: string }
 
 interface ShipActor {
   geometry:    ShipGeometry
@@ -28,18 +40,19 @@ interface ShipActor {
   orbitSpeed:  number
 }
 
-const KILLS_PER_LEVEL = 3
-const LOG_MAX = 6
-
 export class PhysicsScene extends Phaser.Scene {
   private actor!:    ShipActor
-  private gridGfx!:  Phaser.GameObjects.Graphics
-  private flashGfx!: Phaser.GameObjects.Graphics
-  private cx = 0
-  private cy = 0
+  private gridGfx!:  Phaser.GameObjects.Graphics   // screen-space virtual grid
+  private flashGfx!: Phaser.GameObjects.Graphics   // world-space flash
+  private minimapGfx!: Phaser.GameObjects.Graphics // screen-space minimap
+
+  // World centre (orbit point)
+  private wx = WORLD_W / 2
+  private wy = WORLD_H / 2
+
   private runData!: RunData
 
-  // Combat systems
+  // Combat
   private combatState!:    CombatState
   private dispatcher!:     EventDispatcher
   private evaluator!:      TriggerEvaluator
@@ -53,11 +66,11 @@ export class PhysicsScene extends Phaser.Scene {
   private killCount  = 0
   private level      = 1
   private drafting   = false
-  private killCounterText!: Phaser.GameObjects.Text
-  private levelText!:       Phaser.GameObjects.Text
+  private killCounterText!:  Phaser.GameObjects.Text
+  private levelText!:        Phaser.GameObjects.Text
   private modulesContainer!: Phaser.GameObjects.Container
 
-  // HUD elements
+  // HUD bars
   private hullBar!:    Phaser.GameObjects.Graphics
   private shieldBar!:  Phaser.GameObjects.Graphics
   private heatBar!:    Phaser.GameObjects.Graphics
@@ -78,13 +91,14 @@ export class PhysicsScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { width, height } = this.cameras.main
-    this.cx = width / 2
-    this.cy = height / 2
+    // Virtual grid — screen-space, redrawn each frame
+    this.gridGfx = this.add.graphics().setScrollFactor(0).setDepth(0)
 
-    this.gridGfx  = this.add.graphics()
-    this.flashGfx = this.add.graphics()
-    this.drawGrid()
+    // World-space flash (follows camera naturally)
+    this.flashGfx = this.add.graphics().setDepth(10)
+
+    // Minimap — screen-space overlay
+    this.minimapGfx = this.add.graphics().setScrollFactor(0).setDepth(100)
 
     this.buildActor()
     this.buildCombatSystems()
@@ -97,23 +111,28 @@ export class PhysicsScene extends Phaser.Scene {
     // Physics
     this.actor.orbitAngle += this.actor.orbitSpeed * dt
     const { fx, fy } = orbit(
-      this.actor.body, this.cx, this.cy,
+      this.actor.body, this.wx, this.wy,
       this.actor.orbitRadius, this.actor.orbitAngle
     )
     stepPhysics(this.actor.body, fx, fy, dt)
-    wrapBounds(this.actor.body, this.cameras.main.width, this.cameras.main.height)
+    wrapBounds(this.actor.body, WORLD_W, WORLD_H)
 
-    // Combat tick (shield regen etc.)
+    // Camera follows ship
+    this.cameras.main.centerOn(this.actor.body.x, this.actor.body.y)
+
+    // Combat tick
     const ship = DataLoader.getShip(this.runData.shipId)!
-    const shieldRegenPerMs = ship.baseStats.SHIELD_REGEN / 1000
-    this.combatState.tick(delta, shieldRegenPerMs)
+    this.combatState.tick(delta, ship.baseStats.SHIELD_REGEN / 1000)
 
-    // Redraw ship
-    this.actor.gfx.clear()
-    const clsColor = CLASS_COLORS[this.runData.classId] ?? 0x00ffff
+    // Redraw
+    const clsColor   = CLASS_COLORS[this.runData.classId] ?? 0x00ffff
     const phaseAlpha = this.combatState.isPhased ? 0.3 : 1
+
+    this.actor.gfx.clear()
     drawNeonShip(this.actor.gfx, this.actor.body, this.actor.geometry, clsColor, phaseAlpha)
 
+    this.updateGrid()
+    this.updateMinimap(clsColor)
     this.updateHUD()
   }
 
@@ -132,34 +151,32 @@ export class PhysicsScene extends Phaser.Scene {
 
     const orbitRadius = 180
     const body = createBody(
-      this.cx + Math.sin(0) * orbitRadius,
-      this.cy - Math.cos(0) * orbitRadius,
+      this.wx + Math.sin(0) * orbitRadius,
+      this.wy - Math.cos(0) * orbitRadius,
       maxSpeed, accel, mass, drag
     )
 
     this.actor = {
-      geometry: geo, body,
-      gfx: this.add.graphics(),
-      orbitAngle: 0, orbitRadius, orbitSpeed: 0.9,
+      geometry: geo,
+      body,
+      gfx: this.add.graphics().setDepth(5),
+      orbitAngle: 0,
+      orbitRadius,
+      orbitSpeed: 0.9,
     }
   }
 
   private buildCombatSystems(): void {
     const ship = DataLoader.getShip(this.runData.shipId)!
 
-    // Build player state (tag aggregator, computed stats)
     this.playerState  = this.mgr.build(this.runData.shipId, this.runData.classId)!
     this.draftedCards = this.playerState.draftedCards
+    this.combatState  = new CombatState(ship, this.runData.classId)
 
-    // Combat state from ship base stats
-    this.combatState = new CombatState(ship, this.runData.classId)
-
-    // Systems
     this.dispatcher = new EventDispatcher()
     this.evaluator  = new TriggerEvaluator()
     this.executor   = new ActionExecutor()
 
-    // Wire dispatcher → evaluator → executor → log
     const eventTypes: Array<Parameters<EventDispatcher['on']>[0]> =
       ['ON_HIT', 'ON_CRIT', 'ON_KILL', 'ON_SHIELD_DROP', 'ON_OVERHEAT']
 
@@ -172,8 +189,6 @@ export class PhysicsScene extends Phaser.Scene {
           const result = this.executor.execute(trigger, this.combatState)
           if (result.applied) this.logTrigger(trigger.cardName, event.type)
         }
-
-        // Kill → progression
         if (event.type === 'ON_KILL') {
           this.killCount++
           this.updateKillCounter()
@@ -184,7 +199,6 @@ export class PhysicsScene extends Phaser.Scene {
       })
     }
 
-    // Simulator
     this.simulator = new CombatSimulator(this, this.combatState, this.dispatcher)
     this.simulator.start()
   }
@@ -193,7 +207,6 @@ export class PhysicsScene extends Phaser.Scene {
     this.drafting = true
     this.level++
     const offer = this.mgr.getDraftOffer(this.playerState, 4)
-
     this.scene.launch('DraftScene', {
       cards:       offer,
       rerollsFn:   () => this.mgr.getDraftOffer(this.playerState, 4),
@@ -207,11 +220,8 @@ export class PhysicsScene extends Phaser.Scene {
   }
 
   private applyDraftedCard(card: UpgradeCard): void {
-    // Update player state (tags, computed stats)
     this.playerState  = this.mgr.applyUpgrade(this.playerState, card)
     this.draftedCards = this.playerState.draftedCards
-
-    // Apply stat modifiers to live combat state
     for (const mod of card.statModifiers) {
       if (mod.stat === 'HULL' && mod.type === 'flat') {
         this.combatState.maxHull += mod.value
@@ -220,15 +230,72 @@ export class PhysicsScene extends Phaser.Scene {
         this.combatState.maxShield += mod.value
         this.combatState.restoreShield(mod.value)
       } else if (mod.stat === 'SHIELD_MAX' && mod.type === 'percent' && mod.value === -100) {
-        // Zero-Shield Fortress converter
         this.combatState.maxShield = 0
         this.combatState.currentShield = 0
       }
     }
-
     this.updateModulesDisplay()
     this.logTrigger(`Drafted: ${card.name}`, 'UPGRADE')
     this.drafting = false
+  }
+
+  // ─── Grid (virtual, screen-space) ────────────────────────────────────────
+
+  private updateGrid(): void {
+    const cam     = this.cameras.main
+    const offsetX = cam.scrollX % GRID_SZ
+    const offsetY = cam.scrollY % GRID_SZ
+
+    this.gridGfx.clear()
+    this.gridGfx.lineStyle(1, 0x003366, 0.3)
+
+    for (let x = -offsetX; x <= VIEW_W; x += GRID_SZ) {
+      this.gridGfx.lineBetween(x, 0, x, VIEW_H)
+    }
+    for (let y = -offsetY; y <= VIEW_H; y += GRID_SZ) {
+      this.gridGfx.lineBetween(0, y, VIEW_W, y)
+    }
+  }
+
+  // ─── Minimap ─────────────────────────────────────────────────────────────
+
+  private updateMinimap(clsColor: number): void {
+    const g   = this.minimapGfx
+    const cam = this.cameras.main
+    g.clear()
+
+    // Background
+    g.fillStyle(0x000000, 0.75)
+    g.fillRect(MM_X, MM_Y, MM_W, MM_H)
+
+    // Faint world grid on minimap (5 cells each axis)
+    g.lineStyle(1, 0x111f2a, 1)
+    for (let i = 1; i < 5; i++) {
+      const mx = MM_X + (i / 5) * MM_W
+      const my = MM_Y + (i / 5) * MM_H
+      g.lineBetween(mx, MM_Y, mx, MM_Y + MM_H)
+      g.lineBetween(MM_X, my, MM_X + MM_W, my)
+    }
+
+    // Camera viewport rectangle on minimap
+    const vx = MM_X + (cam.scrollX / WORLD_W) * MM_W
+    const vy = MM_Y + (cam.scrollY / WORLD_H) * MM_H
+    const vw = (VIEW_W / WORLD_W) * MM_W
+    const vh = (VIEW_H / WORLD_H) * MM_H
+    g.lineStyle(1, 0x224433, 0.6)
+    g.strokeRect(vx, vy, vw, vh)
+
+    // Player dot
+    const px = MM_X + (this.actor.body.x / WORLD_W) * MM_W
+    const py = MM_Y + (this.actor.body.y / WORLD_H) * MM_H
+    g.fillStyle(clsColor, 1)
+    g.fillCircle(px, py, 3)
+    g.lineStyle(1, clsColor, 0.4)
+    g.strokeCircle(px, py, 5)
+
+    // Border + label
+    g.lineStyle(1, 0x224433, 0.8)
+    g.strokeRect(MM_X, MM_Y, MM_W, MM_H)
   }
 
   // ─── HUD ─────────────────────────────────────────────────────────────────
@@ -237,76 +304,80 @@ export class PhysicsScene extends Phaser.Scene {
     const ship = DataLoader.getShip(this.runData.shipId)!
     const cls  = DataLoader.getClass(this.runData.classId)!
     const geo  = getGeometry(this.runData.shipId)
-    const clsColor  = CLASS_COLORS[this.runData.classId] ?? 0x00ffff
-    const shipHex   = geo  ? `#${geo.color.toString(16).padStart(6, '0')}` : '#ffffff'
-    const clsHex    = `#${clsColor.toString(16).padStart(6, '0')}`
+    const clsColor = CLASS_COLORS[this.runData.classId] ?? 0x00ffff
+    const shipHex  = geo  ? `#${geo.color.toString(16).padStart(6, '0')}` : '#ffffff'
+    const clsHex   = `#${clsColor.toString(16).padStart(6, '0')}`
 
-    // Pilot / ship / class info
-    this.add.text(14, 14, this.runData.pilot, {
+    const add = (obj: Phaser.GameObjects.GameObject) =>
+      (obj as any).setScrollFactor(0).setDepth(50)
+
+    // Pilot / ship / class
+    add(this.add.text(14, 14, this.runData.pilot, {
       fontSize: '13px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
-    })
-    this.add.text(14, 30, ship.name.replace(' Frame', '').toUpperCase(), {
+    }))
+    add(this.add.text(14, 30, ship.name.replace(' Frame', '').toUpperCase(), {
       fontSize: '11px', color: shipHex, fontFamily: 'monospace',
-    })
-    this.add.text(14, 46, cls.name, {
+    }))
+    add(this.add.text(14, 46, cls.name, {
       fontSize: '11px', color: clsHex, fontFamily: 'monospace',
-    })
+    }))
 
-    // Bar labels
-    const barLabelStyle = { fontSize: '9px', color: '#224433', fontFamily: 'monospace' }
-    this.add.text(14, 72, 'HULL', barLabelStyle)
-    this.add.text(14, 92, 'SHIELD', barLabelStyle)
-    this.add.text(14, 112, 'HEAT', barLabelStyle)
+    // Bars
+    const barLabel = (txt: string, y: number) =>
+      add(this.add.text(14, y, txt, { fontSize: '9px', color: '#224433', fontFamily: 'monospace' }))
+    barLabel('HULL',   72)
+    barLabel('SHIELD', 92)
+    barLabel('HEAT',   112)
 
-    // Bar graphics
-    this.hullBar   = this.add.graphics()
-    this.shieldBar = this.add.graphics()
-    this.heatBar   = this.add.graphics()
+    this.hullBar   = this.add.graphics(); add(this.hullBar)
+    this.shieldBar = this.add.graphics(); add(this.shieldBar)
+    this.heatBar   = this.add.graphics(); add(this.heatBar)
 
-    // Bar value texts
-    this.hullText   = this.add.text(220, 70, '', { fontSize: '9px', color: '#336644', fontFamily: 'monospace' })
-    this.shieldText = this.add.text(220, 90, '', { fontSize: '9px', color: '#334466', fontFamily: 'monospace' })
-    this.heatText   = this.add.text(220, 110, '', { fontSize: '9px', color: '#664433', fontFamily: 'monospace' })
+    this.hullText   = this.add.text(220, 70,  '', { fontSize: '9px', color: '#336644', fontFamily: 'monospace' }); add(this.hullText)
+    this.shieldText = this.add.text(220, 90,  '', { fontSize: '9px', color: '#334466', fontFamily: 'monospace' }); add(this.shieldText)
+    this.heatText   = this.add.text(220, 110, '', { fontSize: '9px', color: '#664433', fontFamily: 'monospace' }); add(this.heatText)
 
-    // Active effects
-    this.effectText = this.add.text(14, 134, '', {
-      fontSize: '10px', color: '#ffcc00', fontFamily: 'monospace',
-    })
+    this.effectText = this.add.text(14, 134, '', { fontSize: '10px', color: '#ffcc00', fontFamily: 'monospace' }); add(this.effectText)
 
-    // Trigger log (bottom-left)
-    const { height } = this.cameras.main
-    this.add.text(14, height - LOG_MAX * 18 - 30, 'TRIGGER LOG', {
+    // Trigger log
+    add(this.add.text(14, VIEW_H - LOG_MAX * 18 - 30, 'TRIGGER LOG', {
       fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 3,
-    })
+    }))
     for (let i = 0; i < LOG_MAX; i++) {
-      this.logEntries.push(this.add.text(14, height - (LOG_MAX - i) * 18 - 10, '', {
+      const t = this.add.text(14, VIEW_H - (LOG_MAX - i) * 18 - 10, '', {
         fontSize: '10px', color: '#335544', fontFamily: 'monospace',
-      }))
+      })
+      add(t)
+      this.logEntries.push(t)
     }
 
-    // Kill counter + level (top-right)
-    const { width } = this.cameras.main
-    this.levelText = this.add.text(width - 14, 14, 'LV 1', {
+    // Top-right: level + kills (above minimap)
+    this.levelText = this.add.text(VIEW_W - 14, 14, 'LV 1', {
       fontSize: '13px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
-    }).setOrigin(1, 0)
+    }).setOrigin(1, 0); add(this.levelText)
 
-    this.killCounterText = this.add.text(width - 14, 32, `KILLS  0 / ${KILLS_PER_LEVEL}`, {
+    this.killCounterText = this.add.text(VIEW_W - 14, 32, `KILLS  0 / ${KILLS_PER_LEVEL}`, {
       fontSize: '10px', color: '#335544', fontFamily: 'monospace',
-    }).setOrigin(1, 0)
+    }).setOrigin(1, 0); add(this.killCounterText)
 
-    this.add.text(width - 14, 56, 'ACTIVE MODULES', {
+    // Minimap label
+    add(this.add.text(MM_X, MM_Y - 14, 'SECTOR MAP', {
       fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 3,
-    }).setOrigin(1, 0)
+    }))
 
-    this.modulesContainer = this.add.container(width, 72)
+    // Active modules (below minimap)
+    add(this.add.text(MM_X, MM_Y + MM_H + 10, 'ACTIVE MODULES', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 3,
+    }))
+
+    this.modulesContainer = this.add.container(VIEW_W, MM_Y + MM_H + 26)
+    add(this.modulesContainer)
     this.updateModulesDisplay()
   }
 
   private updateHUD(): void {
-    const cs  = this.combatState
-    const BAR_X = 46
-    const BAR_W = 170
-    const BAR_H = 8
+    const cs    = this.combatState
+    const BAR_X = 46, BAR_W = 170, BAR_H = 8
 
     const drawBar = (gfx: Phaser.GameObjects.Graphics, y: number, ratio: number, color: number) => {
       gfx.clear()
@@ -326,7 +397,6 @@ export class PhysicsScene extends Phaser.Scene {
     this.shieldText.setText(`${Math.round(cs.currentShield)} / ${cs.maxShield}`)
     this.heatText.setText(`${Math.round(cs.currentHeat)}%${cs.isOverheated ? ' OVERHEAT' : ''}`)
 
-    // Active effects
     const effects = cs.activeEffects.map(e =>
       `${e.type.replace('_', ' ')} ${(e.remainingMs / 1000).toFixed(1)}s`
     )
@@ -360,10 +430,9 @@ export class PhysicsScene extends Phaser.Scene {
 
   private logBuffer: string[] = []
 
-  private logTrigger(cardName: string, eventType: string | 'UPGRADE'): void {
+  private logTrigger(cardName: string, eventType: string): void {
     const ts  = new Date().toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    const msg = `${ts}  ${eventType}  →  ${cardName}`
-    this.logBuffer.unshift(msg)
+    this.logBuffer.unshift(`${ts}  ${eventType}  →  ${cardName}`)
     if (this.logBuffer.length > LOG_MAX) this.logBuffer.pop()
 
     this.logEntries.forEach((t, i) => {
@@ -371,7 +440,6 @@ export class PhysicsScene extends Phaser.Scene {
       t.setColor(i === 0 ? '#00ff88' : '#335544')
     })
 
-    // Brief flash on ship
     this.flashShip()
   }
 
@@ -386,15 +454,6 @@ export class PhysicsScene extends Phaser.Scene {
       duration: 400,
       onComplete: () => { this.flashGfx.setAlpha(1); this.flashGfx.clear() },
     })
-  }
-
-  // ─── Grid ────────────────────────────────────────────────────────────────
-
-  private drawGrid(): void {
-    const { width, height } = this.cameras.main
-    this.gridGfx.lineStyle(1, 0x003366, 0.3)
-    for (let x = 0; x <= width;  x += 60) this.gridGfx.lineBetween(x, 0, x, height)
-    for (let y = 0; y <= height; y += 60) this.gridGfx.lineBetween(0, y, width, y)
   }
 }
 
