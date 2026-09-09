@@ -154,10 +154,13 @@ export class PhysicsScene extends Phaser.Scene {
 
     // Enemy update
     const loadout = DEFAULT_LOADOUTS[this.runData.shipId] ?? { weapons: [], modules: [] }
+    const playerRadius = this.getPlayerCollisionRadius()
     this.enemies.update(
       dt,
       this.actor.body.x, this.actor.body.y,
       this.actor.body.heading,
+      playerRadius,
+      this.actor.body,
       loadout.weapons,
       (damage) => this.combatState.takeDamage(damage),
       (result) => {
@@ -247,6 +250,14 @@ export class PhysicsScene extends Phaser.Scene {
     // Simulator still fires hits/heat for ambient combat feel — kill events now come from EnemyManager
     this.simulator = new CombatSimulator(this, this.combatState, this.dispatcher)
     this.simulator.start()
+  }
+
+  private getPlayerCollisionRadius(): number {
+    const ship = DataLoader.getShip(this.runData.shipId)
+    if (!ship) return 16
+    if (ship.weightClass === 'Heavy')  return 28
+    if (ship.weightClass === 'Medium') return 20
+    return 15   // Light
   }
 
   private buildEnemies(): void {
