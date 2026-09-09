@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import { getGeometry, type ShipGeometry } from '../ships/ShipGeometry'
 import { createBody, stepPhysics, wrapBounds, type PhysicsBody } from '../physics/PhysicsBody'
-import { orbit } from '../physics/NavBehaviors'
+import { chase } from '../physics/NavBehaviors'
 import { DataLoader } from '../systems/DataLoader'
 import { LoadoutManager } from '../systems/LoadoutManager'
 import type { PlayerState } from '../systems/LoadoutManager'
@@ -32,12 +32,11 @@ const MM_H = 128
 interface RunData { pilot: string; shipId: string; classId: string }
 
 interface ShipActor {
-  geometry:    ShipGeometry
-  body:        PhysicsBody
-  gfx:         Phaser.GameObjects.Graphics
-  orbitAngle:  number
-  orbitRadius: number
-  orbitSpeed:  number
+  geometry:  ShipGeometry
+  body:      PhysicsBody
+  gfx:       Phaser.GameObjects.Graphics
+  waypoint:  { x: number; y: number }
+  arrivalR:  number   // distance at which a new waypoint is chosen
 }
 
 export class PhysicsScene extends Phaser.Scene {
@@ -46,9 +45,9 @@ export class PhysicsScene extends Phaser.Scene {
   private flashGfx!: Phaser.GameObjects.Graphics   // world-space flash
   private minimapGfx!: Phaser.GameObjects.Graphics // screen-space minimap
 
-  // World centre (orbit point)
-  private wx = WORLD_W / 2
-  private wy = WORLD_H / 2
+  // World centre — spawn and first waypoint reference
+  private readonly wx = WORLD_W / 2
+  private readonly wy = WORLD_H / 2
 
   private runData!: RunData
 
@@ -108,12 +107,14 @@ export class PhysicsScene extends Phaser.Scene {
   update(_t: number, delta: number): void {
     const dt = Math.min(delta / 1000, 0.05)
 
-    // Physics
-    this.actor.orbitAngle += this.actor.orbitSpeed * dt
-    const { fx, fy } = orbit(
-      this.actor.body, this.wx, this.wy,
-      this.actor.orbitRadius, this.actor.orbitAngle
-    )
+    // Waypoint navigation — pick a new target when ship arrives
+    const dx = this.actor.waypoint.x - this.actor.body.x
+    const dy = this.actor.waypoint.y - this.actor.body.y
+    if (Math.hypot(dx, dy) < this.actor.arrivalR) {
+      this.actor.waypoint = this.nextWaypoint()
+    }
+
+    const { fx, fy } = chase(this.actor.body, this.actor.waypoint.x, this.actor.waypoint.y)
     stepPhysics(this.actor.body, fx, fy, dt)
     wrapBounds(this.actor.body, WORLD_W, WORLD_H)
 
@@ -149,10 +150,10 @@ export class PhysicsScene extends Phaser.Scene {
     const mass     = ship.baseStats.MASS
     const drag     = remap(mass, 1, 12, 0.82, 0.94)
 
-    const orbitRadius = 180
+    // Start near world centre
     const body = createBody(
-      this.wx + Math.sin(0) * orbitRadius,
-      this.wy - Math.cos(0) * orbitRadius,
+      this.wx + Phaser.Math.Between(-300, 300),
+      this.wy + Phaser.Math.Between(-300, 300),
       maxSpeed, accel, mass, drag
     )
 
@@ -160,9 +161,8 @@ export class PhysicsScene extends Phaser.Scene {
       geometry: geo,
       body,
       gfx: this.add.graphics().setDepth(5),
-      orbitAngle: 0,
-      orbitRadius,
-      orbitSpeed: 0.9,
+      waypoint:  this.randomWaypointFrom(this.wx, this.wy),
+      arrivalR:  120,
     }
   }
 
@@ -237,6 +237,21 @@ export class PhysicsScene extends Phaser.Scene {
     this.updateModulesDisplay()
     this.logTrigger(`Drafted: ${card.name}`, 'UPGRADE')
     this.drafting = false
+  }
+
+  // ─── Waypoint helpers ────────────────────────────────────────────────────
+
+  private nextWaypoint(): { x: number; y: number } {
+    return this.randomWaypointFrom(this.actor.body.x, this.actor.body.y)
+  }
+
+  private randomWaypointFrom(fromX: number, fromY: number): { x: number; y: number } {
+    // Pick a point 500–1400 px away in a random direction, wrapping at world edges
+    const angle = Math.random() * Math.PI * 2
+    const dist  = Phaser.Math.Between(500, 1400)
+    const x = ((fromX + Math.cos(angle) * dist) % WORLD_W + WORLD_W) % WORLD_W
+    const y = ((fromY + Math.sin(angle) * dist) % WORLD_H + WORLD_H) % WORLD_H
+    return { x, y }
   }
 
   // ─── Grid (virtual, screen-space) ────────────────────────────────────────
