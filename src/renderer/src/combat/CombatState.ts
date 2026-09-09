@@ -12,11 +12,15 @@ export class CombatState {
 
   maxHull:   number
   maxShield: number
-  maxHeat  = 100
+  maxHeat:   number   // HEAT_CAPACITY base stat
 
   currentHull:   number
   currentShield: number
   currentHeat  = 0
+
+  maxEnergy:     number
+  currentEnergy: number
+  energyRegen:   number   // energy/s
 
   shieldDelayMs:  number   // time since last hit before regen starts
   shieldDelayTimer = 0     // ms since last hit
@@ -29,14 +33,20 @@ export class CombatState {
     return this.activeEffects.some(e => e.type === 'PHASE' && e.remainingMs > 0)
   }
   get isOverheated(): boolean { return this.currentHeat >= this.maxHeat }
+  get energyRatio():  number  { return this.maxEnergy > 0 ? this.currentEnergy / this.maxEnergy : 0 }
 
   constructor(ship: ShipFrame, classId: string) {
     this.shipId  = ship.id
     this.classId = classId
 
-    this.maxHull   = ship.baseStats.HULL
-    this.maxShield = ship.baseStats.SHIELD_MAX
+    this.maxHull      = ship.baseStats.HULL
+    this.maxShield    = ship.baseStats.SHIELD_MAX
+    this.maxHeat      = ship.baseStats.HEAT_CAPACITY
     this.shieldDelayMs = ship.baseStats.SHIELD_DELAY * 1000
+
+    this.maxEnergy     = ship.baseStats.ENERGY_GRID
+    this.energyRegen   = ship.baseStats.ENERGY_REGEN
+    this.currentEnergy = this.maxEnergy
 
     this.currentHull   = this.maxHull
     this.currentShield = this.maxShield
@@ -72,6 +82,14 @@ export class CombatState {
     this.currentHeat = Math.max(0, this.currentHeat - amount)
   }
 
+  drainEnergy(amount: number): void {
+    this.currentEnergy = Math.max(0, this.currentEnergy - amount)
+  }
+
+  restoreEnergy(amount: number): void {
+    this.currentEnergy = Math.min(this.maxEnergy, this.currentEnergy + amount)
+  }
+
   applyEffect(type: ActiveEffect['type'], durationMs: number, value: number): void {
     // Replace existing effect of same type
     const existing = this.activeEffects.find(e => e.type === type)
@@ -90,6 +108,8 @@ export class CombatState {
   // ─── Tick — called every frame ────────────────────────────────────────────
 
   tick(deltaMs: number, shieldRegenPerMs: number): void {
+    // Energy regen
+    this.restoreEnergy(this.energyRegen * (deltaMs / 1000))
     // Decay active effects
     this.activeEffects = this.activeEffects
       .map(e => ({ ...e, remainingMs: e.remainingMs - deltaMs }))

@@ -16,7 +16,10 @@ const PER_TAG_BONUS: Record<string, { stat: string; type: 'flat' | 'percent'; va
   EVASION:          [{ stat: 'EVASION',          type: 'flat',    value: 3    }],
   HEAT_DISSIPATION: [{ stat: 'HEAT_DISSIPATION', type: 'flat',    value: 8    }],
   ENERGY_GRID:      [{ stat: 'ENERGY_GRID',      type: 'flat',    value: 40   }],
+  ENERGY_REGEN:     [{ stat: 'ENERGY_REGEN',     type: 'flat',    value: 5    }],
   REPAIR_RATE:      [{ stat: 'REPAIR_RATE',      type: 'flat',    value: 5    }],
+  WEIGHT_CAPACITY:  [{ stat: 'WEIGHT_CAPACITY',  type: 'flat',    value: 20   }],
+  HEAT_CAPACITY:    [{ stat: 'HEAT_CAPACITY',    type: 'flat',    value: 10   }],
 }
 
 const STAT_CAPS: Record<string, number> = {
@@ -25,7 +28,7 @@ const STAT_CAPS: Record<string, number> = {
 }
 
 export class StatCalculator {
-  compute(ship: ShipFrame, tags: TagPool, upgrades: UpgradeCard[]): ComputedStats {
+  compute(ship: ShipFrame, tags: TagPool, upgrades: UpgradeCard[], totalEquipmentWeight = 0): ComputedStats {
     const stats: Record<string, number> = { ...ship.baseStats }
 
     // 1. Flat modifiers from drafted upgrades
@@ -48,7 +51,7 @@ export class StatCalculator {
       }
     }
 
-    // 3. Percent modifiers from drafted upgrades (applied to post-flat value)
+    // 3. Percent modifiers from drafted upgrades
     for (const card of upgrades) {
       for (const mod of card.statModifiers) {
         if (mod.type === 'percent') {
@@ -57,7 +60,7 @@ export class StatCalculator {
       }
     }
 
-    // 4. Percent bonuses from tag pool (compounding per tag instance)
+    // 4. Percent bonuses from tag pool (compounding)
     for (const [tag, count] of Object.entries(tags)) {
       const bonuses = PER_TAG_BONUS[tag]
       if (!bonuses) continue
@@ -68,7 +71,21 @@ export class StatCalculator {
       }
     }
 
-    // 5. Apply caps and floor at 0
+    // 5. Weight penalty — applies only when total equipment weight exceeds capacity.
+    //    Curve: penalty = 1 / (1 + overfill²)
+    //    Under capacity → no penalty. At 50% over → ×0.80. At 100% over → ×0.50.
+    if (totalEquipmentWeight > 0) {
+      const capacity = stats['WEIGHT_CAPACITY'] ?? 100
+      if (totalEquipmentWeight > capacity) {
+        const overfill = (totalEquipmentWeight - capacity) / capacity
+        const penalty  = 1 / (1 + overfill * overfill)
+        stats['TOP_SPEED']    = (stats['TOP_SPEED']    ?? 0) * penalty
+        stats['ACCELERATION'] = (stats['ACCELERATION'] ?? 0) * penalty
+        stats['TURN_SPEED']   = (stats['TURN_SPEED']   ?? 0) * penalty
+      }
+    }
+
+    // 6. Caps and floor
     for (const [stat, cap] of Object.entries(STAT_CAPS)) {
       if (stats[stat] !== undefined) stats[stat] = Math.min(stats[stat], cap)
     }
@@ -77,5 +94,12 @@ export class StatCalculator {
     }
 
     return stats as unknown as ComputedStats
+  }
+
+  // Convenience: compute the mobility penalty multiplier for display purposes
+  weightPenalty(totalEquipmentWeight: number, weightCapacity: number): number {
+    if (totalEquipmentWeight <= weightCapacity) return 1
+    const overfill = (totalEquipmentWeight - weightCapacity) / weightCapacity
+    return 1 / (1 + overfill * overfill)
   }
 }

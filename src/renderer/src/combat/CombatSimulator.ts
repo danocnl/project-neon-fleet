@@ -83,9 +83,12 @@ export class CombatSimulator {
   }
 
   private simulateWeaponFire(): void {
-    const heatPerShot = 14
+    const heatPerShot   = 14
+    const energyPerShot = 8
     const wasOk = !this.state.isOverheated
+
     this.state.addHeat(heatPerShot)
+    this.state.drainEnergy(energyPerShot)
 
     if (wasOk && this.state.isOverheated) {
       this.dispatcher.emit({

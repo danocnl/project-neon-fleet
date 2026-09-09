@@ -73,11 +73,13 @@ export class PhysicsScene extends Phaser.Scene {
   private hullBar!:    Phaser.GameObjects.Graphics
   private shieldBar!:  Phaser.GameObjects.Graphics
   private heatBar!:    Phaser.GameObjects.Graphics
+  private energyBar!:  Phaser.GameObjects.Graphics
   private effectText!: Phaser.GameObjects.Text
   private logEntries:  Phaser.GameObjects.Text[] = []
   private hullText!:   Phaser.GameObjects.Text
   private shieldText!: Phaser.GameObjects.Text
   private heatText!:   Phaser.GameObjects.Text
+  private energyText!: Phaser.GameObjects.Text
 
   constructor() { super({ key: 'PhysicsScene' }) }
 
@@ -343,16 +345,19 @@ export class PhysicsScene extends Phaser.Scene {
     barLabel('HULL',   72)
     barLabel('SHIELD', 92)
     barLabel('HEAT',   112)
+    barLabel('ENERGY', 132)
 
     this.hullBar   = this.add.graphics(); add(this.hullBar)
     this.shieldBar = this.add.graphics(); add(this.shieldBar)
     this.heatBar   = this.add.graphics(); add(this.heatBar)
+    this.energyBar = this.add.graphics(); add(this.energyBar)
 
     this.hullText   = this.add.text(220, 70,  '', { fontSize: '9px', color: '#336644', fontFamily: 'monospace' }); add(this.hullText)
     this.shieldText = this.add.text(220, 90,  '', { fontSize: '9px', color: '#334466', fontFamily: 'monospace' }); add(this.shieldText)
     this.heatText   = this.add.text(220, 110, '', { fontSize: '9px', color: '#664433', fontFamily: 'monospace' }); add(this.heatText)
+    this.energyText = this.add.text(220, 130, '', { fontSize: '9px', color: '#445533', fontFamily: 'monospace' }); add(this.energyText)
 
-    this.effectText = this.add.text(14, 134, '', { fontSize: '10px', color: '#ffcc00', fontFamily: 'monospace' }); add(this.effectText)
+    this.effectText = this.add.text(14, 154, '', { fontSize: '10px', color: '#ffcc00', fontFamily: 'monospace' }); add(this.effectText)
 
     // Trigger log
     add(this.add.text(14, VIEW_H - LOG_MAX * 18 - 30, 'TRIGGER LOG', {
@@ -404,13 +409,15 @@ export class PhysicsScene extends Phaser.Scene {
       gfx.strokeRect(BAR_X, y, BAR_W, BAR_H)
     }
 
-    drawBar(this.hullBar,   72,  cs.currentHull   / cs.maxHull,   0x00cc44)
-    drawBar(this.shieldBar, 92,  cs.currentShield / cs.maxShield,  0x4488ff)
-    drawBar(this.heatBar,   112, cs.currentHeat   / cs.maxHeat,    cs.isOverheated ? 0xff2200 : 0xff8800)
+    drawBar(this.hullBar,   72,  cs.currentHull   / cs.maxHull,    0x00cc44)
+    drawBar(this.shieldBar, 92,  cs.currentShield / cs.maxShield,   0x4488ff)
+    drawBar(this.heatBar,   112, cs.currentHeat   / cs.maxHeat,     cs.isOverheated ? 0xff2200 : 0xff8800)
+    drawBar(this.energyBar, 132, cs.energyRatio,                    0x88ff44)
 
     this.hullText.setText(`${Math.round(cs.currentHull)} / ${cs.maxHull}`)
     this.shieldText.setText(`${Math.round(cs.currentShield)} / ${cs.maxShield}`)
-    this.heatText.setText(`${Math.round(cs.currentHeat)}%${cs.isOverheated ? ' OVERHEAT' : ''}`)
+    this.heatText.setText(`${Math.round(cs.currentHeat)} / ${cs.maxHeat}${cs.isOverheated ? ' OVERHEAT' : ''}`)
+    this.energyText.setText(`${Math.round(cs.currentEnergy)} / ${cs.maxEnergy}`)
 
     const effects = cs.activeEffects.map(e =>
       `${e.type.replace('_', ' ')} ${(e.remainingMs / 1000).toFixed(1)}s`

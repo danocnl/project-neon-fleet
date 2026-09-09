@@ -26,8 +26,11 @@ export interface ShipBaseStats {
   WEAPON_SLOT_XL?: number   // Heavy ordnance only
   CARGO_CAPACITY: number
   HEAT_DISSIPATION: number  // Heat units cooled per second
+  HEAT_CAPACITY: number     // Max heat before overheat (default 100, upgradeable)
   ENERGY_GRID: number       // Total energy capacity
+  ENERGY_REGEN: number      // Energy restored per second passively
   REPAIR_RATE: number       // HP/s passive hull repair
+  WEIGHT_CAPACITY: number   // Max loadout weight before mobility penalty kicks in
   DRONE_BAYS?: number       // Dedicated drone hardpoints (Krait only)
 }
 
