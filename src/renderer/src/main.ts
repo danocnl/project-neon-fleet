@@ -3,6 +3,7 @@ import { BootScene } from './scenes/BootScene'
 import { PhysicsScene } from './scenes/PhysicsScene'
 import { SelectionScene } from './scenes/SelectionScene'
 import { DraftScene } from './scenes/DraftScene'
+import { BenchmarkScene } from './scenes/BenchmarkScene'
 import { DataLoader } from './systems/DataLoader'
 
 DataLoader.init()
@@ -17,7 +18,7 @@ const config: Phaser.Types.Core.GameConfig = {
     width: 1280,
     height: 720,
   },
-  scene: [BootScene, SelectionScene, PhysicsScene, DraftScene]
+  scene: [BootScene, SelectionScene, PhysicsScene, DraftScene, BenchmarkScene]
 }
 
 new Phaser.Game(config)

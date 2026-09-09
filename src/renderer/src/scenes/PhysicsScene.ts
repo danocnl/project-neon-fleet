@@ -81,6 +81,7 @@ export class PhysicsScene extends Phaser.Scene {
   private drafting        = false
   private pendingUpgrades = 0
   private runCredits      = 0
+  private isDead          = false
   private upgradeBtnGfx!: Phaser.GameObjects.Graphics
   private upgradeBtnText!: Phaser.GameObjects.Text
   private upgradeBtnZone!: Phaser.GameObjects.Zone
@@ -187,6 +188,13 @@ export class PhysicsScene extends Phaser.Scene {
       tgt !== null
     )
     this.projectiles.draw()
+
+    // Death check
+    if (!this.isDead && this.combatState.currentHull <= 0) {
+      this.isDead = true
+      this.triggerBenchmarkWarp()
+      return
+    }
 
     // Trigger damage flashes
     if (this.combatState.currentShield < shieldBefore) this.shieldFlashTimer = 1.0
@@ -298,6 +306,28 @@ export class PhysicsScene extends Phaser.Scene {
     if (ship.weightClass === 'Heavy')  return 28
     if (ship.weightClass === 'Medium') return 20
     return 15   // Light
+  }
+
+  private triggerBenchmarkWarp(): void {
+    this.simulator.stop()
+
+    // White flash then fade to black → BenchmarkScene
+    this.cameras.main.flash(250, 255, 255, 255)
+    this.time.delayedCall(350, () => {
+      this.cameras.main.fade(400, 0, 0, 0)
+      this.time.delayedCall(450, () => {
+        const ship = DataLoader.getShip(this.runData.shipId)
+        this.scene.start('BenchmarkScene', {
+          pilot:          this.runData.pilot,
+          shipId:         this.runData.shipId,
+          classId:        this.runData.classId,
+          killsThisRun:   this.killCount,
+          creditsThisRun: this.runCredits,
+          levelReached:   this.level,
+          maxHull:        ship?.baseStats.HULL ?? 900,
+        })
+      })
+    })
   }
 
   private buildEnemies(): void {
