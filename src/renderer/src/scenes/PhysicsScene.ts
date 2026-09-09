@@ -190,8 +190,8 @@ export class PhysicsScene extends Phaser.Scene {
     const ship = DataLoader.getShip(shipId)
     if (!geo || !ship) return
 
-    const maxSpeed = remap(ship.baseStats.TOP_SPEED,    150, 620, 80, 300)
-    const accel    = remap(ship.baseStats.ACCELERATION, 100, 600, 60, 220)
+    const maxSpeed = remap(ship.baseStats.TOP_SPEED,    150, 620, 35, 150)
+    const accel    = remap(ship.baseStats.ACCELERATION, 100, 600, 25,  90)
     const mass     = ship.baseStats.MASS
     const drag     = remap(mass, 1, 12, 0.82, 0.94)
 
