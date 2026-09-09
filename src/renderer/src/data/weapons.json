@@ -1,185 +1,507 @@
 [
   {
-    "id": "light_chaingun", "name": "Light Chaingun",
-    "size": "SMALL", "damageType": "KINETIC", "mountPosition": "FORWARD",
+    "id": "light_chaingun",
+    "name": "Light Chaingun",
+    "size": "SMALL",
+    "damageType": "KINETIC",
+    "mountPosition": "FORWARD",
     "description": "Rapid-fire ballistic weapon. Low per-shot damage compensated by extreme fire rate. Entry-level kinetic option for light ships.",
     "baseStats": {
-      "DAMAGE": 8, "RATE_OF_FIRE": 8.0, "RELOAD_SPEED": 1.5, "AMMO_CAPACITY": 40,
-      "RANGE": 250, "ACCURACY": 8, "VELOCITY": 380, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 3, "HEAT_GEN": 3, "PASSIVE_DRAIN": 0, "PASSIVE_HEAT": 0,
-      "WEIGHT": 12, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 90
+      "DAMAGE": 8,
+      "RATE_OF_FIRE": 8.0,
+      "RELOAD_SPEED": 1.5,
+      "AMMO_CAPACITY": 40,
+      "RANGE": 250,
+      "ACCURACY": 8,
+      "VELOCITY": 380,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 3,
+      "HEAT_GEN": 3,
+      "PASSIVE_DRAIN": 0,
+      "PASSIVE_HEAT": 0,
+      "WEIGHT": 12,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 25
     },
-    "behaviors": {}, "statusEffects": {},
-    "tags": ["KINETIC", "RATE_OF_FIRE", "AMMO_CAPACITY", "ACCURACY", "FIRING_ARC"]
+    "behaviors": {},
+    "statusEffects": {},
+    "tags": [
+      "KINETIC",
+      "RATE_OF_FIRE",
+      "AMMO_CAPACITY",
+      "ACCURACY",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "chaingun", "name": "Chaingun",
-    "size": "MEDIUM", "damageType": "KINETIC", "mountPosition": "FORWARD",
+    "id": "chaingun",
+    "name": "Chaingun",
+    "size": "MEDIUM",
+    "damageType": "KINETIC",
+    "mountPosition": "FORWARD",
     "description": "Standard chaingun. Reliable kinetic output at medium range. Workhorse weapon for medium-class ships.",
     "baseStats": {
-      "DAMAGE": 18, "RATE_OF_FIRE": 6.0, "RELOAD_SPEED": 2.0, "AMMO_CAPACITY": 60,
-      "RANGE": 300, "ACCURACY": 6, "VELOCITY": 400, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 6, "HEAT_GEN": 5, "PASSIVE_DRAIN": 0, "PASSIVE_HEAT": 0,
-      "WEIGHT": 28, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 90
+      "DAMAGE": 18,
+      "RATE_OF_FIRE": 6.0,
+      "RELOAD_SPEED": 2.0,
+      "AMMO_CAPACITY": 60,
+      "RANGE": 300,
+      "ACCURACY": 6,
+      "VELOCITY": 400,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 6,
+      "HEAT_GEN": 5,
+      "PASSIVE_DRAIN": 0,
+      "PASSIVE_HEAT": 0,
+      "WEIGHT": 28,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 25
     },
-    "behaviors": {}, "statusEffects": {},
-    "tags": ["KINETIC", "RATE_OF_FIRE", "AMMO_CAPACITY", "ACCURACY", "FIRING_ARC"]
+    "behaviors": {},
+    "statusEffects": {},
+    "tags": [
+      "KINETIC",
+      "RATE_OF_FIRE",
+      "AMMO_CAPACITY",
+      "ACCURACY",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "heavy_chaingun", "name": "Heavy Chaingun",
-    "size": "LARGE", "damageType": "KINETIC", "mountPosition": "FORWARD",
-    "description": "High-calibre rotary cannon. Slower cycling than the standard but each round hits significantly harder. Narrower arc than lighter models — needs the ship facing the target.",
+    "id": "heavy_chaingun",
+    "name": "Heavy Chaingun",
+    "size": "LARGE",
+    "damageType": "KINETIC",
+    "mountPosition": "FORWARD",
+    "description": "High-calibre rotary cannon. Slower cycling than the standard but each round hits significantly harder. Narrower arc than lighter models \u2014 needs the ship facing the target.",
     "baseStats": {
-      "DAMAGE": 38, "RATE_OF_FIRE": 4.0, "RELOAD_SPEED": 2.5, "AMMO_CAPACITY": 80,
-      "RANGE": 340, "ACCURACY": 5, "VELOCITY": 420, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 10, "HEAT_GEN": 8, "PASSIVE_DRAIN": 0, "PASSIVE_HEAT": 0,
-      "WEIGHT": 65, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 60
+      "DAMAGE": 38,
+      "RATE_OF_FIRE": 4.0,
+      "RELOAD_SPEED": 2.5,
+      "AMMO_CAPACITY": 80,
+      "RANGE": 340,
+      "ACCURACY": 5,
+      "VELOCITY": 420,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 10,
+      "HEAT_GEN": 8,
+      "PASSIVE_DRAIN": 0,
+      "PASSIVE_HEAT": 0,
+      "WEIGHT": 65,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 20
     },
-    "behaviors": {}, "statusEffects": {},
-    "tags": ["KINETIC", "RATE_OF_FIRE", "AMMO_CAPACITY", "FIRING_ARC"]
+    "behaviors": {},
+    "statusEffects": {},
+    "tags": [
+      "KINETIC",
+      "RATE_OF_FIRE",
+      "AMMO_CAPACITY",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "rotary_cannon", "name": "Rotary Cannon",
-    "size": "XL", "damageType": "KINETIC", "mountPosition": "TURRET",
-    "description": "Capital-grade rotating barrel array. Extreme rate of fire at XL scale. Turret-mounted — rotates freely to track any target. Only the Type-10 has the hardpoint and energy capacity to run one sustainably.",
+    "id": "rotary_cannon",
+    "name": "Rotary Cannon",
+    "size": "XL",
+    "damageType": "KINETIC",
+    "mountPosition": "TURRET",
+    "description": "Capital-grade rotating barrel array. Extreme rate of fire at XL scale. Turret-mounted \u2014 rotates freely to track any target. Only the Type-10 has the hardpoint and energy capacity to run one sustainably.",
     "baseStats": {
-      "DAMAGE": 28, "RATE_OF_FIRE": 12.0, "RELOAD_SPEED": 3.0, "AMMO_CAPACITY": 200,
-      "RANGE": 360, "ACCURACY": 4, "VELOCITY": 450, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 5, "HEAT_GEN": 6, "PASSIVE_DRAIN": 8, "PASSIVE_HEAT": 4,
-      "WEIGHT": 140, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 360
+      "DAMAGE": 28,
+      "RATE_OF_FIRE": 12.0,
+      "RELOAD_SPEED": 3.0,
+      "AMMO_CAPACITY": 200,
+      "RANGE": 360,
+      "ACCURACY": 4,
+      "VELOCITY": 450,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 5,
+      "HEAT_GEN": 6,
+      "PASSIVE_DRAIN": 8,
+      "PASSIVE_HEAT": 4,
+      "WEIGHT": 140,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 360
     },
-    "behaviors": {}, "statusEffects": {},
-    "tags": ["KINETIC", "RATE_OF_FIRE", "AMMO_CAPACITY", "ACCURACY"]
+    "behaviors": {},
+    "statusEffects": {},
+    "tags": [
+      "KINETIC",
+      "RATE_OF_FIRE",
+      "AMMO_CAPACITY",
+      "ACCURACY"
+    ]
   },
   {
-    "id": "pulse_laser", "name": "Pulse Laser",
-    "size": "SMALL", "damageType": "ENERGY", "mountPosition": "FORWARD",
+    "id": "pulse_laser",
+    "name": "Pulse Laser",
+    "size": "SMALL",
+    "damageType": "ENERGY",
+    "mountPosition": "FORWARD",
     "description": "Rapid-pulse energy beam. Infinite ammo, zero spread. Interacts with mirrors and prisms. Natural fit for Vector Specialist builds.",
     "baseStats": {
-      "DAMAGE": 10, "RATE_OF_FIRE": 6.0, "RELOAD_SPEED": 0, "AMMO_CAPACITY": 0,
-      "RANGE": 300, "ACCURACY": 0, "VELOCITY": 0, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 8, "HEAT_GEN": 5, "PASSIVE_DRAIN": 2, "PASSIVE_HEAT": 1,
-      "WEIGHT": 15, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 90
+      "DAMAGE": 10,
+      "RATE_OF_FIRE": 6.0,
+      "RELOAD_SPEED": 0,
+      "AMMO_CAPACITY": 0,
+      "RANGE": 300,
+      "ACCURACY": 0,
+      "VELOCITY": 0,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 8,
+      "HEAT_GEN": 5,
+      "PASSIVE_DRAIN": 2,
+      "PASSIVE_HEAT": 1,
+      "WEIGHT": 15,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 30
     },
-    "behaviors": { "BEAM": true }, "statusEffects": {},
-    "tags": ["ENERGY", "BEAM", "RATE_OF_FIRE", "RANGE", "FIRING_ARC"]
+    "behaviors": {
+      "BEAM": true
+    },
+    "statusEffects": {},
+    "tags": [
+      "ENERGY",
+      "BEAM",
+      "RATE_OF_FIRE",
+      "RANGE",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "beam_laser", "name": "Beam Laser",
-    "size": "MEDIUM", "damageType": "ENERGY", "mountPosition": "FORWARD",
-    "description": "Continuous cutting beam. DAMAGE is DPS. Narrower arc than a pulse laser — the beam must be held on target. Significant passive heat — HEAT_DISSIPATION modules mandatory.",
+    "id": "beam_laser",
+    "name": "Beam Laser",
+    "size": "MEDIUM",
+    "damageType": "ENERGY",
+    "mountPosition": "FORWARD",
+    "description": "Continuous cutting beam. DAMAGE is DPS. Narrower arc than a pulse laser \u2014 the beam must be held on target. Significant passive heat \u2014 HEAT_DISSIPATION modules mandatory.",
     "baseStats": {
-      "DAMAGE": 55, "RATE_OF_FIRE": 0, "RELOAD_SPEED": 0, "AMMO_CAPACITY": 0,
-      "RANGE": 380, "ACCURACY": 0, "VELOCITY": 0, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 0, "HEAT_GEN": 0, "PASSIVE_DRAIN": 14, "PASSIVE_HEAT": 10,
-      "WEIGHT": 35, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 45
+      "DAMAGE": 55,
+      "RATE_OF_FIRE": 0,
+      "RELOAD_SPEED": 0,
+      "AMMO_CAPACITY": 0,
+      "RANGE": 380,
+      "ACCURACY": 0,
+      "VELOCITY": 0,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 0,
+      "HEAT_GEN": 0,
+      "PASSIVE_DRAIN": 14,
+      "PASSIVE_HEAT": 10,
+      "WEIGHT": 35,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 15
     },
-    "behaviors": { "BEAM": true }, "statusEffects": {},
-    "tags": ["ENERGY", "BEAM", "RANGE", "HEAT_DISSIPATION", "FIRING_ARC"]
+    "behaviors": {
+      "BEAM": true
+    },
+    "statusEffects": {},
+    "tags": [
+      "ENERGY",
+      "BEAM",
+      "RANGE",
+      "HEAT_DISSIPATION",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "heavy_beam", "name": "Heavy Beam",
-    "size": "LARGE", "damageType": "ENERGY", "mountPosition": "FORWARD",
-    "description": "High-power continuous beam array. Exceptional DPS. Very narrow arc — the ship must be pointed almost directly at the target. Extreme passive heat without dedicated cooling.",
+    "id": "heavy_beam",
+    "name": "Heavy Beam",
+    "size": "LARGE",
+    "damageType": "ENERGY",
+    "mountPosition": "FORWARD",
+    "description": "High-power continuous beam array. Exceptional DPS. Very narrow arc \u2014 the ship must be pointed almost directly at the target. Extreme passive heat without dedicated cooling.",
     "baseStats": {
-      "DAMAGE": 130, "RATE_OF_FIRE": 0, "RELOAD_SPEED": 0, "AMMO_CAPACITY": 0,
-      "RANGE": 450, "ACCURACY": 0, "VELOCITY": 0, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 0, "HEAT_GEN": 0, "PASSIVE_DRAIN": 28, "PASSIVE_HEAT": 22,
-      "WEIGHT": 75, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 30
+      "DAMAGE": 130,
+      "RATE_OF_FIRE": 0,
+      "RELOAD_SPEED": 0,
+      "AMMO_CAPACITY": 0,
+      "RANGE": 450,
+      "ACCURACY": 0,
+      "VELOCITY": 0,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 0,
+      "HEAT_GEN": 0,
+      "PASSIVE_DRAIN": 28,
+      "PASSIVE_HEAT": 22,
+      "WEIGHT": 75,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 10
     },
-    "behaviors": { "BEAM": true }, "statusEffects": {},
-    "tags": ["ENERGY", "BEAM", "RANGE", "HEAT_DISSIPATION", "FIRING_ARC"]
+    "behaviors": {
+      "BEAM": true
+    },
+    "statusEffects": {},
+    "tags": [
+      "ENERGY",
+      "BEAM",
+      "RANGE",
+      "HEAT_DISSIPATION",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "railgun", "name": "Railgun",
-    "size": "MEDIUM", "damageType": "KINETIC", "mountPosition": "FORWARD",
-    "description": "Electromagnetic accelerator. Extreme single-shot damage. Requires charge time before firing. Very narrow arc — the ship automation loop must align the nose precisely before firing. Pierces 2 enemies.",
+    "id": "railgun",
+    "name": "Railgun",
+    "size": "MEDIUM",
+    "damageType": "KINETIC",
+    "mountPosition": "FORWARD",
+    "description": "Electromagnetic accelerator. Extreme single-shot damage. Requires charge time before firing. Very narrow arc \u2014 the ship automation loop must align the nose precisely before firing. Pierces 2 enemies.",
     "baseStats": {
-      "DAMAGE": 130, "RATE_OF_FIRE": 0.5, "RELOAD_SPEED": 0, "AMMO_CAPACITY": 1,
-      "RANGE": 650, "ACCURACY": 0, "VELOCITY": 900, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 28, "HEAT_GEN": 20, "PASSIVE_DRAIN": 0, "PASSIVE_HEAT": 0,
-      "WEIGHT": 44, "CHARGE_TIME": 1.5, "PROJECTILE_COUNT": 1, "FIRING_ARC": 15
+      "DAMAGE": 130,
+      "RATE_OF_FIRE": 0.5,
+      "RELOAD_SPEED": 0,
+      "AMMO_CAPACITY": 1,
+      "RANGE": 650,
+      "ACCURACY": 0,
+      "VELOCITY": 900,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 28,
+      "HEAT_GEN": 20,
+      "PASSIVE_DRAIN": 0,
+      "PASSIVE_HEAT": 0,
+      "WEIGHT": 44,
+      "CHARGE_TIME": 1.5,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 10
     },
-    "behaviors": { "PIERCE": 2 }, "statusEffects": {},
-    "tags": ["KINETIC", "PIERCE", "VELOCITY", "RANGE", "FIRING_ARC"]
+    "behaviors": {
+      "PIERCE": 2
+    },
+    "statusEffects": {},
+    "tags": [
+      "KINETIC",
+      "PIERCE",
+      "VELOCITY",
+      "RANGE",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "gauss_cannon", "name": "Gauss Cannon",
-    "size": "LARGE", "damageType": "KINETIC", "mountPosition": "FORWARD",
-    "description": "Capital-grade electromagnetic slug thrower. Devastating per-shot damage at extreme range. Pierces 3 enemies. Almost no arc — fires only when near-perfectly aligned. Pairs with automation builds that maintain precise heading.",
+    "id": "gauss_cannon",
+    "name": "Gauss Cannon",
+    "size": "LARGE",
+    "damageType": "KINETIC",
+    "mountPosition": "FORWARD",
+    "description": "Capital-grade electromagnetic slug thrower. Devastating per-shot damage at extreme range. Pierces 3 enemies. Almost no arc \u2014 fires only when near-perfectly aligned. Pairs with automation builds that maintain precise heading.",
     "baseStats": {
-      "DAMAGE": 300, "RATE_OF_FIRE": 0.25, "RELOAD_SPEED": 0, "AMMO_CAPACITY": 1,
-      "RANGE": 900, "ACCURACY": 0, "VELOCITY": 1400, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 48, "HEAT_GEN": 36, "PASSIVE_DRAIN": 0, "PASSIVE_HEAT": 0,
-      "WEIGHT": 90, "CHARGE_TIME": 2.5, "PROJECTILE_COUNT": 1, "FIRING_ARC": 10
+      "DAMAGE": 300,
+      "RATE_OF_FIRE": 0.25,
+      "RELOAD_SPEED": 0,
+      "AMMO_CAPACITY": 1,
+      "RANGE": 900,
+      "ACCURACY": 0,
+      "VELOCITY": 1400,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 48,
+      "HEAT_GEN": 36,
+      "PASSIVE_DRAIN": 0,
+      "PASSIVE_HEAT": 0,
+      "WEIGHT": 90,
+      "CHARGE_TIME": 2.5,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 8
     },
-    "behaviors": { "PIERCE": 3 }, "statusEffects": {},
-    "tags": ["KINETIC", "PIERCE", "VELOCITY", "RANGE", "FIRING_ARC"]
+    "behaviors": {
+      "PIERCE": 3
+    },
+    "statusEffects": {},
+    "tags": [
+      "KINETIC",
+      "PIERCE",
+      "VELOCITY",
+      "RANGE",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "micro_missile", "name": "Micro Missile",
-    "size": "SMALL", "damageType": "EXPLOSIVE", "mountPosition": "FORWARD",
-    "description": "Compact self-guided explosive. Wide arc — missiles track to targets across a broad forward hemisphere. Limited magazine. AoE damage on detonation.",
+    "id": "micro_missile",
+    "name": "Micro Missile",
+    "size": "SMALL",
+    "damageType": "EXPLOSIVE",
+    "mountPosition": "FORWARD",
+    "description": "Compact self-guided explosive. Wide arc \u2014 missiles track to targets across a broad forward hemisphere. Limited magazine. AoE damage on detonation.",
     "baseStats": {
-      "DAMAGE": 40, "RATE_OF_FIRE": 1.5, "RELOAD_SPEED": 2.0, "AMMO_CAPACITY": 6,
-      "RANGE": 350, "ACCURACY": 2, "VELOCITY": 240, "BLAST_RADIUS": 40,
-      "ENERGY_COST": 8, "HEAT_GEN": 4, "PASSIVE_DRAIN": 0, "PASSIVE_HEAT": 0,
-      "WEIGHT": 20, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 180
+      "DAMAGE": 40,
+      "RATE_OF_FIRE": 1.5,
+      "RELOAD_SPEED": 2.0,
+      "AMMO_CAPACITY": 6,
+      "RANGE": 350,
+      "ACCURACY": 2,
+      "VELOCITY": 240,
+      "BLAST_RADIUS": 40,
+      "ENERGY_COST": 8,
+      "HEAT_GEN": 4,
+      "PASSIVE_DRAIN": 0,
+      "PASSIVE_HEAT": 0,
+      "WEIGHT": 20,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 60
     },
-    "behaviors": {}, "statusEffects": {},
-    "tags": ["EXPLOSIVE", "BLAST_RADIUS", "AMMO_CAPACITY", "GLOBAL_RADIUS", "FIRING_ARC"]
+    "behaviors": {},
+    "statusEffects": {},
+    "tags": [
+      "EXPLOSIVE",
+      "BLAST_RADIUS",
+      "AMMO_CAPACITY",
+      "GLOBAL_RADIUS",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "torpedo", "name": "Torpedo",
-    "size": "MEDIUM", "damageType": "EXPLOSIVE", "mountPosition": "FORWARD",
-    "description": "Heavy self-guided warhead. Wide tracking arc. Massive AoE detonation. Very slow fire rate and tiny magazine — each shot must count.",
+    "id": "torpedo",
+    "name": "Torpedo",
+    "size": "MEDIUM",
+    "damageType": "EXPLOSIVE",
+    "mountPosition": "FORWARD",
+    "description": "Heavy self-guided warhead. Wide tracking arc. Massive AoE detonation. Very slow fire rate and tiny magazine \u2014 each shot must count.",
     "baseStats": {
-      "DAMAGE": 160, "RATE_OF_FIRE": 0.35, "RELOAD_SPEED": 4.0, "AMMO_CAPACITY": 3,
-      "RANGE": 500, "ACCURACY": 1, "VELOCITY": 180, "BLAST_RADIUS": 100,
-      "ENERGY_COST": 20, "HEAT_GEN": 10, "PASSIVE_DRAIN": 0, "PASSIVE_HEAT": 0,
-      "WEIGHT": 42, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 120
+      "DAMAGE": 160,
+      "RATE_OF_FIRE": 0.35,
+      "RELOAD_SPEED": 4.0,
+      "AMMO_CAPACITY": 3,
+      "RANGE": 500,
+      "ACCURACY": 1,
+      "VELOCITY": 180,
+      "BLAST_RADIUS": 100,
+      "ENERGY_COST": 20,
+      "HEAT_GEN": 10,
+      "PASSIVE_DRAIN": 0,
+      "PASSIVE_HEAT": 0,
+      "WEIGHT": 42,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 60
     },
-    "behaviors": {}, "statusEffects": {},
-    "tags": ["EXPLOSIVE", "BLAST_RADIUS", "AMMO_CAPACITY", "GLOBAL_RADIUS", "FIRING_ARC"]
+    "behaviors": {},
+    "statusEffects": {},
+    "tags": [
+      "EXPLOSIVE",
+      "BLAST_RADIUS",
+      "AMMO_CAPACITY",
+      "GLOBAL_RADIUS",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "emp_cannon", "name": "EMP Cannon",
-    "size": "MEDIUM", "damageType": "ENERGY", "mountPosition": "FORWARD",
-    "description": "Fires a pulsed electromagnetic charge. Wide arc — the pulse spreads on impact, so exact alignment isn't critical. Disables enemy shields and weapon routines for 1.5s.",
+    "id": "emp_cannon",
+    "name": "EMP Cannon",
+    "size": "MEDIUM",
+    "damageType": "ENERGY",
+    "mountPosition": "FORWARD",
+    "description": "Fires a pulsed electromagnetic charge. Wide arc \u2014 the pulse spreads on impact, so exact alignment isn't critical. Disables enemy shields and weapon routines for 1.5s.",
     "baseStats": {
-      "DAMAGE": 30, "RATE_OF_FIRE": 1.0, "RELOAD_SPEED": 2.5, "AMMO_CAPACITY": 10,
-      "RANGE": 350, "ACCURACY": 2, "VELOCITY": 300, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 22, "HEAT_GEN": 8, "PASSIVE_DRAIN": 0, "PASSIVE_HEAT": 0,
-      "WEIGHT": 35, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 120
+      "DAMAGE": 30,
+      "RATE_OF_FIRE": 1.0,
+      "RELOAD_SPEED": 2.5,
+      "AMMO_CAPACITY": 10,
+      "RANGE": 350,
+      "ACCURACY": 2,
+      "VELOCITY": 300,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 22,
+      "HEAT_GEN": 8,
+      "PASSIVE_DRAIN": 0,
+      "PASSIVE_HEAT": 0,
+      "WEIGHT": 35,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 60
     },
-    "behaviors": {}, "statusEffects": { "EMP": 1.5 },
-    "tags": ["ENERGY", "EMP", "RATE_OF_FIRE", "FIRING_ARC"]
+    "behaviors": {},
+    "statusEffects": {
+      "EMP": 1.5
+    },
+    "tags": [
+      "ENERGY",
+      "EMP",
+      "RATE_OF_FIRE",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "arc_cannon", "name": "Arc Cannon",
-    "size": "MEDIUM", "damageType": "ENERGY", "mountPosition": "FORWARD",
+    "id": "arc_cannon",
+    "name": "Arc Cannon",
+    "size": "MEDIUM",
+    "damageType": "ENERGY",
+    "mountPosition": "FORWARD",
     "description": "Fires a high-voltage bolt that arcs to 2 additional nearby targets on impact. Standard forward arc. Natural synergy with Quantum Entangler tether networks.",
     "baseStats": {
-      "DAMAGE": 42, "RATE_OF_FIRE": 1.2, "RELOAD_SPEED": 2.0, "AMMO_CAPACITY": 8,
-      "RANGE": 320, "ACCURACY": 1, "VELOCITY": 350, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 16, "HEAT_GEN": 10, "PASSIVE_DRAIN": 0, "PASSIVE_HEAT": 0,
-      "WEIGHT": 38, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 90
+      "DAMAGE": 42,
+      "RATE_OF_FIRE": 1.2,
+      "RELOAD_SPEED": 2.0,
+      "AMMO_CAPACITY": 8,
+      "RANGE": 320,
+      "ACCURACY": 1,
+      "VELOCITY": 350,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 16,
+      "HEAT_GEN": 10,
+      "PASSIVE_DRAIN": 0,
+      "PASSIVE_HEAT": 0,
+      "WEIGHT": 38,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 25
     },
-    "behaviors": { "CHAIN": 2 }, "statusEffects": {},
-    "tags": ["ENERGY", "CHAIN", "TETHER", "DAMAGE_SHARE", "FIRING_ARC"]
+    "behaviors": {
+      "CHAIN": 2
+    },
+    "statusEffects": {},
+    "tags": [
+      "ENERGY",
+      "CHAIN",
+      "TETHER",
+      "DAMAGE_SHARE",
+      "FIRING_ARC"
+    ]
   },
   {
-    "id": "shockwave_emitter", "name": "Shockwave Emitter",
-    "size": "MEDIUM", "damageType": "KINETIC", "mountPosition": "TURRET",
-    "description": "Generates a kinetic pressure wave radiating outward from the ship every 3 seconds. Full 360° coverage — damages all enemies within 180u simultaneously regardless of ship heading.",
+    "id": "shockwave_emitter",
+    "name": "Shockwave Emitter",
+    "size": "MEDIUM",
+    "damageType": "KINETIC",
+    "mountPosition": "TURRET",
+    "description": "Generates a kinetic pressure wave radiating outward from the ship every 3 seconds. Full 360\u00b0 coverage \u2014 damages all enemies within 180u simultaneously regardless of ship heading.",
     "baseStats": {
-      "DAMAGE": 45, "RATE_OF_FIRE": 0, "RELOAD_SPEED": 0, "AMMO_CAPACITY": 0,
-      "RANGE": 0, "ACCURACY": 0, "VELOCITY": 0, "BLAST_RADIUS": 0,
-      "ENERGY_COST": 0, "HEAT_GEN": 0, "PASSIVE_DRAIN": 10, "PASSIVE_HEAT": 3,
-      "WEIGHT": 40, "CHARGE_TIME": 0, "PROJECTILE_COUNT": 1, "FIRING_ARC": 360
+      "DAMAGE": 45,
+      "RATE_OF_FIRE": 0,
+      "RELOAD_SPEED": 0,
+      "AMMO_CAPACITY": 0,
+      "RANGE": 0,
+      "ACCURACY": 0,
+      "VELOCITY": 0,
+      "BLAST_RADIUS": 0,
+      "ENERGY_COST": 0,
+      "HEAT_GEN": 0,
+      "PASSIVE_DRAIN": 10,
+      "PASSIVE_HEAT": 3,
+      "WEIGHT": 40,
+      "CHARGE_TIME": 0,
+      "PROJECTILE_COUNT": 1,
+      "FIRING_ARC": 360
     },
-    "behaviors": { "PULSE": true, "PULSE_RADIUS": 180, "PULSE_INTERVAL": 3.0 },
+    "behaviors": {
+      "PULSE": true,
+      "PULSE_RADIUS": 180,
+      "PULSE_INTERVAL": 3.0
+    },
     "statusEffects": {},
-    "tags": ["KINETIC", "PULSE", "PULSE_RADIUS", "AURA_RADIUS", "GLOBAL_RADIUS"]
+    "tags": [
+      "KINETIC",
+      "PULSE",
+      "PULSE_RADIUS",
+      "AURA_RADIUS",
+      "GLOBAL_RADIUS"
+    ]
   }
 ]
