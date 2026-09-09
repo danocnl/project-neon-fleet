@@ -12,6 +12,7 @@ const WEAPON_STATS: Record<string, { dps: number; range: number; arc: number }> 
   light_chaingun: { dps: 64,  range: 250, arc: 25 },
   chaingun:       { dps: 108, range: 300, arc: 25 },
   pulse_laser:    { dps: 60,  range: 300, arc: 30 },
+  beam_laser:     { dps: 55,  range: 380, arc: 15 },  // Mamba default
   emp_cannon:     { dps: 30,  range: 350, arc: 60 },
   arc_cannon:     { dps: 50,  range: 320, arc: 25 },
 }

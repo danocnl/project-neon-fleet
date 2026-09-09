@@ -28,7 +28,7 @@ const UNLOCKED_SHIPS = ['sidewinder', 'cobra', 'mamba']
 // Default loadout per starting ship (weapon ids, module ids)
 const DEFAULT_LOADOUTS: Record<string, { weapons: string[]; modules: string[] }> = {
   sidewinder: {
-    weapons: ['light_chaingun', 'light_chaingun'],
+    weapons: ['pulse_laser', 'pulse_laser'],
     modules: ['thruster_pack_s', 'shield_booster_s', 'cooling_fin_s'],
   },
   cobra: {
@@ -36,7 +36,7 @@ const DEFAULT_LOADOUTS: Record<string, { weapons: string[]; modules: string[] }>
     modules: ['shield_capacitor_m', 'shield_booster_s', 'power_cell_s'],
   },
   mamba: {
-    weapons: ['light_chaingun', 'light_chaingun'],
+    weapons: ['beam_laser'],
     modules: ['cryo_module_m', 'cooling_fin_s', 'thruster_pack_s'],
   },
 }
@@ -623,7 +623,7 @@ export class SelectionScene extends Phaser.Scene {
   private calcDefaultWeight(loadout: { weapons: string[]; modules: string[] }): number {
     // Approximate weights from known weapons/modules (data not yet cross-referenced at runtime)
     const weaponWeights: Record<string, number> = {
-      light_chaingun: 12, chaingun: 28, pulse_laser: 15,
+      light_chaingun: 12, chaingun: 28, pulse_laser: 15, beam_laser: 35,
     }
     const moduleWeights: Record<string, number> = {
       thruster_pack_s: 10, shield_booster_s: 15, cooling_fin_s: 8,
@@ -637,7 +637,7 @@ export class SelectionScene extends Phaser.Scene {
 
   private calcDefaultDrain(loadout: { weapons: string[]; modules: string[] }): number {
     const drains: Record<string, number> = {
-      pulse_laser: 2, cryo_module_m: 2,
+      pulse_laser: 2, beam_laser: 14, cryo_module_m: 2,
     }
     let d = 0
     loadout.weapons.forEach(id => { d += drains[id] ?? 0 })
