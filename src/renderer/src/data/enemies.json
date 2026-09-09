@@ -18,8 +18,8 @@
     },
     "weapon": null,
     "drops": {
-      "creditsMin": 25,
-      "creditsMax": 40,
+      "creditsMin": 35,
+      "creditsMax": 60,
       "debris": true
     },
     "breakdown": {
@@ -57,8 +57,8 @@
     },
     "weapon": null,
     "drops": {
-      "creditsMin": 10,
-      "creditsMax": 18,
+      "creditsMin": 14,
+      "creditsMax": 26,
       "debris": true
     },
     "breakdown": {
@@ -96,8 +96,8 @@
     },
     "weapon": null,
     "drops": {
-      "creditsMin": 4,
-      "creditsMax": 8
+      "creditsMin": 6,
+      "creditsMax": 12
     },
     "breakdown": {
       "count": 2,
@@ -134,8 +134,8 @@
     },
     "weapon": null,
     "drops": {
-      "creditsMin": 1,
-      "creditsMax": 4
+      "creditsMin": 2,
+      "creditsMax": 6
     },
     "breakdown": null,
     "vulnerableTo": [
@@ -175,8 +175,8 @@
       "isBeam": false
     },
     "drops": {
-      "creditsMin": 5,
-      "creditsMax": 10
+      "creditsMin": 8,
+      "creditsMax": 16
     },
     "breakdown": null,
     "vulnerableTo": [
@@ -211,8 +211,8 @@
       "isBeam": false
     },
     "drops": {
-      "creditsMin": 10,
-      "creditsMax": 20
+      "creditsMin": 16,
+      "creditsMax": 28
     },
     "breakdown": null,
     "vulnerableTo": [
@@ -247,8 +247,8 @@
       "isBeam": true
     },
     "drops": {
-      "creditsMin": 18,
-      "creditsMax": 30
+      "creditsMin": 24,
+      "creditsMax": 40
     },
     "breakdown": null,
     "vulnerableTo": [

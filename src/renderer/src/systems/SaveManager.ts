@@ -45,8 +45,9 @@ export class SaveManager {
     return { success: true, data: d }
   }
 
-  // Repair cost = 12% of ship max hull
+  // Repair cost = 5% of ship max hull
+  // Intentionally low — economy is driven by Armory purchases, not repair friction
   static repairCost(maxHull: number): number {
-    return Math.round(maxHull * 0.12)
+    return Math.round(maxHull * 0.05)
   }
 }

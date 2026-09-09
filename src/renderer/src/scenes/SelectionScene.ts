@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { DataLoader } from '../systems/DataLoader'
+import { SaveManager } from '../systems/SaveManager'
 import { LoadoutManager } from '../systems/LoadoutManager'
 import { getGeometry } from '../ships/ShipGeometry'
 import { drawClassIcon, CLASS_COLORS } from '../ships/ClassIcons'
@@ -217,6 +218,11 @@ export class SelectionScene extends Phaser.Scene {
 
     this.reg(this.add.text(W / 2, cy + 116, 'PRESS ENTER TO CONFIRM', {
       fontSize: '9px', color: '#1a3322', fontFamily: 'monospace', letterSpacing: 4,
+    }).setOrigin(0.5), 1)
+
+    const { credits } = SaveManager.load()
+    this.reg(this.add.text(W / 2, cy + 144, `${credits} ⬡  AVAILABLE`, {
+      fontSize: '11px', color: '#443300', fontFamily: 'monospace',
     }).setOrigin(0.5), 1)
   }
 
