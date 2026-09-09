@@ -21,7 +21,7 @@ const GEOMETRIES: ShipGeometry[] = [
     // NEEDLE — stays narrow the entire length, tiny fins, pure dragster
     id: 'mamba',
     color: 0x00ff88,
-    scale: 0.75,
+    scale: 0.38,
     outline: [
       [0, -34], [3, -24], [4, -10],
       [10, 4], [8, 12], [5, 10],
@@ -38,7 +38,7 @@ const GEOMETRIES: ShipGeometry[] = [
     // Silhouette: isosceles triangle, instantly recognisable
     id: 'sidewinder',
     color: 0x00ffff,
-    scale: 0.75,
+    scale: 0.38,
     outline: [
       [0, -30],     // sharp nose tip
       [4, -16],     // right cockpit edge
@@ -65,7 +65,7 @@ const GEOMETRIES: ShipGeometry[] = [
     // creates a clear X silhouette at any rotation angle
     id: 'cobra',
     color: 0xaaffaa,
-    scale: 0.75,
+    scale: 0.38,
     outline: [
       [0, -22],     // nose
       [14, -14],    // right FORWARD wing tip (sweeps toward nose)
@@ -96,7 +96,7 @@ const GEOMETRIES: ShipGeometry[] = [
     // The fork reads like a tuning fork or trident — unique silhouette
     id: 'krait',
     color: 0x88aaff,
-    scale: 1.0,
+    scale: 0.5,
     outline: [
       [0, -30],     // razor nose
       [3, -20],     // right — stays very narrow (stem)
@@ -125,7 +125,7 @@ const GEOMETRIES: ShipGeometry[] = [
     // Looks like a flying tank, not a ship — maximum angularity
     id: 'chieftain',
     color: 0xff00ff,
-    scale: 1.0,
+    scale: 0.5,
     outline: [
       [0, -28],     // front centre (slight point)
       [14, -22],    // right front shoulder
@@ -150,7 +150,7 @@ const GEOMETRIES: ShipGeometry[] = [
     // Aspect ratio ~1.7:1, clearly a weapons platform not a fighter
     id: 'python',
     color: 0xff8800,
-    scale: 1.0,
+    scale: 0.5,
     outline: [
       [0, -24],     // nose
       [8, -18],     // right front
@@ -179,7 +179,7 @@ const GEOMETRIES: ShipGeometry[] = [
     // Looks like a stealth bomber / B-2 from above — W:H ≈ 3:1
     id: 'anaconda',
     color: 0xffcc00,
-    scale: 1.35,
+    scale: 0.68,
     outline: [
       [0, -12],     // tiny nose nub
       [10, -10],    // right front
@@ -208,7 +208,7 @@ const GEOMETRIES: ShipGeometry[] = [
     // More points create smooth approximation of a curve — shield-like
     id: 'cutter',
     color: 0x00ccff,
-    scale: 1.35,
+    scale: 0.68,
     outline: [
       [0, -36],     // pointed nose
       [10, -30],    // right upper
@@ -237,7 +237,7 @@ const GEOMETRIES: ShipGeometry[] = [
     // Turrets extend perpendicular from the flat faces — clearly a platform
     id: 'type_10',
     color: 0xff4444,
-    scale: 1.35,
+    scale: 0.68,
     outline: [
       [0, -36],     // front centre
       [16, -32],    // right front inner

@@ -530,7 +530,7 @@ export class SelectionScene extends Phaser.Scene {
     const geo = getGeometry(this.selectedShipId)
     if (!geo) return
 
-    const scale = 2.0
+    const scale = 4.0
     const cos   = Math.cos(this.previewAngle)
     const sin   = Math.sin(this.previewAngle)
     const rot   = (x: number, y: number) => ({
