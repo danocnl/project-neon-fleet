@@ -62,11 +62,12 @@ export class EnemyManager {
       }
     }
 
-    spawn('asteroid_xl',   5, 800)
-    spawn('asteroid_large', 4, 500)
-    spawn('scout_drone',   8, 500)
-    spawn('attack_drone',  5, 600)
-    spawn('turret',        3, 700)
+    spawn('asteroid_xl',    12, 800)
+    spawn('asteroid_large',  8, 500)
+    spawn('asteroid_medium', 6, 400)
+    spawn('scout_drone',     3, 500)
+    spawn('attack_drone',    2, 600)
+    spawn('turret',          1, 800)
   }
 
   spawnEnemy(id: string, x: number, y: number, angle: number): EnemyEntity | null {
