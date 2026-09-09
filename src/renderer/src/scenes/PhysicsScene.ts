@@ -88,6 +88,8 @@ export class PhysicsScene extends Phaser.Scene {
   private pendingUpgrades = 0
   private runCredits      = 0
   private isDead          = false
+  private godMode         = false
+  private godModeText!:   Phaser.GameObjects.Text
   private flightMode:     FlightMode = 'PATROL'
   private modeChips:      { mode: FlightMode; gfx: Phaser.GameObjects.Graphics; text: Phaser.GameObjects.Text }[] = []
   private upgradeBtnGfx!: Phaser.GameObjects.Graphics
@@ -207,6 +209,12 @@ export class PhysicsScene extends Phaser.Scene {
       tgt !== null
     )
     this.projectiles.draw()
+
+    // God mode — reset hull and shield to max every frame
+    if (this.godMode) {
+      this.combatState.currentHull   = this.combatState.maxHull
+      this.combatState.currentShield = this.combatState.maxShield
+    }
 
     // Death check
     if (!this.isDead && this.combatState.currentHull <= 0) {
@@ -650,6 +658,17 @@ export class PhysicsScene extends Phaser.Scene {
     this.updateModeChips()
 
     // Keyboard shortcuts
+    // God mode toggle — press G
+    this.godModeText = this.add.text(VIEW_W / 2, 12, '', {
+      fontSize: '11px', color: '#ffcc00', fontFamily: 'monospace', fontStyle: 'bold',
+      stroke: '#ffcc00', strokeThickness: 1,
+      shadow: { offsetX: 0, offsetY: 0, color: '#ffcc00', blur: 8, fill: true },
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(50)
+    this.input.keyboard!.on('keydown-G', () => {
+      this.godMode = !this.godMode
+      this.godModeText.setText(this.godMode ? '◈ INVULNERABLE' : '')
+    })
+
     this.input.keyboard!.on('keydown-ONE',   () => this.setFlightMode('PATROL'))
     this.input.keyboard!.on('keydown-TWO',   () => this.setFlightMode('EVASIVE'))
     this.input.keyboard!.on('keydown-THREE', () => this.setFlightMode('HUNTER'))
