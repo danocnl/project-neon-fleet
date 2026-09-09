@@ -232,8 +232,9 @@ export interface Module {
 
 // ─── Weapons ─────────────────────────────────────────────────────────────────
 
-export type WeaponSize   = 'SMALL' | 'MEDIUM' | 'LARGE' | 'XL'
-export type DamageType   = 'ENERGY' | 'KINETIC' | 'EXPLOSIVE' | 'PSIONIC' | 'BIOLOGICAL' | 'CORROSIVE'
+export type WeaponSize     = 'SMALL' | 'MEDIUM' | 'LARGE' | 'XL'
+export type DamageType     = 'ENERGY' | 'KINETIC' | 'EXPLOSIVE' | 'PSIONIC' | 'BIOLOGICAL' | 'CORROSIVE'
+export type MountPosition  = 'FORWARD' | 'REAR' | 'TURRET'
 
 export interface WeaponBaseStats {
   DAMAGE: number           // damage per hit (beams: DPS)
@@ -251,6 +252,7 @@ export interface WeaponBaseStats {
   WEIGHT: number           // contributes to ship WEIGHT_CAPACITY
   CHARGE_TIME: number      // seconds to charge before firing (0 = instant)
   PROJECTILE_COUNT: number // simultaneous projectiles per shot
+  FIRING_ARC: number       // targeting cone in degrees (0–360), centred on mountPosition
 }
 
 export interface WeaponBehaviors {
@@ -278,9 +280,10 @@ export interface Weapon {
   name:          string
   size:          WeaponSize
   damageType:    DamageType
+  mountPosition: MountPosition  // FORWARD | REAR | TURRET
   description:   string
   baseStats:     WeaponBaseStats
   behaviors:     WeaponBehaviors
   statusEffects: WeaponStatusEffects
-  tags:          string[]  // upgrade categories that boost this weapon
+  tags:          string[]
 }

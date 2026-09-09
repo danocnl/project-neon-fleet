@@ -1250,6 +1250,16 @@
     ]
   },
 
+  { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "FIRING_ARC",
+    "description": "The targeting cone a weapon can fire within, in degrees, centred on its mount position. FORWARD weapons fire within a cone off the ship nose. TURRET weapons rotate freely.",
+    "mechanic": "Each tag adds +30° to all weapon firing arcs. Hard cap 360°. Narrow-arc weapons (Railgun 15°, Gauss 10°) benefit most — every tag meaningfully widens their engagement window.",
+    "interactions": [
+      { "tag": "TURRET_ARRAY", "effect": "TURRET_ARRAY (Type-10 special) converts all weapons to 360° regardless of FIRING_ARC count — the tag becomes a damage/range booster instead." },
+      { "tag": "FRONTAL_ARC", "effect": "FRONTAL_ARC widens logic trigger zones (for abilities); FIRING_ARC widens weapon targeting cones. Both benefit angular builds but affect different systems." },
+      { "tag": "ACCURACY", "effect": "High ACCURACY paired with narrow FIRING_ARC defines precision sniper builds — the Gauss Cannon fires rarely but lands every shot when the automation holds heading." }
+    ]
+  },
+
   { "category": "WEAPON", "subCategory": "BEHAVIOR", "tag": "BEAM",
     "description": "Weapon fires a continuous beam rather than discrete projectiles. Interacts with MIRROR, PRISM, and REFLECTION. Cannot ricochet off surfaces.",
     "mechanic": "Each tag increases continuous beam DPS by +10% and extends effective beam length by +8%.",

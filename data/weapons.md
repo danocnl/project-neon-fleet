@@ -12,6 +12,10 @@
 - `PASSIVE_HEAT` — heat/s generated while weapon is running, regardless of firing.
 - `WEIGHT` — contributes to ship WEIGHT_CAPACITY. Exceeding capacity penalises mobility.
 - `CHARGE_TIME` — seconds between trigger and shot. Automation loop must account for this.
+- `FIRING_ARC` — targeting cone in degrees centred on mount position. Weapons only engage targets within this arc. Upgradeable via `FIRING_ARC` draft tag (+30° per stack, cap 360°).
+- `MOUNT_POSITION` — `FORWARD` (arc off nose) · `TURRET` (rotates freely, 360°) · `REAR` (arc off tail)
+
+**TURRET_ARRAY** (Type-10 special tag) converts ALL equipped weapons to 360° targeting regardless of their natural FIRING_ARC. A Railgun or Gauss Cannon on a Type-10 becomes a full-rotation precision weapon.
 
 **Size → slot required:** SMALL fits WEAPON_SLOT_SMALL+. MEDIUM fits WEAPON_SLOT_MEDIUM+. Etc.
 
@@ -312,19 +316,19 @@ Benefits from: `KINETIC`, `PULSE`, `PULSE_RADIUS`, `AURA_RADIUS`, `GLOBAL_RADIUS
 
 ## Quick Reference
 
-| Weapon | Size | Type | DMG | ROF | Weight | Special |
-|---|---|---|---|---|---|---|
-| Light Chaingun | SMALL | KINETIC | 8/shot | 8.0/s | 12 | — |
-| Chaingun | MEDIUM | KINETIC | 18/shot | 6.0/s | 28 | — |
-| Heavy Chaingun | LARGE | KINETIC | 38/shot | 4.0/s | 65 | — |
-| Rotary Cannon | XL | KINETIC | 28/shot | 12.0/s | 140 | PASSIVE |
-| Pulse Laser | SMALL | ENERGY | 10/pulse | 6.0/s | 15 | BEAM |
-| Beam Laser | MEDIUM | ENERGY | 55 DPS | continuous | 35 | BEAM · PASSIVE |
-| Heavy Beam | LARGE | ENERGY | 130 DPS | continuous | 75 | BEAM · HIGH PASSIVE |
-| Railgun | MEDIUM | KINETIC | 130/shot | 0.5/s | 44 | PIERCE×2 · CHARGE 1.5s |
-| Gauss Cannon | LARGE | KINETIC | 300/shot | 0.25/s | 90 | PIERCE×3 · CHARGE 2.5s |
-| Micro Missile | SMALL | EXPLOSIVE | 40/shot | 1.5/s | 20 | BLAST 40u |
-| Torpedo | MEDIUM | EXPLOSIVE | 160/shot | 0.35/s | 42 | BLAST 100u |
-| EMP Cannon | MEDIUM | ENERGY | 30/shot | 1.0/s | 35 | EMP 1.5s |
-| Arc Cannon | MEDIUM | ENERGY | 42/shot | 1.2/s | 38 | CHAIN×2 |
-| Shockwave Emitter | MEDIUM | KINETIC | 45/pulse | 0.33/s | 40 | PULSE 180u |
+| Weapon | Size | Type | DMG | ROF | Arc | Mount | Weight | Special |
+|---|---|---|---|---|---|---|---|---|
+| Light Chaingun | SMALL | KINETIC | 8/shot | 8.0/s | 90° | FORWARD | 12 | — |
+| Chaingun | MEDIUM | KINETIC | 18/shot | 6.0/s | 90° | FORWARD | 28 | — |
+| Heavy Chaingun | LARGE | KINETIC | 38/shot | 4.0/s | 60° | FORWARD | 65 | — |
+| Rotary Cannon | XL | KINETIC | 28/shot | 12.0/s | 360° | TURRET | 140 | PASSIVE |
+| Pulse Laser | SMALL | ENERGY | 10/pulse | 6.0/s | 90° | FORWARD | 15 | BEAM |
+| Beam Laser | MEDIUM | ENERGY | 55 DPS | continuous | 45° | FORWARD | 35 | BEAM · PASSIVE |
+| Heavy Beam | LARGE | ENERGY | 130 DPS | continuous | 30° | FORWARD | 75 | BEAM · HIGH PASSIVE |
+| Railgun | MEDIUM | KINETIC | 130/shot | 0.5/s | 15° | FORWARD | 44 | PIERCE×2 · CHARGE 1.5s |
+| Gauss Cannon | LARGE | KINETIC | 300/shot | 0.25/s | 10° | FORWARD | 90 | PIERCE×3 · CHARGE 2.5s |
+| Micro Missile | SMALL | EXPLOSIVE | 40/shot | 1.5/s | 180° | FORWARD | 20 | BLAST 40u |
+| Torpedo | MEDIUM | EXPLOSIVE | 160/shot | 0.35/s | 120° | FORWARD | 42 | BLAST 100u |
+| EMP Cannon | MEDIUM | ENERGY | 30/shot | 1.0/s | 120° | FORWARD | 35 | EMP 1.5s |
+| Arc Cannon | MEDIUM | ENERGY | 42/shot | 1.2/s | 90° | FORWARD | 38 | CHAIN×2 |
+| Shockwave Emitter | MEDIUM | KINETIC | 45/pulse | — | 360° | TURRET | 40 | PULSE 180u |
