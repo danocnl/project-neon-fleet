@@ -179,6 +179,8 @@ export class EnemyManager {
     body: PhysicsBody,
     onDamage: (d: number) => void
   ): void {
+    const playerSpeed = Math.hypot(body.vx, body.vy)
+
     for (const e of this.entities) {
       if (!e.alive) continue
       const dx = px - e.x, dy = py - e.y
@@ -186,22 +188,27 @@ export class EnemyManager {
       const minDist = playerRadius + e.def.stats.COLLISION_RADIUS
       if (dist >= minDist || dist < 0.5) continue
 
-      // Normalised direction from enemy to player
       const nx = dx / dist, ny = dy / dist
 
-      // Damage proportional to enemy max hull
-      const damage = e.def.stats.HULL * 0.08
+      // Damage scales with player speed × object size
+      // At full Mamba speed (~150 u/s) hitting an XL asteroid = ~225 damage (lethal)
+      const sizeNorm = e.def.stats.COLLISION_RADIUS / 80  // 1.0 = XL asteroid
+      const damage   = Math.max(5, playerSpeed * sizeNorm * 1.5)
       onDamage(damage)
 
-      // Impulse — heavier asteroids push harder
-      const impulse = 35 + e.def.stats.COLLISION_RADIUS * 0.6
-      body.vx += nx * impulse
-      body.vy += ny * impulse
+      // Physics bounce — reflect velocity component along collision normal
+      const dot = body.vx * nx + body.vy * ny
+      body.vx -= dot * nx * 1.4   // partial velocity reflection
+      body.vy -= dot * ny * 1.4
+      // Additional push-away impulse proportional to object size
+      const bounce = e.def.stats.COLLISION_RADIUS * 0.7
+      body.vx += nx * bounce
+      body.vy += ny * bounce
 
-      // Push moving enemies back too (not turrets)
+      // Moving enemies pushed back
       if (e.def.behavior !== 'STATIC') {
-        e.vx -= nx * impulse * 0.4
-        e.vy -= ny * impulse * 0.4
+        e.vx -= nx * bounce * 0.3
+        e.vy -= ny * bounce * 0.3
       }
     }
   }

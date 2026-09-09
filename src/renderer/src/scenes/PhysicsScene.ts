@@ -143,7 +143,8 @@ export class PhysicsScene extends Phaser.Scene {
     }
 
     const { fx, fy } = chase(this.actor.body, this.actor.waypoint.x, this.actor.waypoint.y)
-    stepPhysics(this.actor.body, fx, fy, dt)
+    const avoid = this.asteroidAvoidanceForce()
+    stepPhysics(this.actor.body, fx + avoid.x, fy + avoid.y, dt)
     wrapBounds(this.actor.body, WORLD_W, WORLD_H)
 
     // Camera follows ship
@@ -691,6 +692,34 @@ export class PhysicsScene extends Phaser.Scene {
       `${e.type.replace('_', ' ')} ${(e.remainingMs / 1000).toFixed(1)}s`
     )
     this.effectText.setText(effects.join('  '))
+  }
+
+  // Steering force that pushes the ship away from nearby asteroids.
+  // Applied every frame on top of the waypoint-chase force so the ship
+  // naturally flows around obstacles. EVASIVE gets a much wider range and
+  // stronger push; all other modes get a baseline avoidance.
+  private asteroidAvoidanceForce(): { x: number; y: number } {
+    const isEvasive  = this.flightMode === 'EVASIVE'
+    const avoidRange = isEvasive ? 400 : 220    // detection radius (u)
+    const strength   = isEvasive ? 5.0 : 1.8    // force multiplier
+
+    let fx = 0, fy = 0
+    const bx = this.actor.body.x, by = this.actor.body.y
+    const accel = this.actor.body.accel
+
+    for (const e of this.enemies.getEntities()) {
+      if (!e.def.id.startsWith('asteroid') || !e.alive) continue
+      const dx = bx - e.x, dy = by - e.y
+      const dist = Math.hypot(dx, dy)
+      if (dist >= avoidRange || dist < 0.5) continue
+
+      // Repulsion falls off with distance
+      const t = 1 - dist / avoidRange   // 1 when adjacent, 0 at avoidRange
+      const push = t * t * accel * strength
+      fx += (dx / dist) * push
+      fy += (dy / dist) * push
+    }
+    return { x: fx, y: fy }
   }
 
   private setFlightMode(mode: FlightMode): void {
