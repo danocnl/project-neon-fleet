@@ -240,58 +240,44 @@ export class SelectionScene extends Phaser.Scene {
   // ─────────────────────────────────────────────────────────────────────────
 
   private buildStep2(): void {
-    const ITEM_H = 120
+    const ITEM_H  = 36
+    const ITEM_STRIDE = 40
     const baseClasses = DataLoader.getAllClasses().filter(c => c.isBase)
 
     this.reg(this.add.text(14, HDR_H + 8, '02 · SPECIALIZATION', {
       fontSize: '9px', color: '#224433', fontFamily: 'monospace', letterSpacing: 4,
     }), 2)
 
-    this.reg(this.add.text(14, HDR_H + 22, 'CHOOSE YOUR BASE CLASS — SPECIALISE LATER', {
-      fontSize: '8px', color: '#1a2a1a', fontFamily: 'monospace', letterSpacing: 2,
-    }), 2)
-
-    baseClasses.forEach((cls, i) => {
-      const y = HDR_H + 40 + i * (ITEM_H + 10)
+    let y = HDR_H + 32
+    baseClasses.forEach(cls => {
       const color = CLASS_COLORS[cls.id] ?? ACCENT
 
       const bg = this.reg(this.add.graphics(), 2) as Phaser.GameObjects.Graphics
       this.classItemBgs.set(cls.id, bg)
 
-      // Icon
+      // Small icon
       const iconGfx = this.reg(this.add.graphics(), 2) as Phaser.GameObjects.Graphics
-      drawClassIcon(iconGfx, cls.id, 30, y + ITEM_H / 2, color, 30)
+      drawClassIcon(iconGfx, cls.id, 22, y + ITEM_H / 2, color, 22)
 
-      // Name + role
-      const nameT = this.reg(this.add.text(68, y + 14, cls.name.toUpperCase(), {
-        fontSize: '14px', color: `#${color.toString(16).padStart(6, '0')}`,
+      // Name
+      const nameT = this.reg(this.add.text(46, y + 5, cls.name, {
+        fontSize: '13px', color: `#${color.toString(16).padStart(6, '0')}`,
         fontFamily: 'monospace', fontStyle: 'bold',
       }), 2) as Phaser.GameObjects.Text
       this.classItemTexts.set(cls.id, nameT)
 
-      this.reg(this.add.text(68, y + 33, cls.roleCategory, {
-        fontSize: '10px', color: '#335566', fontFamily: 'monospace',
-      }), 2)
-
-      // Subclass hint
-      const subNames = (cls.subclasses ?? [])
-        .map(id => DataLoader.getClass(id)?.name ?? id)
-        .join('  ·  ')
-      this.reg(this.add.text(68, y + 52, `→ ${subNames}`, {
-        fontSize: '9px', color: '#1a3322', fontFamily: 'monospace',
-      }), 2)
-
-      // Description snippet
-      this.reg(this.add.text(68, y + 70, cls.description, {
-        fontSize: '9px', color: '#334444', fontFamily: 'monospace',
-        wordWrap: { width: L - 80 },
+      // Role
+      this.reg(this.add.text(46, y + 22, cls.roleCategory, {
+        fontSize: '9px', color: '#335566', fontFamily: 'monospace',
       }), 2)
 
       const zone = this.add.zone(0, y, L, ITEM_H).setOrigin(0, 0).setInteractive()
       this.reg(zone, 2); this.regZ(zone, 2)
-      zone.on('pointerover', () => { if (this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, true, ITEM_H) })
-      zone.on('pointerout',  () => { if (this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, false, ITEM_H) })
+      zone.on('pointerover', () => { if (this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, true) })
+      zone.on('pointerout',  () => { if (this.selectedClassId !== cls.id) this.hoverClassItem(cls.id, false) })
       zone.on('pointerdown', () => this.selectClass(cls.id))
+
+      y += ITEM_STRIDE
     })
 
     // Right panel — class detail
@@ -345,22 +331,23 @@ export class SelectionScene extends Phaser.Scene {
     this.reg(next2.gfx, 2); this.reg(next2.text, 2); this.regZ(next2.zone, 2)
   }
 
-  private hoverClassItem(id: string, hover: boolean, itemH: number): void {
+  private hoverClassItem(id: string, hover: boolean): void {
+    const ITEM_H = 36, ITEM_STRIDE = 40
     const baseClasses = DataLoader.getAllClasses().filter(c => c.isBase)
     const i = baseClasses.findIndex(c => c.id === id)
-    const y = HDR_H + 40 + i * (itemH + 10)
+    const y = HDR_H + 32 + i * ITEM_STRIDE
     const color = CLASS_COLORS[id] ?? ACCENT
     const bg = this.classItemBgs.get(id)!
     bg.clear()
     if (hover) {
-      bg.fillStyle(color, 0.06); bg.fillRect(0, y, L, itemH)
-      bg.lineStyle(1, color, 0.25); bg.strokeRect(0, y, L, itemH)
+      bg.fillStyle(color, 0.06); bg.fillRect(0, y, L, ITEM_H)
+      bg.lineStyle(1, color, 0.25); bg.strokeRect(0, y, L, ITEM_H)
     }
   }
 
   private selectClass(id: string): void {
-    const ITEM_H = 120
-    this.hoverClassItem(this.selectedClassId, false, ITEM_H)
+    const ITEM_H = 36, ITEM_STRIDE = 40
+    this.hoverClassItem(this.selectedClassId, false)
     this.classItemTexts.get(this.selectedClassId)?.setAlpha(0.4)
     this.selectedClassId = id
 
@@ -370,7 +357,7 @@ export class SelectionScene extends Phaser.Scene {
 
     const baseClasses = DataLoader.getAllClasses().filter(c => c.isBase)
     const i = baseClasses.findIndex(c => c.id === id)
-    const y = HDR_H + 40 + i * (ITEM_H + 10)
+    const y = HDR_H + 32 + i * ITEM_STRIDE
 
     const bg = this.classItemBgs.get(id)!
     bg.clear()
