@@ -166,20 +166,50 @@ export class BenchmarkScene extends Phaser.Scene {
       fontSize: '11px', color: '#334433', fontFamily: 'monospace',
     }).setOrigin(0.5)
 
-    const doRelaunch = () => this.scene.start('SelectionScene')
+    let launched = false
+    const doRelaunch = () => {
+      if (launched) return
+      launched = true
+      cleanup()
+      this.scene.start('SelectionScene')
+    }
 
-    // Scene-level pointer detection — bypasses game-object input issues
-    this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
-      drawBtn(p.x >= BX && p.x <= BX + BW && p.y >= BY && p.y <= BY + BH)
-    })
-    this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
-      if (p.x >= BX && p.x <= BX + BW && p.y >= BY && p.y <= BY + BH) doRelaunch()
-    })
+    // Raw DOM click — bypasses all Phaser input/scaling issues
+    const canvas = this.sys.canvas
+    const clickHandler = (e: MouseEvent) => {
+      const rect   = canvas.getBoundingClientRect()
+      const scaleX = W / rect.width
+      const scaleY = H / rect.height
+      const gx     = (e.clientX - rect.left) * scaleX
+      const gy     = (e.clientY - rect.top)  * scaleY
+      drawBtn(gx >= BX && gx <= BX + BW && gy >= BY && gy <= BY + BH)
+      if (gx >= BX && gx <= BX + BW && gy >= BY && gy <= BY + BH) doRelaunch()
+    }
+    const moveHandler = (e: MouseEvent) => {
+      const rect   = canvas.getBoundingClientRect()
+      const scaleX = W / rect.width
+      const scaleY = H / rect.height
+      const gx     = (e.clientX - rect.left) * scaleX
+      const gy     = (e.clientY - rect.top)  * scaleY
+      drawBtn(gx >= BX && gx <= BX + BW && gy >= BY && gy <= BY + BH)
+    }
 
-    // Keyboard shortcut so the player always has a way out
-    this.input.keyboard!.once('keydown-ENTER', doRelaunch)
-    this.input.keyboard!.once('keydown-SPACE', doRelaunch)
-    this.input.keyboard!.once('keydown-R',     doRelaunch)
+    const keyHandler = (e: KeyboardEvent) => {
+      if (['Enter', ' ', 'r', 'R'].includes(e.key)) doRelaunch()
+    }
+
+    const cleanup = () => {
+      canvas.removeEventListener('click',     clickHandler)
+      canvas.removeEventListener('mousemove', moveHandler)
+      window.removeEventListener('keydown',   keyHandler)
+    }
+
+    canvas.addEventListener('click',     clickHandler)
+    canvas.addEventListener('mousemove', moveHandler)
+    window.addEventListener('keydown',   keyHandler)
+
+    // Clean up if this scene is destroyed before the player clicks
+    this.events.once('destroy', cleanup)
 
     this.add.text(W / 2, 618, 'Credits carry over between runs. Spend them in the Armory for permanent weapons and modules.', {
       fontSize: '9px', color: '#1a3322', fontFamily: 'monospace',
