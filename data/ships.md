@@ -11,7 +11,9 @@
 - **WEAPON_SLOT_*** — hardpoints for offensive weapons (cannons, torpedoes, beam arrays, turrets)
 - **DRONE_BAYS** — dedicated construct launch bays, do not consume module or weapon slots (Krait only)
 
-**Stat units:** HULL/SHIELD in points · ARMOR in % reduction · speeds in units/s or °/s · SHIELD_DELAY in seconds (lower = faster regen) · HEAT_DISSIPATION in heat/s · REPAIR_RATE in HP/s
+**Weight system:** Total equipment weight is summed across all equipped weapons and modules. If it exceeds `WEIGHT_CAPACITY`, TOP_SPEED, ACCELERATION, and TURN_SPEED are penalised using the curve `penalty = 1 / (1 + overfill²)` where `overfill = (weight - capacity) / capacity`. Under capacity = no penalty.
+
+**Stat units:** HULL/SHIELD in points · ARMOR in % reduction · speeds in units/s or °/s · SHIELD_DELAY in seconds (lower = faster regen) · HEAT_DISSIPATION in heat/s · ENERGY_REGEN in energy/s · REPAIR_RATE in HP/s
 
 **Synergy ratings:** S = exceptional · A = good · B = workable · C = poor
 
@@ -34,14 +36,20 @@
 | TURN_SPEED | 340 °/s |
 | EVASION | 15% |
 | MASS | 1 |
-| SLOT_SMALL | 3 |
-| SLOT_MEDIUM | 1 |
-| SLOT_LARGE | 0 |
-| SLOT_XL | 0 |
+| MODULE_SLOT_SMALL | 3 |
+| MODULE_SLOT_MEDIUM | 1 |
+| MODULE_SLOT_LARGE | 0 |
+| MODULE_SLOT_XL | 0 |
+| WEAPON_SLOT_SMALL | 2 |
+| WEAPON_SLOT_MEDIUM | 0 |
+| WEAPON_SLOT_LARGE | 0 |
 | CARGO_CAPACITY | 60 |
 | HEAT_DISSIPATION | 28 h/s |
+| HEAT_CAPACITY | 100 |
 | ENERGY_GRID | 120 |
+| ENERGY_REGEN | 35 /s |
 | REPAIR_RATE | 8 HP/s |
+| WEIGHT_CAPACITY | 60 |
 
 **Hardware Tags:** EVASION×2 · TOP_SPEED×2 · TURN_SPEED×2
 
@@ -90,16 +98,22 @@ SHIELD_DELAY 2
 | TURN_SPEED | 260 °/s |
 | EVASION | 8% |
 | MASS | 2 |
-| SLOT_SMALL | 2 |
-| SLOT_MEDIUM | 2 |
-| SLOT_LARGE | 1 |
-| SLOT_XL | 0 |
+| MODULE_SLOT_SMALL | 2 |
+| MODULE_SLOT_MEDIUM | 2 |
+| MODULE_SLOT_LARGE | 1 |
+| MODULE_SLOT_XL | 0 |
+| WEAPON_SLOT_SMALL | 2 |
+| WEAPON_SLOT_MEDIUM | 1 |
+| WEAPON_SLOT_LARGE | 0 |
 | CARGO_CAPACITY | 90 |
 | HEAT_DISSIPATION | 24 h/s |
+| HEAT_CAPACITY | 100 |
 | ENERGY_GRID | 180 |
+| ENERGY_REGEN | 40 /s |
 | REPAIR_RATE | 14 HP/s |
+| WEIGHT_CAPACITY | 85 |
 
-**Hardware Tags:** SHIELD_MAX×2 · TOP_SPEED×1 · SLOT_MEDIUM×1
+**Hardware Tags:** SHIELD_MAX×2 · TOP_SPEED×1 · MODULE_SLOT_MEDIUM×1
 
 **Tag Weighting:**
 ```
@@ -146,14 +160,20 @@ EVASION      2
 | TURN_SPEED | 130 °/s |
 | EVASION | 6% |
 | MASS | 2 |
-| SLOT_SMALL | 2 |
-| SLOT_MEDIUM | 2 |
-| SLOT_LARGE | 1 |
-| SLOT_XL | 0 |
+| MODULE_SLOT_SMALL | 2 |
+| MODULE_SLOT_MEDIUM | 2 |
+| MODULE_SLOT_LARGE | 1 |
+| MODULE_SLOT_XL | 0 |
+| WEAPON_SLOT_SMALL | 2 |
+| WEAPON_SLOT_MEDIUM | 0 |
+| WEAPON_SLOT_LARGE | 0 |
 | CARGO_CAPACITY | 60 |
 | HEAT_DISSIPATION | 55 h/s |
+| HEAT_CAPACITY | 100 |
 | ENERGY_GRID | 260 |
+| ENERGY_REGEN | 45 /s |
 | REPAIR_RATE | 6 HP/s |
+| WEIGHT_CAPACITY | 55 |
 
 **Hardware Tags:** HEAT_DISSIPATION×3 · TOP_SPEED×2 · RESOURCE_FEED×1
 
@@ -204,15 +224,21 @@ ON_OVERHEAT      2
 | TURN_SPEED | 170 °/s |
 | EVASION | 3% |
 | MASS | 5 |
-| SLOT_SMALL | 2 |
-| SLOT_MEDIUM | 2 |
-| SLOT_LARGE | 1 |
-| SLOT_XL | 0 |
+| MODULE_SLOT_SMALL | 2 |
+| MODULE_SLOT_MEDIUM | 2 |
+| MODULE_SLOT_LARGE | 1 |
+| MODULE_SLOT_XL | 0 |
+| WEAPON_SLOT_SMALL | 2 |
+| WEAPON_SLOT_MEDIUM | 1 |
+| WEAPON_SLOT_LARGE | 0 |
 | **DRONE_BAYS** | **2** |
 | CARGO_CAPACITY | 110 |
 | HEAT_DISSIPATION | 22 h/s |
+| HEAT_CAPACITY | 100 |
 | ENERGY_GRID | 200 |
+| ENERGY_REGEN | 55 /s |
 | REPAIR_RATE | 18 HP/s |
+| WEIGHT_CAPACITY | 145 |
 
 **Hardware Tags:** DRONE_COUNT×3 · DRONE_SPEED×1
 
@@ -228,7 +254,7 @@ NANITE           2
 TARGETING_BEACON 2
 ```
 
-**Special Tags:** `DRONE_COMMAND` — dedicated drone hardpoints that do not consume standard weapon slots
+**Special Tags:** `DRONE_COMMAND` — dedicated drone hardpoints that do not consume weapon or module slots
 
 **Class Synergies**
 
@@ -261,14 +287,20 @@ TARGETING_BEACON 2
 | TURN_SPEED | 200 °/s |
 | EVASION | 4% |
 | MASS | 7 |
-| SLOT_SMALL | 2 |
-| SLOT_MEDIUM | 3 |
-| SLOT_LARGE | 1 |
-| SLOT_XL | 0 |
+| MODULE_SLOT_SMALL | 2 |
+| MODULE_SLOT_MEDIUM | 3 |
+| MODULE_SLOT_LARGE | 1 |
+| MODULE_SLOT_XL | 0 |
+| WEAPON_SLOT_SMALL | 3 |
+| WEAPON_SLOT_MEDIUM | 1 |
+| WEAPON_SLOT_LARGE | 0 |
 | CARGO_CAPACITY | 100 |
 | HEAT_DISSIPATION | 20 h/s |
+| HEAT_CAPACITY | 100 |
 | ENERGY_GRID | 160 |
+| ENERGY_REGEN | 50 /s |
 | REPAIR_RATE | 22 HP/s |
+| WEIGHT_CAPACITY | 165 |
 
 **Hardware Tags:** ARMOR×2 · IMPACT×2 · MASS×1
 
@@ -303,7 +335,7 @@ CORROSIVE   2
 ---
 
 ### Python — The Heavy Gunship
-*Role: Maximum firepower platform. More hardpoints than any other ship. Slow but devastating.*
+*Role: Maximum firepower platform. More weapon hardpoints than any other ship. Slow but devastating.*
 
 | Stat | Value |
 |---|---|
@@ -317,27 +349,33 @@ CORROSIVE   2
 | TURN_SPEED | 110 °/s |
 | EVASION | 2% |
 | MASS | 7 |
-| SLOT_SMALL | 3 |
-| SLOT_MEDIUM | 3 |
-| SLOT_LARGE | 3 |
-| SLOT_XL | 1 |
+| MODULE_SLOT_SMALL | 3 |
+| MODULE_SLOT_MEDIUM | 3 |
+| MODULE_SLOT_LARGE | 3 |
+| MODULE_SLOT_XL | 1 |
+| WEAPON_SLOT_SMALL | 4 |
+| WEAPON_SLOT_MEDIUM | 2 |
+| WEAPON_SLOT_LARGE | 1 |
 | CARGO_CAPACITY | 130 |
 | HEAT_DISSIPATION | 16 h/s |
+| HEAT_CAPACITY | 100 |
 | ENERGY_GRID | 160 |
+| ENERGY_REGEN | 60 /s |
 | REPAIR_RATE | 15 HP/s |
+| WEIGHT_CAPACITY | 200 |
 
-**Hardware Tags:** SLOT_LARGE×2 · SHIELD_MAX×1 · RATE_OF_FIRE×1
+**Hardware Tags:** MODULE_SLOT_LARGE×2 · SHIELD_MAX×1 · RATE_OF_FIRE×1
 
 **Tag Weighting:**
 ```
-SLOT_LARGE    5  (core)
-SLOT_MEDIUM   4
-SHIELD_MAX    4
-RATE_OF_FIRE  4
-ENERGY_GRID   3
-AMMO_CAPACITY 3
-PIERCE        2
-TETHER        2
+MODULE_SLOT_LARGE  5  (core)
+MODULE_SLOT_MEDIUM 4
+SHIELD_MAX         4
+RATE_OF_FIRE       4
+ENERGY_GRID        3
+AMMO_CAPACITY      3
+PIERCE             2
+TETHER             2
 ```
 
 **Special Tags:** `WEAPONS_PLATFORM` — bonus damage when 3+ weapons fire simultaneously in the same tick
@@ -375,14 +413,20 @@ TETHER        2
 | TURN_SPEED | 60 °/s |
 | EVASION | 1% |
 | MASS | 9 |
-| SLOT_SMALL | 2 |
-| SLOT_MEDIUM | 3 |
-| SLOT_LARGE | 2 |
-| SLOT_XL | 1 |
+| MODULE_SLOT_SMALL | 2 |
+| MODULE_SLOT_MEDIUM | 3 |
+| MODULE_SLOT_LARGE | 2 |
+| MODULE_SLOT_XL | 1 |
+| WEAPON_SLOT_SMALL | 2 |
+| WEAPON_SLOT_MEDIUM | 2 |
+| WEAPON_SLOT_LARGE | 1 |
 | CARGO_CAPACITY | 180 |
 | HEAT_DISSIPATION | 26 h/s |
+| HEAT_CAPACITY | 100 |
 | ENERGY_GRID | 280 |
+| ENERGY_REGEN | 70 /s |
 | REPAIR_RATE | 30 HP/s |
+| WEIGHT_CAPACITY | 285 |
 
 **Hardware Tags:** HULL×2 · SHIELD_MAX×2 · RANGE×1
 
@@ -431,26 +475,32 @@ BROADCAST    2
 | TURN_SPEED | 70 °/s |
 | EVASION | 1% |
 | MASS | 12 |
-| SLOT_SMALL | 2 |
-| SLOT_MEDIUM | 3 |
-| SLOT_LARGE | 2 |
-| SLOT_XL | 1 |
+| MODULE_SLOT_SMALL | 2 |
+| MODULE_SLOT_MEDIUM | 3 |
+| MODULE_SLOT_LARGE | 2 |
+| MODULE_SLOT_XL | 1 |
+| WEAPON_SLOT_SMALL | 2 |
+| WEAPON_SLOT_MEDIUM | 2 |
+| WEAPON_SLOT_LARGE | 1 |
 | CARGO_CAPACITY | 140 |
 | HEAT_DISSIPATION | 20 h/s |
+| HEAT_CAPACITY | 100 |
 | ENERGY_GRID | 300 |
+| ENERGY_REGEN | 75 /s |
 | REPAIR_RATE | 22 HP/s |
+| WEIGHT_CAPACITY | 310 |
 
 **Hardware Tags:** SHIELD_MAX×3 · MASS×2 · IMPACT×1
 
 **Tag Weighting:**
 ```
-SHIELD_MAX   5  (core)
-SHIELD_REGEN 5  (core)
-MASS         4
-IMPACT       3
-ENERGY_GRID  3
-HULL         3
-VOLTAGE      2
+SHIELD_MAX      5  (core)
+SHIELD_REGEN    5  (core)
+MASS            4
+IMPACT          3
+ENERGY_GRID     3
+HULL            3
+VOLTAGE         2
 INVULNERABILITY 2
 ```
 
@@ -473,7 +523,7 @@ INVULNERABILITY 2
 ---
 
 ### Type-10 — The Heavy Ordnance Array
-*Role: Immovable fortress. Maximum armor and hull. 360° turret coverage. Completely status immune.*
+*Role: Immovable fortress. Maximum armor and hull. 360° turret coverage. Completely status immune. Only ship with XL weapon slot.*
 
 | Stat | Value |
 |---|---|
@@ -487,27 +537,34 @@ INVULNERABILITY 2
 | TURN_SPEED | 45 °/s |
 | EVASION | 0% |
 | MASS | 12 |
-| SLOT_SMALL | 2 |
-| SLOT_MEDIUM | 2 |
-| SLOT_LARGE | 3 |
-| SLOT_XL | 2 |
+| MODULE_SLOT_SMALL | 2 |
+| MODULE_SLOT_MEDIUM | 2 |
+| MODULE_SLOT_LARGE | 3 |
+| MODULE_SLOT_XL | 2 |
+| WEAPON_SLOT_SMALL | 2 |
+| WEAPON_SLOT_MEDIUM | 2 |
+| WEAPON_SLOT_LARGE | 2 |
+| WEAPON_SLOT_XL | 1 |
 | CARGO_CAPACITY | 160 |
 | HEAT_DISSIPATION | 24 h/s |
+| HEAT_CAPACITY | 100 |
 | ENERGY_GRID | 320 |
+| ENERGY_REGEN | 80 /s |
 | REPAIR_RATE | 35 HP/s |
+| WEIGHT_CAPACITY | 370 |
 
 **Hardware Tags:** ARMOR×3 · HULL×2 · STATUS_IMMUNITY×1
 
 **Tag Weighting:**
 ```
-ARMOR       5  (core)
-HULL        5  (core)
-SLOT_LARGE  4
-SLOT_XL     4
-ENERGY_GRID 3
-REPAIR_RATE 3
-GRAVITY     2
-SALVAGE     2
+ARMOR              5  (core)
+HULL               5  (core)
+MODULE_SLOT_LARGE  4
+MODULE_SLOT_XL     4
+ENERGY_GRID        3
+REPAIR_RATE        3
+GRAVITY            2
+SALVAGE            2
 ```
 
 **Special Tags:** `STATUS_IMMUNE` — immune to FREEZE, BURN, and EMP debuffs · `TURRET_ARRAY` — all equipped weapons gain 360° targeting arc
@@ -530,14 +587,14 @@ SALVAGE     2
 
 ## Quick Comparison
 
-| Ship | Class | HULL | ARMOR | SHIELD | SPEED | EVASION | Module Slots (S/M/L/XL) | Weapon Slots (S/M/L/XL) |
-|---|---|---|---|---|---|---|---|---|
-| Sidewinder | Light | 900 | 3% | 800 | 580 | 15% | 3/1/0/0 | 2/0/0/— |
-| Cobra | Light | 1,200 | 6% | 1,100 | 490 | 8% | 2/2/1/0 | 2/1/0/— |
-| Mamba | Light | 850 | 3% | 600 | 620 | 6% | 2/2/1/0 | 2/0/0/— |
-| Krait | Medium | 2,500 | 12% | 1,400 | 380 | 3% | 2/2/1/0 + 2 drone bays | 2/1/0/— |
-| Chieftain | Medium | 3,500 | 22% | 700 | 350 | 4% | 2/3/1/0 | 3/1/0/— |
-| Python | Medium | 3,200 | 15% | 2,200 | 280 | 2% | 3/3/3/1 | 4/2/1/— |
-| Anaconda | Heavy | 7,500 | 22% | 4,000 | 200 | 1% | 2/3/2/1 | 2/2/1/— |
-| Cutter | Heavy | 6,000 | 18% | 5,500 | 250 | 1% | 2/3/2/1 | 2/2/1/— |
-| Type-10 | Heavy | 10,000 | 32% | 1,800 | 150 | 0% | 2/2/3/2 | 2/2/2/1 |
+| Ship | Class | HULL | ARMOR | SHIELD | SPEED | EVASION | Module Slots (S/M/L/XL) | Weapon Slots (S/M/L/XL) | Weight Cap | Energy Regen |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Sidewinder | Light | 900 | 3% | 800 | 580 | 15% | 3/1/0/0 | 2/0/0/— | 60 | 35/s |
+| Cobra | Light | 1,200 | 6% | 1,100 | 490 | 8% | 2/2/1/0 | 2/1/0/— | 85 | 40/s |
+| Mamba | Light | 850 | 3% | 600 | 620 | 6% | 2/2/1/0 | 2/0/0/— | 55 | 45/s |
+| Krait | Medium | 2,500 | 12% | 1,400 | 380 | 3% | 2/2/1/0 + 2 drone bays | 2/1/0/— | 145 | 55/s |
+| Chieftain | Medium | 3,500 | 22% | 700 | 350 | 4% | 2/3/1/0 | 3/1/0/— | 165 | 50/s |
+| Python | Medium | 3,200 | 15% | 2,200 | 280 | 2% | 3/3/3/1 | 4/2/1/— | 200 | 60/s |
+| Anaconda | Heavy | 7,500 | 22% | 4,000 | 200 | 1% | 2/3/2/1 | 2/2/1/— | 285 | 70/s |
+| Cutter | Heavy | 6,000 | 18% | 5,500 | 250 | 1% | 2/3/2/1 | 2/2/1/— | 310 | 75/s |
+| Type-10 | Heavy | 10,000 | 32% | 1,800 | 150 | 0% | 2/2/3/2 | 2/2/2/1 | 370 | 80/s |
