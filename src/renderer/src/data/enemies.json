@@ -7,8 +7,8 @@
     "behavior": "DRIFT",
     "description": "A massive rock drifting through the sector. No shields, no targeting, no weapon \u2014 but absorbs enormous punishment before fracturing. Breaking one releases two large asteroids.",
     "stats": {
-      "HULL": 800,
-      "ARMOR": 5,
+      "HULL": 350,
+      "ARMOR": 0,
       "SHIELD_MAX": 0,
       "SHIELD_REGEN": 0,
       "SHIELD_DELAY": 0,
@@ -46,8 +46,8 @@
     "behavior": "DRIFT",
     "description": "A large fragment drifting faster than its parent. Still no shields, but takes several hits to destroy. Breaks into two medium asteroids.",
     "stats": {
-      "HULL": 320,
-      "ARMOR": 5,
+      "HULL": 140,
+      "ARMOR": 0,
       "SHIELD_MAX": 0,
       "SHIELD_REGEN": 0,
       "SHIELD_DELAY": 0,
@@ -85,7 +85,7 @@
     "behavior": "DRIFT",
     "description": "A tumbling medium fragment. Faster and lighter \u2014 a few shots clear it. Breaks into two small asteroids on destruction.",
     "stats": {
-      "HULL": 110,
+      "HULL": 55,
       "ARMOR": 0,
       "SHIELD_MAX": 0,
       "SHIELD_REGEN": 0,
@@ -123,7 +123,7 @@
     "behavior": "DRIFT",
     "description": "The final fragment. Fast, small, easily destroyed. No further breakdown \u2014 a single hit from most weapons clears it.",
     "stats": {
-      "HULL": 30,
+      "HULL": 18,
       "ARMOR": 0,
       "SHIELD_MAX": 0,
       "SHIELD_REGEN": 0,
@@ -158,7 +158,7 @@
     "behavior": "CHASE",
     "description": "A lightweight pursuit drone. Very fast, lightly armoured, with a small shield that recharges quickly when not under fire. Fires rapid weak energy pulses. Individually trivial \u2014 dangerous in groups.",
     "stats": {
-      "HULL": 75,
+      "HULL": 40,
       "ARMOR": 0,
       "SHIELD_MAX": 50,
       "SHIELD_REGEN": 20,
@@ -194,7 +194,7 @@
     "behavior": "CHASE",
     "description": "A standard combat drone. Slower than the scout but significantly more durable. Fires kinetic rounds that deal moderate damage. Light shielding provides brief protection before armor takes over.",
     "stats": {
-      "HULL": 150,
+      "HULL": 75,
       "ARMOR": 5,
       "SHIELD_MAX": 80,
       "SHIELD_REGEN": 15,
@@ -230,8 +230,8 @@
     "behavior": "STATIC",
     "description": "A hardwired stationary defence platform. No shields \u2014 built entirely from reinforced armour plating. Fires a continuous energy beam at any target in range. Must be actively destroyed; it will not pursue. EMP has no effect on its hardwired systems.",
     "stats": {
-      "HULL": 220,
-      "ARMOR": 12,
+      "HULL": 110,
+      "ARMOR": 8,
       "SHIELD_MAX": 0,
       "SHIELD_REGEN": 0,
       "SHIELD_DELAY": 0,
