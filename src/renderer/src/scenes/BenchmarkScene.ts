@@ -25,9 +25,6 @@ export class BenchmarkScene extends Phaser.Scene {
   init(data: BenchmarkData): void { this.runData = data }
 
   create(): void {
-    // Fade in from black
-    this.cameras.main.fadeIn(400, 0, 0, 0)
-
     this.drawBg()
     this.buildContent()
   }
@@ -147,15 +144,9 @@ export class BenchmarkScene extends Phaser.Scene {
 
     this.add.graphics().lineStyle(1, 0x002244, 0.8).lineBetween(80, 510, W - 80, 510)
 
-    // Relaunch — fade out then start SelectionScene
-    const relaunch = addButton(this, W / 2 - 230, 546, 210, 50, 'RELAUNCH', ACCENT, () => {
-      const ov = this.add.graphics()
-      ov.fillStyle(0x000000, 0).fillRect(0, 0, W, H)
-      this.tweens.add({
-        targets: ov, alpha: { from: 0, to: 1 }, duration: 300,
-        onComplete: () => this.scene.start('SelectionScene'),
-      })
-    })
+    const relaunch = addButton(this, W / 2 - 230, 546, 210, 50, 'RELAUNCH', ACCENT,
+      () => this.scene.start('SelectionScene')
+    )
     relaunch.text.setStyle({ fontSize: '14px', fontStyle: 'bold' })
 
     // Armory — locked for now
