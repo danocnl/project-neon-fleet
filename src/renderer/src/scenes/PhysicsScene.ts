@@ -150,6 +150,7 @@ export class PhysicsScene extends Phaser.Scene {
     this.enemies.update(
       dt,
       this.actor.body.x, this.actor.body.y,
+      this.actor.body.heading,
       loadout.weapons,
       (damage) => this.combatState.takeDamage(damage),
       (result) => {

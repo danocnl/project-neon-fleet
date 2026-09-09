@@ -7,13 +7,13 @@ const WORLD_W = 1280 * 5
 const WORLD_H = 720  * 5
 const SPAWN_CLEAR_RADIUS = 700   // keep enemies away from world centre at spawn
 
-// Hardcoded DPS + range for default loadout weapons (avoids needing weapons.json in DataLoader for now)
-const WEAPON_STATS: Record<string, { dps: number; range: number }> = {
-  light_chaingun: { dps: 64,  range: 250 },
-  chaingun:       { dps: 108, range: 300 },
-  pulse_laser:    { dps: 60,  range: 300 },
-  emp_cannon:     { dps: 30,  range: 350 },
-  arc_cannon:     { dps: 50,  range: 320 },
+// Hardcoded DPS + range + firing arc for default loadout weapons
+const WEAPON_STATS: Record<string, { dps: number; range: number; arc: number }> = {
+  light_chaingun: { dps: 64,  range: 250, arc: 90  },
+  chaingun:       { dps: 108, range: 300, arc: 90  },
+  pulse_laser:    { dps: 60,  range: 300, arc: 90  },
+  emp_cannon:     { dps: 30,  range: 350, arc: 120 },
+  arc_cannon:     { dps: 50,  range: 320, arc: 90  },
 }
 
 // Colours per enemy category
@@ -83,11 +83,12 @@ export class EnemyManager {
   update(
     dt: number,
     playerX: number, playerY: number,
+    playerHeading: number,
     weaponIds: string[],
     onEnemyAttack: (damage: number) => void,
     onKill: (result: KillResult) => void
   ): void {
-    const { dps: playerDps, range: playerRange } = computeLoadout(weaponIds)
+    const { dps: playerDps, range: playerRange, arc: playerArc } = computeLoadout(weaponIds)
 
     // Update all entities
     for (const e of this.entities) {
@@ -97,8 +98,8 @@ export class EnemyManager {
       wrapEntity(e)
     }
 
-    // Player attacks nearest enemy in range
-    const target = this.nearestAlive(playerX, playerY, playerRange)
+    // Player attacks nearest enemy within weapon range AND firing arc
+    const target = this.nearestAlive(playerX, playerY, playerRange, playerHeading, playerArc)
     if (target) {
       target.takeDamage(playerDps * dt)
     }
@@ -246,13 +247,31 @@ export class EnemyManager {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
-  private nearestAlive(x: number, y: number, range: number): EnemyEntity | null {
+  private nearestAlive(
+    x: number, y: number,
+    range: number,
+    shipHeading: number,
+    arcDegrees: number
+  ): EnemyEntity | null {
     let best: EnemyEntity | null = null
     let bestDist = range
+    const halfArc = (arcDegrees / 2) * (Math.PI / 180)
+
     for (const e of this.entities) {
       if (!e.alive) continue
-      const d = Math.hypot(e.x - x, e.y - y)
-      if (d < bestDist) { best = e; bestDist = d }
+      const dx = e.x - x, dy = e.y - y
+      const dist = Math.hypot(dx, dy)
+      if (dist >= bestDist) continue
+
+      // Check firing arc — skip if target is outside the weapon's cone
+      if (arcDegrees < 360) {
+        const angleToTarget = Math.atan2(dx, -dy)  // same convention as body.heading (0 = up)
+        let diff = Math.abs(angleToTarget - shipHeading)
+        if (diff > Math.PI) diff = Math.abs(diff - Math.PI * 2)
+        if (diff > halfArc) continue
+      }
+
+      best = e; bestDist = dist
     }
     return best
   }
@@ -264,13 +283,13 @@ export class EnemyManager {
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
-function computeLoadout(weaponIds: string[]): { dps: number; range: number } {
-  let dps = 0, range = 0
+function computeLoadout(weaponIds: string[]): { dps: number; range: number; arc: number } {
+  let dps = 0, range = 0, arc = 0
   for (const id of weaponIds) {
     const w = WEAPON_STATS[id]
-    if (w) { dps += w.dps; range = Math.max(range, w.range) }
+    if (w) { dps += w.dps; range = Math.max(range, w.range); arc = Math.max(arc, w.arc) }
   }
-  return { dps: dps || 64, range: range || 250 }  // fallback for unknown weapons
+  return { dps: dps || 64, range: range || 250, arc: arc || 90 }
 }
 
 function wrapEntity(e: EnemyEntity): void {
