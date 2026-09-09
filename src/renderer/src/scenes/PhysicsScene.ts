@@ -142,7 +142,9 @@ export class PhysicsScene extends Phaser.Scene {
       this.actor.waypoint = this.nextWaypoint()
     }
 
-    const { fx, fy } = chase(this.actor.body, this.actor.waypoint.x, this.actor.waypoint.y)
+    // Use shortest wrapped path so the ship crosses edges rather than going "the long way round"
+    const wp = this.wrappedWaypoint()
+    const { fx, fy } = chase(this.actor.body, wp.x, wp.y)
     const avoid = this.asteroidAvoidanceForce()
     stepPhysics(this.actor.body, fx + avoid.x, fy + avoid.y, dt)
     wrapBounds(this.actor.body, WORLD_W, WORLD_H)
@@ -698,6 +700,21 @@ export class PhysicsScene extends Phaser.Scene {
   // Applied every frame on top of the waypoint-chase force so the ship
   // naturally flows around obstacles. EVASIVE gets a much wider range and
   // stronger push; all other modes get a baseline avoidance.
+  // Returns the waypoint as a virtual coordinate that represents the shortest
+  // path considering world wrap. If going through an edge is shorter, the
+  // returned coordinate is outside [0, WORLD] bounds — chase() will steer the
+  // ship toward it and wrapBounds() snaps the position back once it crosses.
+  private wrappedWaypoint(): { x: number; y: number } {
+    const bx = this.actor.body.x, by = this.actor.body.y
+    let dx = this.actor.waypoint.x - bx
+    let dy = this.actor.waypoint.y - by
+    if (dx >  WORLD_W / 2) dx -= WORLD_W   // crossing right→left edge is shorter
+    if (dx < -WORLD_W / 2) dx += WORLD_W   // crossing left→right edge is shorter
+    if (dy >  WORLD_H / 2) dy -= WORLD_H
+    if (dy < -WORLD_H / 2) dy += WORLD_H
+    return { x: bx + dx, y: by + dy }
+  }
+
   private asteroidAvoidanceForce(): { x: number; y: number } {
     const isEvasive  = this.flightMode === 'EVASIVE'
     const avoidRange = isEvasive ? 400 : 220    // detection radius (u)
