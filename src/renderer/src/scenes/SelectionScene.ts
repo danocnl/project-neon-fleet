@@ -32,7 +32,7 @@ const DEFAULT_LOADOUTS: Record<string, { weapons: string[]; modules: string[] }>
     modules: ['thruster_pack_s', 'shield_booster_s', 'cooling_fin_s'],
   },
   cobra: {
-    weapons: ['pulse_laser', 'chaingun'],
+    weapons: ['chaingun', 'chaingun'],
     modules: ['shield_capacitor_m', 'shield_booster_s', 'power_cell_s'],
   },
   mamba: {

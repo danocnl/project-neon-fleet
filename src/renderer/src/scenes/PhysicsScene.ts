@@ -27,7 +27,7 @@ const LOG_MAX = 6
 
 const DEFAULT_LOADOUTS: Record<string, { weapons: string[]; modules: string[] }> = {
   sidewinder: { weapons: ['pulse_laser', 'pulse_laser'],       modules: ['thruster_pack_s', 'shield_booster_s', 'cooling_fin_s'] },
-  cobra:      { weapons: ['pulse_laser', 'chaingun'],          modules: ['shield_capacitor_m', 'shield_booster_s', 'power_cell_s'] },
+  cobra:      { weapons: ['chaingun', 'chaingun'],             modules: ['shield_capacitor_m', 'shield_booster_s', 'power_cell_s'] },
   mamba:      { weapons: ['beam_laser'],                        modules: ['cryo_module_m', 'cooling_fin_s', 'thruster_pack_s'] },
 }
 

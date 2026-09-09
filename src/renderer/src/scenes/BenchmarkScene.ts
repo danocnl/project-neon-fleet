@@ -143,28 +143,43 @@ export class BenchmarkScene extends Phaser.Scene {
 
     this.add.graphics().lineStyle(1, 0x002244, 0.8).lineBetween(80, 510, W - 80, 510)
 
-    // RELAUNCH — Phaser Rectangle with built-in input (more reliable than Zone)
-    const btnCY = 571
-    const btnRect = this.add.rectangle(W / 2 - 125, btnCY, 210, 46, 0x002233)
-      .setOrigin(0, 0.5)
-      .setStrokeStyle(1.5, ACCENT, 1)
-      .setInteractive({ useHandCursor: true })
-    btnRect.on('pointerover',  () => btnRect.setFillStyle(ACCENT, 0.2))
-    btnRect.on('pointerout',   () => btnRect.setFillStyle(0x002233, 1))
-    btnRect.on('pointerdown',  () => this.scene.start('SelectionScene'))
+    // RELAUNCH — draw visuals, detect click via scene-level pointerup
+    const BX = W / 2 - 125, BY = 548, BW = 210, BH = 46
 
-    this.add.text(W / 2 - 20, btnCY, 'RELAUNCH', {
+    const btnGfx = this.add.graphics()
+    const drawBtn = (hover: boolean) => {
+      btnGfx.clear()
+      btnGfx.fillStyle(ACCENT, hover ? 0.25 : 0.1)
+      btnGfx.fillRect(BX, BY, BW, BH)
+      btnGfx.lineStyle(1.5, ACCENT, hover ? 1 : 0.8)
+      btnGfx.strokeRect(BX, BY, BW, BH)
+    }
+    drawBtn(false)
+
+    this.add.text(BX + BW / 2, BY + BH / 2, 'RELAUNCH', {
       fontSize: '14px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
     }).setOrigin(0.5)
 
-    // ARMORY — locked
-    const armoryRect = this.add.rectangle(W / 2 + 15, btnCY, 210, 46, 0x111111)
-      .setOrigin(0, 0.5)
-      .setStrokeStyle(1, 0x223322, 0.5)
-    this.add.text(W / 2 + 120, btnCY, 'ARMORY  [SOON]', {
+    // ARMORY placeholder
+    this.add.graphics().lineStyle(1, 0x223322, 0.4).strokeRect(W / 2 + 15, BY, BW, BH)
+    this.add.text(W / 2 + 15 + BW / 2, BY + BH / 2, 'ARMORY  [SOON]', {
       fontSize: '11px', color: '#334433', fontFamily: 'monospace',
     }).setOrigin(0.5)
-    void armoryRect
+
+    const doRelaunch = () => this.scene.start('SelectionScene')
+
+    // Scene-level pointer detection — bypasses game-object input issues
+    this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+      drawBtn(p.x >= BX && p.x <= BX + BW && p.y >= BY && p.y <= BY + BH)
+    })
+    this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+      if (p.x >= BX && p.x <= BX + BW && p.y >= BY && p.y <= BY + BH) doRelaunch()
+    })
+
+    // Keyboard shortcut so the player always has a way out
+    this.input.keyboard!.once('keydown-ENTER', doRelaunch)
+    this.input.keyboard!.once('keydown-SPACE', doRelaunch)
+    this.input.keyboard!.once('keydown-R',     doRelaunch)
 
     this.add.text(W / 2, 618, 'Credits carry over between runs. Spend them in the Armory for permanent weapons and modules.', {
       fontSize: '9px', color: '#1a3322', fontFamily: 'monospace',

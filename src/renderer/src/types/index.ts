@@ -141,14 +141,6 @@ export interface EnemyStats {
   COLLISION_RADIUS: number   // Pixel radius for collision detection
 }
 
-export interface EnemyWeapon {
-  damageType:  DamageType
-  damage:      number   // per shot, or DPS if isBeam
-  rateOfFire:  number   // shots/s (0 = continuous beam)
-  range:       number   // units
-  isBeam?:     boolean
-}
-
 export interface EnemyDrops {
   creditsMin: number
   creditsMax: number
@@ -166,9 +158,9 @@ export interface Enemy {
   tier:        number
   size:        EnemySize
   behavior:    EnemyBehavior
-  aggroRange?: number      // CHASE enemies activate only within this distance (u)
+  leash?:      number      // activation distance (u) — outside = idle, inside = active
   stats:       EnemyStats
-  weapon:      EnemyWeapon | null
+  weaponId:    string | null   // references weapons.json by id
   drops:       EnemyDrops
   breakdown:   EnemyBreakdown | null
   vulnerableTo: string[]

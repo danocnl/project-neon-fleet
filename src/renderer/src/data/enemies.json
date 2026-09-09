@@ -16,7 +16,6 @@
       "ACCELERATION": 0,
       "COLLISION_RADIUS": 80
     },
-    "weapon": null,
     "drops": {
       "creditsMin": 35,
       "creditsMax": 60,
@@ -36,7 +35,8 @@
       "BURN",
       "BIOLOGICAL"
     ],
-    "xpValue": 10
+    "xpValue": 10,
+    "weaponId": null
   },
   {
     "id": "asteroid_large",
@@ -55,7 +55,6 @@
       "ACCELERATION": 0,
       "COLLISION_RADIUS": 50
     },
-    "weapon": null,
     "drops": {
       "creditsMin": 14,
       "creditsMax": 26,
@@ -75,7 +74,8 @@
       "BURN",
       "BIOLOGICAL"
     ],
-    "xpValue": 6
+    "xpValue": 6,
+    "weaponId": null
   },
   {
     "id": "asteroid_medium",
@@ -94,7 +94,6 @@
       "ACCELERATION": 0,
       "COLLISION_RADIUS": 30
     },
-    "weapon": null,
     "drops": {
       "creditsMin": 6,
       "creditsMax": 12
@@ -113,7 +112,8 @@
       "BURN",
       "BIOLOGICAL"
     ],
-    "xpValue": 3
+    "xpValue": 3,
+    "weaponId": null
   },
   {
     "id": "asteroid_small",
@@ -132,7 +132,6 @@
       "ACCELERATION": 0,
       "COLLISION_RADIUS": 15
     },
-    "weapon": null,
     "drops": {
       "creditsMin": 2,
       "creditsMax": 6
@@ -148,7 +147,8 @@
       "BURN",
       "BIOLOGICAL"
     ],
-    "xpValue": 1
+    "xpValue": 1,
+    "weaponId": null
   },
   {
     "id": "scout_drone",
@@ -167,13 +167,6 @@
       "ACCELERATION": 65,
       "COLLISION_RADIUS": 12
     },
-    "weapon": {
-      "damageType": "ENERGY",
-      "damage": 6,
-      "rateOfFire": 2.0,
-      "range": 200,
-      "isBeam": false
-    },
     "drops": {
       "creditsMin": 8,
       "creditsMax": 16
@@ -185,7 +178,8 @@
     ],
     "immuneTo": [],
     "xpValue": 3,
-    "aggroRange": 900
+    "weaponId": "pulse_laser",
+    "leash": 1920
   },
   {
     "id": "attack_drone",
@@ -204,13 +198,6 @@
       "ACCELERATION": 45,
       "COLLISION_RADIUS": 18
     },
-    "weapon": {
-      "damageType": "KINETIC",
-      "damage": 35,
-      "rateOfFire": 0.4,
-      "range": 280,
-      "isBeam": false
-    },
     "drops": {
       "creditsMin": 16,
       "creditsMax": 28
@@ -222,7 +209,8 @@
     ],
     "immuneTo": [],
     "xpValue": 6,
-    "aggroRange": 750
+    "weaponId": "chaingun",
+    "leash": 1920
   },
   {
     "id": "turret",
@@ -241,13 +229,6 @@
       "ACCELERATION": 0,
       "COLLISION_RADIUS": 22
     },
-    "weapon": {
-      "damageType": "ENERGY",
-      "damage": 12,
-      "rateOfFire": 0,
-      "range": 380,
-      "isBeam": true
-    },
     "drops": {
       "creditsMin": 24,
       "creditsMax": 40
@@ -260,6 +241,8 @@
     "immuneTo": [
       "EMP"
     ],
-    "xpValue": 8
+    "xpValue": 8,
+    "weaponId": "railgun",
+    "leash": 2560
   }
 ]

@@ -117,28 +117,31 @@ export class EnemyManager {
     this._currentTarget = target
     if (target) target.takeDamage(playerDps * dt)
 
-    // Enemy attacks + spawn visual projectiles
+    // Enemy attacks + spawn visual projectiles (weapon looked up from DataLoader)
     for (const e of this.entities) {
-      if (!e.alive || !e.def.weapon) continue
+      if (!e.alive || !e.def.weaponId) continue
+      const weapon = DataLoader.getWeapon(e.def.weaponId)
+      if (!weapon) continue
       const dist = Math.hypot(e.x - playerX, e.y - playerY)
-      if (dist > e.def.weapon.range) continue
+      if (dist > weapon.baseStats.RANGE) continue
 
-      if (e.def.weapon.isBeam) {
-        onEnemyAttack(e.def.weapon.damage * dt)
+      const isBeam = weapon.behaviors?.BEAM === true
+      if (isBeam) {
+        onEnemyAttack(weapon.baseStats.DAMAGE * dt)
       } else {
-        if (e.attackCooldownMs <= 0) {
-          onEnemyAttack(e.def.weapon.damage)
-          e.attackCooldownMs = (1 / e.def.weapon.rateOfFire) * 1000
-          // Spawn visual projectile toward player's current position
+        const rof = weapon.baseStats.RATE_OF_FIRE
+        if (e.attackCooldownMs <= 0 && rof > 0) {
+          onEnemyAttack(weapon.baseStats.DAMAGE)
+          e.attackCooldownMs = (1 / rof) * 1000
           const dx = playerX - e.x, dy = playerY - e.y
           const d  = Math.hypot(dx, dy)
-          const spd = 240
+          const spd = weapon.behaviors?.BEAM ? 0 : 280
           this.enemyProjs.push({
             x: e.x, y: e.y,
             vx: (dx / d) * spd, vy: (dy / d) * spd,
-            lifetimeMs: Math.min((d / spd) * 1000 + 80, 2000),
-            color: PROJ_COLOR[e.def.weapon.damageType] ?? 0xff3300,
-            size: 2.5,
+            lifetimeMs: Math.min((d / spd) * 1000 + 80, 2500),
+            color: PROJ_COLOR[weapon.damageType] ?? 0xff3300,
+            size: weapon.size === 'LARGE' ? 4 : weapon.size === 'MEDIUM' ? 3 : 2.5,
           })
         }
       }
@@ -225,9 +228,9 @@ export class EnemyManager {
       case 'CHASE': {
         const dx = px - e.x, dy = py - e.y
         const dist = Math.hypot(dx, dy)
-        const aggroRange = e.def.aggroRange ?? Infinity
+        const aggroRange = e.def.leash ?? Infinity
 
-        if (dist <= aggroRange && dist > 1) {
+        if (dist <= (e.def.leash ?? Infinity) && dist > 1) {
           // Active pursuit — steer toward player
           const accel = e.def.stats.ACCELERATION
           e.vx += (dx / dist) * accel * dt
@@ -261,11 +264,13 @@ export class EnemyManager {
     // Enemy shapes + health bars
     for (const e of this.entities) this.drawEnemy(e)
 
-    // Turret beams (persistent red line while in range)
+    // Turret beams — draw a beam line for beam-type weapons
     for (const e of this.entities) {
-      if (e.def.id !== 'turret' || !e.def.weapon) continue
+      if (!e.def.weaponId) continue
+      const w = DataLoader.getWeapon(e.def.weaponId)
+      if (!w?.behaviors?.BEAM) continue
       const dist = Math.hypot(e.x - playerX, e.y - playerY)
-      if (dist > e.def.weapon.range) continue
+      if (dist > w.baseStats.RANGE) continue
       const a = 0.4 + 0.3 * Math.sin(Date.now() / 120)
       this.projGfx.lineStyle(2, 0xff2200, a)
       this.projGfx.lineBetween(e.x, e.y, playerX, playerY)
