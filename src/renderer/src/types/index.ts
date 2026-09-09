@@ -124,6 +124,56 @@ export interface GameSession {
 
 export type ComputedStats = ShipBaseStats
 
+// ─── Enemies ─────────────────────────────────────────────────────────────────
+
+export type EnemyBehavior = 'DRIFT' | 'STATIC' | 'CHASE' | 'ORBIT' | 'SWARM' | 'PATROL'
+export type EnemySize     = 'XS' | 'S' | 'M' | 'L' | 'XL'
+
+export interface EnemyStats {
+  HULL:             number   // HP
+  ARMOR:            number   // % flat damage reduction
+  SHIELD_MAX:       number   // Shield points (0 = no shields)
+  SHIELD_REGEN:     number   // SP/s when not taking damage
+  SHIELD_DELAY:     number   // Seconds before regen begins
+  SPEED:            number   // Max movement speed u/s
+  ACCELERATION:     number   // u/s² (0 = constant drift)
+  COLLISION_RADIUS: number   // Pixel radius for collision detection
+}
+
+export interface EnemyWeapon {
+  damageType:  DamageType
+  damage:      number   // per shot, or DPS if isBeam
+  rateOfFire:  number   // shots/s (0 = continuous beam)
+  range:       number   // units
+  isBeam?:     boolean
+}
+
+export interface EnemyDrops {
+  creditsMin: number
+  creditsMax: number
+  debris?:    boolean   // generates salvageable debris on death
+}
+
+export interface EnemyBreakdown {
+  count:   number
+  enemyId: string   // spawns this many of this enemy on death
+}
+
+export interface Enemy {
+  id:          string
+  name:        string
+  tier:        number
+  size:        EnemySize
+  behavior:    EnemyBehavior
+  stats:       EnemyStats
+  weapon:      EnemyWeapon | null
+  drops:       EnemyDrops
+  breakdown:   EnemyBreakdown | null   // asteroid cascade etc.
+  vulnerableTo: string[]   // damage type / status tags that are extra effective
+  immuneTo:    string[]    // tags with no effect on this enemy
+  description: string
+}
+
 // ─── Modules ─────────────────────────────────────────────────────────────────
 
 export type ModuleCategory =

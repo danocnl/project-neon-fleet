@@ -1,0 +1,188 @@
+[
+  {
+    "id": "asteroid_xl",
+    "name": "Asteroid — XL",
+    "tier": 1,
+    "size": "XL",
+    "behavior": "DRIFT",
+    "description": "A massive rock drifting through the sector. No shields, no targeting, no weapon — but absorbs enormous punishment before fracturing. Breaking one releases two large asteroids.",
+    "stats": {
+      "HULL": 800,
+      "ARMOR": 5,
+      "SHIELD_MAX": 0,
+      "SHIELD_REGEN": 0,
+      "SHIELD_DELAY": 0,
+      "SPEED": 35,
+      "ACCELERATION": 0,
+      "COLLISION_RADIUS": 80
+    },
+    "weapon": null,
+    "drops": { "creditsMin": 25, "creditsMax": 40, "debris": true },
+    "breakdown": { "count": 2, "enemyId": "asteroid_large" },
+    "vulnerableTo": ["EXPLOSIVE", "KINETIC"],
+    "immuneTo": ["EMP", "FREEZE", "BURN", "BIOLOGICAL"],
+    "xpValue": 10
+  },
+  {
+    "id": "asteroid_large",
+    "name": "Asteroid — Large",
+    "tier": 1,
+    "size": "L",
+    "behavior": "DRIFT",
+    "description": "A large fragment drifting faster than its parent. Still no shields, but takes several hits to destroy. Breaks into two medium asteroids.",
+    "stats": {
+      "HULL": 320,
+      "ARMOR": 5,
+      "SHIELD_MAX": 0,
+      "SHIELD_REGEN": 0,
+      "SHIELD_DELAY": 0,
+      "SPEED": 55,
+      "ACCELERATION": 0,
+      "COLLISION_RADIUS": 50
+    },
+    "weapon": null,
+    "drops": { "creditsMin": 10, "creditsMax": 18, "debris": true },
+    "breakdown": { "count": 2, "enemyId": "asteroid_medium" },
+    "vulnerableTo": ["EXPLOSIVE", "KINETIC"],
+    "immuneTo": ["EMP", "FREEZE", "BURN", "BIOLOGICAL"],
+    "xpValue": 6
+  },
+  {
+    "id": "asteroid_medium",
+    "name": "Asteroid — Medium",
+    "tier": 1,
+    "size": "M",
+    "behavior": "DRIFT",
+    "description": "A tumbling medium fragment. Faster and lighter — a few shots clear it. Breaks into two small asteroids on destruction.",
+    "stats": {
+      "HULL": 110,
+      "ARMOR": 0,
+      "SHIELD_MAX": 0,
+      "SHIELD_REGEN": 0,
+      "SHIELD_DELAY": 0,
+      "SPEED": 85,
+      "ACCELERATION": 0,
+      "COLLISION_RADIUS": 30
+    },
+    "weapon": null,
+    "drops": { "creditsMin": 4, "creditsMax": 8 },
+    "breakdown": { "count": 2, "enemyId": "asteroid_small" },
+    "vulnerableTo": ["EXPLOSIVE", "KINETIC"],
+    "immuneTo": ["EMP", "FREEZE", "BURN", "BIOLOGICAL"],
+    "xpValue": 3
+  },
+  {
+    "id": "asteroid_small",
+    "name": "Asteroid — Small",
+    "tier": 1,
+    "size": "S",
+    "behavior": "DRIFT",
+    "description": "The final fragment. Fast, small, easily destroyed. No further breakdown — a single hit from most weapons clears it.",
+    "stats": {
+      "HULL": 30,
+      "ARMOR": 0,
+      "SHIELD_MAX": 0,
+      "SHIELD_REGEN": 0,
+      "SHIELD_DELAY": 0,
+      "SPEED": 130,
+      "ACCELERATION": 0,
+      "COLLISION_RADIUS": 15
+    },
+    "weapon": null,
+    "drops": { "creditsMin": 1, "creditsMax": 4 },
+    "breakdown": null,
+    "vulnerableTo": ["EXPLOSIVE", "KINETIC"],
+    "immuneTo": ["EMP", "FREEZE", "BURN", "BIOLOGICAL"],
+    "xpValue": 1
+  },
+  {
+    "id": "scout_drone",
+    "name": "Scout Drone",
+    "size": "S",
+    "tier": 1,
+    "behavior": "CHASE",
+    "description": "A lightweight pursuit drone. Very fast, lightly armoured, with a small shield that recharges quickly when not under fire. Fires rapid weak energy pulses. Individually trivial — dangerous in groups.",
+    "stats": {
+      "HULL": 75,
+      "ARMOR": 0,
+      "SHIELD_MAX": 50,
+      "SHIELD_REGEN": 20,
+      "SHIELD_DELAY": 3.0,
+      "SPEED": 220,
+      "ACCELERATION": 180,
+      "COLLISION_RADIUS": 12
+    },
+    "weapon": {
+      "damageType": "ENERGY",
+      "damage": 8,
+      "rateOfFire": 4.0,
+      "range": 200,
+      "isBeam": false
+    },
+    "drops": { "creditsMin": 5, "creditsMax": 10 },
+    "breakdown": null,
+    "vulnerableTo": ["KINETIC", "EMP"],
+    "immuneTo": [],
+    "xpValue": 3
+  },
+  {
+    "id": "attack_drone",
+    "name": "Attack Drone",
+    "size": "M",
+    "tier": 1,
+    "behavior": "CHASE",
+    "description": "A standard combat drone. Slower than the scout but significantly more durable. Fires kinetic rounds that deal moderate damage. Light shielding provides brief protection before armor takes over.",
+    "stats": {
+      "HULL": 150,
+      "ARMOR": 5,
+      "SHIELD_MAX": 80,
+      "SHIELD_REGEN": 15,
+      "SHIELD_DELAY": 4.0,
+      "SPEED": 140,
+      "ACCELERATION": 100,
+      "COLLISION_RADIUS": 18
+    },
+    "weapon": {
+      "damageType": "KINETIC",
+      "damage": 22,
+      "rateOfFire": 1.5,
+      "range": 280,
+      "isBeam": false
+    },
+    "drops": { "creditsMin": 10, "creditsMax": 20 },
+    "breakdown": null,
+    "vulnerableTo": ["EMP", "CORROSIVE"],
+    "immuneTo": [],
+    "xpValue": 6
+  },
+  {
+    "id": "turret",
+    "name": "Sector Turret",
+    "size": "S",
+    "tier": 1,
+    "behavior": "STATIC",
+    "description": "A hardwired stationary defence platform. No shields — built entirely from reinforced armour plating. Fires a continuous energy beam at any target in range. Must be actively destroyed; it will not pursue. EMP has no effect on its hardwired systems.",
+    "stats": {
+      "HULL": 220,
+      "ARMOR": 12,
+      "SHIELD_MAX": 0,
+      "SHIELD_REGEN": 0,
+      "SHIELD_DELAY": 0,
+      "SPEED": 0,
+      "ACCELERATION": 0,
+      "COLLISION_RADIUS": 22
+    },
+    "weapon": {
+      "damageType": "ENERGY",
+      "damage": 25,
+      "rateOfFire": 0,
+      "range": 380,
+      "isBeam": true
+    },
+    "drops": { "creditsMin": 18, "creditsMax": 30 },
+    "breakdown": null,
+    "vulnerableTo": ["EXPLOSIVE", "KINETIC"],
+    "immuneTo": ["EMP"],
+    "xpValue": 8
+  }
+]
