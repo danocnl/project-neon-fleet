@@ -158,9 +158,9 @@
     "behavior": "CHASE",
     "description": "A lightweight pursuit drone. Very fast, lightly armoured, with a small shield that recharges quickly when not under fire. Fires rapid weak energy pulses. Individually trivial \u2014 dangerous in groups.",
     "stats": {
-      "HULL": 40,
+      "HULL": 20,
       "ARMOR": 0,
-      "SHIELD_MAX": 50,
+      "SHIELD_MAX": 25,
       "SHIELD_REGEN": 20,
       "SHIELD_DELAY": 3.0,
       "SPEED": 85,
@@ -170,7 +170,7 @@
     "weapon": {
       "damageType": "ENERGY",
       "damage": 8,
-      "rateOfFire": 4.0,
+      "rateOfFire": 0.5,
       "range": 200,
       "isBeam": false
     },
@@ -195,9 +195,9 @@
     "behavior": "CHASE",
     "description": "A standard combat drone. Slower than the scout but significantly more durable. Fires kinetic rounds that deal moderate damage. Light shielding provides brief protection before armor takes over.",
     "stats": {
-      "HULL": 75,
-      "ARMOR": 5,
-      "SHIELD_MAX": 80,
+      "HULL": 35,
+      "ARMOR": 0,
+      "SHIELD_MAX": 40,
       "SHIELD_REGEN": 15,
       "SHIELD_DELAY": 4.0,
       "SPEED": 60,
@@ -207,7 +207,7 @@
     "weapon": {
       "damageType": "KINETIC",
       "damage": 22,
-      "rateOfFire": 1.5,
+      "rateOfFire": 0.33,
       "range": 280,
       "isBeam": false
     },
@@ -232,8 +232,8 @@
     "behavior": "STATIC",
     "description": "A hardwired stationary defence platform. No shields \u2014 built entirely from reinforced armour plating. Fires a continuous energy beam at any target in range. Must be actively destroyed; it will not pursue. EMP has no effect on its hardwired systems.",
     "stats": {
-      "HULL": 110,
-      "ARMOR": 8,
+      "HULL": 80,
+      "ARMOR": 6,
       "SHIELD_MAX": 0,
       "SHIELD_REGEN": 0,
       "SHIELD_DELAY": 0,
@@ -243,7 +243,7 @@
     },
     "weapon": {
       "damageType": "ENERGY",
-      "damage": 25,
+      "damage": 12,
       "rateOfFire": 0,
       "range": 380,
       "isBeam": true
