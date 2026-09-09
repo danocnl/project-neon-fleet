@@ -5,6 +5,7 @@ import { LoadoutManager } from '../systems/LoadoutManager'
 import { getGeometry } from '../ships/ShipGeometry'
 import { drawClassIcon, CLASS_COLORS } from '../ships/ClassIcons'
 import { addTagChip, addButton, synergyColor, synergyLabel } from '../ui/NeonUI'
+import { network } from '../systems/NetworkManager'
 import type { ClassSpecialization } from '../types'
 
 // ─── Layout ────────────────────────────────────────────────────────────────
@@ -50,6 +51,8 @@ const ALL_SHIPS = [
 // ─── Scene ─────────────────────────────────────────────────────────────────
 export class SelectionScene extends Phaser.Scene {
   private step: 1 | 2 | 3 = 1
+  private guestMode    = false
+  private hostLobbyMode = false
 
   private username        = ''
   private selectedClassId = 'architect'
@@ -97,6 +100,22 @@ export class SelectionScene extends Phaser.Scene {
   constructor() { super({ key: 'SelectionScene' }) }
 
   // ──────────────────────────────────────────────────────────────────────────
+  init(data: { guestMode?: boolean; hostLobbyMode?: boolean } = {}): void {
+    this.guestMode     = data.guestMode     === true
+    this.hostLobbyMode = data.hostLobbyMode === true
+
+    // Pre-populate from appropriate source
+    if (this.guestMode) {
+      // Guests load their own lightweight profile, not a slot
+      const gp = SaveManager.getGuestProfile()
+      if (gp) { this.username = gp.pilot; this.selectedClassId = gp.classId; this.selectedShipId = gp.shipId }
+    } else {
+      // Host / solo — load from active slot
+      const saved = SaveManager.getSavedConfig()
+      if (saved) { this.username = saved.pilot; this.selectedClassId = saved.classId; this.selectedShipId = saved.shipId }
+    }
+  }
+
   create(): void {
     this.drawBg()
     this.buildHeader()
@@ -105,6 +124,51 @@ export class SelectionScene extends Phaser.Scene {
     this.buildStep2()
     this.buildStep3()
     this.showStep(1)
+    if (this.hostLobbyMode) this.buildSessionCodeBanner()
+
+    // Register START_GAME listener immediately so it's never missed,
+    // regardless of when the host clicks start relative to the tween
+    if (this.guestMode) {
+      network.once('START_GAME', () => {
+        this.scene.start('PhysicsScene', {
+          pilot:   this.username,
+          shipId:  this.selectedShipId,
+          classId: this.selectedClassId,
+          netRole: 'guest',
+        })
+      })
+    }
+  }
+
+  private buildSessionCodeBanner(): void {
+    const code = network.roomCode ?? '------'
+    const bw = 340, bh = 32, bx = W / 2 - bw / 2, by = 6
+
+    const bg = this.add.graphics().setScrollFactor(0).setDepth(200)
+    bg.fillStyle(0x001a1a, 0.95); bg.fillRect(bx, by, bw, bh)
+    bg.lineStyle(1, 0x00aa88, 0.6); bg.strokeRect(bx, by, bw, bh)
+
+    this.add.text(bx + 14, by + bh / 2, 'SESSION', {
+      fontSize: '9px', color: '#335544', fontFamily: 'monospace', letterSpacing: 3,
+    }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(201)
+
+    const codeText = this.add.text(bx + 90, by + bh / 2, code, {
+      fontSize: '14px', color: '#00ffcc', fontFamily: 'monospace', fontStyle: 'bold', letterSpacing: 3,
+    }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(201)
+
+    const hint = this.add.text(bx + bw - 14, by + bh / 2, 'click to copy', {
+      fontSize: '9px', color: '#224433', fontFamily: 'monospace',
+    }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(201)
+
+    const zone = this.add.zone(bx, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true }).setScrollFactor(0).setDepth(202)
+    zone.on('pointerover', () => { codeText.setColor('#ffffff'); hint.setColor('#00aa88') })
+    zone.on('pointerout',  () => { codeText.setColor('#00ffcc'); hint.setColor('#224433') })
+    zone.on('pointerdown', () => {
+      navigator.clipboard.writeText(code).then(() => {
+        hint.setText('✓ copied!').setColor('#00ffcc')
+        this.time.delayedCall(2000, () => hint.setText('click to copy').setColor('#224433'))
+      })
+    })
   }
 
   update(_t: number, delta: number): void {
@@ -197,7 +261,7 @@ export class SelectionScene extends Phaser.Scene {
     boxGfx.strokeRect(W / 2 - 200, cy - 44, 400, 52)
     this.reg(boxGfx, 1)
 
-    this.usernameDisplay = this.reg(this.add.text(W / 2, cy - 18, '', {
+    this.usernameDisplay = this.reg(this.add.text(W / 2, cy - 18, this.username, {
       fontSize: '24px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
     }).setOrigin(0.5), 1)
 
@@ -513,7 +577,8 @@ export class SelectionScene extends Phaser.Scene {
       fontSize: '10px', color: '#224433', fontFamily: 'monospace', letterSpacing: 8,
     }).setOrigin(0.5), 3)
 
-    const launch = addButton(this, W - 220, BTM_Y + 14, 206, 40, 'LAUNCH SECTOR RUN', ACCENT, () => { if (this.step === 3) this.launch() })
+    const launchLabel = this.guestMode ? 'READY  ✓' : this.hostLobbyMode ? 'HOST SESSION  ⬡' : 'LAUNCH SECTOR RUN'
+    const launch = addButton(this, W - 220, BTM_Y + 14, 206, 40, launchLabel, ACCENT, () => { if (this.step === 3) this.launch() })
     this.reg(launch.gfx, 3); this.reg(launch.text, 3); this.regZ(launch.zone, 3)
   }
 
@@ -681,20 +746,39 @@ export class SelectionScene extends Phaser.Scene {
   private launch(): void {
     const state = this.mgr.build(this.selectedShipId, this.selectedClassId)
     if (!state) return
-    console.log('[Loadout]', {
-      pilot: this.username, ship: this.selectedShipId, class: this.selectedClassId,
-      tags: state.aggregator.getAll(),
-    })
+
     const ov = this.add.graphics()
     ov.fillStyle(0x00ffff, 0).fillRect(0, 0, W, H)
     this.tweens.add({
       targets: ov, alpha: { from: 0, to: 0.15 }, duration: 200, yoyo: true,
       onComplete: () => {
         ov.destroy()
-        SaveManager.savePilotConfig(this.username, this.selectedShipId, this.selectedClassId)
-        this.scene.start('PhysicsScene', {
-          pilot: this.username, shipId: this.selectedShipId, classId: this.selectedClassId,
-        })
+
+        if (this.guestMode) {
+          // Guest — persist as guest profile (separate from host slots), notify host
+          SaveManager.saveGuestProfile(this.username, this.selectedShipId, this.selectedClassId)
+          network.sendGuestConfig(this.username, this.selectedShipId, this.selectedClassId)
+          const waitBg = this.add.graphics().setDepth(100)
+          waitBg.fillStyle(0x000008, 0.85).fillRect(0, 0, W, H)
+          this.add.text(W / 2, H / 2 - 20, '✓  READY', {
+            fontSize: '32px', color: '#00ffcc', fontFamily: 'monospace', fontStyle: 'bold',
+          }).setOrigin(0.5).setDepth(101)
+          this.add.text(W / 2, H / 2 + 24, 'waiting for host to start the mission…', {
+            fontSize: '12px', color: '#335544', fontFamily: 'monospace',
+          }).setOrigin(0.5).setDepth(101)
+        } else if (this.hostLobbyMode) {
+          // Host lobby — go to LobbyScene with this config; room already created
+          SaveManager.savePilotConfig(this.username, this.selectedShipId, this.selectedClassId)
+          this.scene.start('LobbyScene', {
+            role: 'host', pilot: this.username, shipId: this.selectedShipId, classId: this.selectedClassId,
+          })
+        } else {
+          // Solo
+          SaveManager.savePilotConfig(this.username, this.selectedShipId, this.selectedClassId)
+          this.scene.start('PhysicsScene', {
+            pilot: this.username, shipId: this.selectedShipId, classId: this.selectedClassId,
+          })
+        }
       },
     })
   }

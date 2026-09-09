@@ -14,11 +14,12 @@ function electronAPI(): ElectronSaveAPI | null {
 
 // ─── Storage constants ────────────────────────────────────────────────────────
 
-const LEGACY_KEY      = 'neon_fleet_save_v1'
-const LS_SLOT_KEY     = (n: number) => `neon_fleet_save_v2_slot_${n}`
-const SESSION_KEY     = 'neon_active_slot'
-const SLOT_COUNT      = 3
-const MODULE_MAX_LEVEL = 20
+const LEGACY_KEY        = 'neon_fleet_save_v1'
+const LS_SLOT_KEY       = (n: number) => `neon_fleet_save_v2_slot_${n}`
+const SESSION_KEY       = 'neon_active_slot'
+const GUEST_PROFILE_KEY = 'neon_guest_profile'   // lightweight co-pilot identity, separate from slots
+const SLOT_COUNT        = 3
+const MODULE_MAX_LEVEL  = 20
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -142,14 +143,34 @@ export class SaveManager {
 
   static getSavedConfig(): { pilot: string; shipId: string; classId: string } | null {
     const d = this.load()
-    const hasData = d.totalRuns > 0 || d.credits !== DEFAULTS.credits ||
-                    d.weaponInventory.length > 0 || Object.keys(d.moduleInventory).length > 0
-    if (!hasData) return null
+    // Pilot name is the definitive indicator of a configured slot
+    if (d.lastPilot && d.lastShipId && d.lastClassId) {
+      return { pilot: d.lastPilot, shipId: d.lastShipId, classId: d.lastClassId }
+    }
+    // Partial save (legacy — fields were wiped by old clearLastRun): only recover
+    // if the slot has meaningful activity, so truly empty slots stay empty
+    const hasActivity = d.totalRuns > 0 || d.credits !== DEFAULTS.credits ||
+                        d.weaponInventory.length > 0 || Object.keys(d.moduleInventory).length > 0
+    if (!hasActivity) return null
     return {
       pilot:   d.lastPilot   ?? 'PILOT',
       shipId:  d.lastShipId  ?? 'sidewinder',
       classId: d.lastClassId ?? 'chrono_architect',
     }
+  }
+
+  // ─── Guest profile (lightweight identity, no slot required) ─────────────────
+
+  static getGuestProfile(): { pilot: string; shipId: string; classId: string } | null {
+    try {
+      const raw = localStorage.getItem(GUEST_PROFILE_KEY)
+      if (raw) return JSON.parse(raw) as { pilot: string; shipId: string; classId: string }
+    } catch {}
+    return null
+  }
+
+  static saveGuestProfile(pilot: string, shipId: string, classId: string): void {
+    localStorage.setItem(GUEST_PROFILE_KEY, JSON.stringify({ pilot, shipId, classId }))
   }
 
   // ─── Quick relaunch ───────────────────────────────────────────────────────

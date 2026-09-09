@@ -18,6 +18,8 @@ export interface GameStateSnapshot {
   enemies: RemoteEnemyState[]
   sector: number
   kills: number
+  hostShipId?:  string
+  hostClassId?: string
 }
 
 type MsgHandler = (msg: Record<string, unknown>) => void
@@ -111,6 +113,10 @@ export class NetworkManager {
 
   sendStartGame(): void {
     this.send({ type: 'START_GAME' })
+  }
+
+  sendGuestPosition(x: number, y: number, vx: number, vy: number, heading: number): void {
+    this.send({ type: 'GUEST_POSITION', x, y, vx, vy, heading })
   }
 
   disconnect(): void {

@@ -123,7 +123,7 @@ export interface GameSession {
 }
 
 export type ComputedStats = ShipBaseStats
-export type FlightMode = 'PATROL' | 'EVASIVE' | 'HUNTER' | 'FARMER'
+export type FlightMode = 'PATROL' | 'EVASIVE' | 'HUNTER' | 'SUPPORT'
 
 // ─── Enemies ─────────────────────────────────────────────────────────────────
 

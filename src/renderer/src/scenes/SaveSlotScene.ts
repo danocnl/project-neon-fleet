@@ -77,6 +77,14 @@ export class SaveSlotScene extends Phaser.Scene {
       else if (e.key === 'Enter' && joinCode.length === 6) { doJoin() }
     })
 
+    // Paste support — strip non-alphanumeric, take first 6 chars
+    const onPaste = (e: ClipboardEvent) => {
+      const text = (e.clipboardData?.getData('text') ?? '').replace(/[^A-Z0-9]/gi, '').toUpperCase()
+      if (text.length > 0) { joinCode = text.substring(0, 6); refreshCode() }
+    }
+    window.addEventListener('paste', onPaste)
+    this.events.once('shutdown', () => window.removeEventListener('paste', onPaste))
+
     // JOIN button
     const jbx = W / 2 + 80, jby = sectionY + 20, jbw = 90, jbh = 32
     const jGfx = this.add.graphics()
@@ -112,6 +120,23 @@ export class SaveSlotScene extends Phaser.Scene {
     bg.fillRect(x, y, CARD_W, CARD_H)
     bg.lineStyle(1, isEmpty ? 0x112233 : 0x004455, 1)
     bg.strokeRect(x, y, CARD_W, CARD_H)
+
+    // Card hover + click zone — created FIRST so later zones (delete, host) get higher input priority
+    const cardZone = this.add.zone(x, y, CARD_W, CARD_H).setOrigin(0).setInteractive()
+    cardZone.on('pointerover', () => {
+      bg.clear()
+      bg.fillStyle(0x051414, 1); bg.fillRect(x, y, CARD_W, CARD_H)
+      bg.lineStyle(1.5, isEmpty ? 0x224433 : 0x00ffcc, 1); bg.strokeRect(x, y, CARD_W, CARD_H)
+    })
+    cardZone.on('pointerout', () => {
+      bg.clear()
+      bg.fillStyle(0x030d0d, 1); bg.fillRect(x, y, CARD_W, CARD_H)
+      bg.lineStyle(1, isEmpty ? 0x112233 : 0x004455, 1); bg.strokeRect(x, y, CARD_W, CARD_H)
+    })
+    cardZone.on('pointerdown', () => {
+      SaveManager.setActiveSlot(slot)
+      this.scene.start('BootScene')
+    })
 
     // Slot label
     this.add.text(x + 14, y + 14, `SLOT ${slot + 1}`, {
@@ -163,37 +188,6 @@ export class SaveSlotScene extends Phaser.Scene {
         }).setOrigin(0.5)
       }
 
-      // HOST button — bottom left of card
-      const hbx = x + 10, hby = y + CARD_H - 30, hbw = 62, hbh = 20
-      const hostGfx = this.add.graphics()
-      hostGfx.lineStyle(1, 0x224433, 0.6); hostGfx.strokeRect(hbx, hby, hbw, hbh)
-      const hostLabel = this.add.text(hbx + hbw / 2, hby + hbh / 2, 'HOST', {
-        fontSize: '9px', color: '#335544', fontFamily: 'monospace', fontStyle: 'bold', letterSpacing: 2,
-      }).setOrigin(0.5)
-
-      const hostZone = this.add.zone(hbx, hby, hbw, hbh).setOrigin(0).setInteractive()
-      hostZone.on('pointerover', () => {
-        hostGfx.clear(); hostGfx.lineStyle(1.5, 0x00ffcc, 0.9); hostGfx.strokeRect(hbx, hby, hbw, hbh)
-        hostLabel.setColor('#00ffcc')
-      })
-      hostZone.on('pointerout', () => {
-        hostGfx.clear(); hostGfx.lineStyle(1, 0x224433, 0.6); hostGfx.strokeRect(hbx, hby, hbw, hbh)
-        hostLabel.setColor('#335544')
-      })
-      hostZone.on('pointerdown', () => {
-        SaveManager.setActiveSlot(slot)
-        hostLabel.setText('…')
-        network.createRoom().then(() => {
-          const config = SaveManager.getSavedConfig()
-          this.scene.start('LobbyScene', {
-            role:    'host',
-            pilot:   config?.pilot   ?? 'PILOT',
-            shipId:  config?.shipId  ?? 'sidewinder',
-            classId: config?.classId ?? 'chrono_architect',
-          })
-        }).catch(() => { hostLabel.setText('HOST') })
-      })
-
       // Delete button — top right corner
       const delX = x + CARD_W - 28, delY = y + 10
       const delGfx = this.add.graphics()
@@ -203,41 +197,96 @@ export class SaveSlotScene extends Phaser.Scene {
         fontSize: '12px', color: '#441111', fontFamily: 'monospace',
       }).setOrigin(0.5)
 
+      let pendingDelete = false
+      let cancelTimer: Phaser.Time.TimerEvent | null = null
+
+      const resetDel = () => {
+        pendingDelete = false
+        cancelTimer?.remove()
+        cancelTimer = null
+        delGfx.clear(); delGfx.lineStyle(1, 0x331111, 0.6); delGfx.strokeRect(delX, delY, 18, 18)
+        delText.setText('×').setColor('#441111').setFontSize('12px')
+      }
+
       const delZone = this.add.zone(delX, delY, 18, 18).setOrigin(0).setInteractive()
       delZone.on('pointerover', () => {
+        if (pendingDelete) return
         delGfx.clear(); delGfx.lineStyle(1, 0xff2200, 0.9); delGfx.strokeRect(delX, delY, 18, 18)
         delText.setColor('#ff2200')
       })
       delZone.on('pointerout', () => {
+        if (pendingDelete) return
         delGfx.clear(); delGfx.lineStyle(1, 0x331111, 0.6); delGfx.strokeRect(delX, delY, 18, 18)
         delText.setColor('#441111')
       })
       delZone.on('pointerdown', () => {
-        SaveManager.deleteSlot(slot)
-        this.scene.restart()
+        if (!pendingDelete) {
+          // First click — expand to confirmation state
+          pendingDelete = true
+          const cw = 90, ch = 22
+          const cx = x + CARD_W - cw - 6, cy = y + 6
+          delGfx.clear()
+          delGfx.fillStyle(0x220000, 1);     delGfx.fillRect(cx, cy, cw, ch)
+          delGfx.lineStyle(1.5, 0xff2200, 1); delGfx.strokeRect(cx, cy, cw, ch)
+          delText.setText('DELETE?').setColor('#ff2200').setFontSize('9px')
+            .setPosition(cx + cw / 2, cy + ch / 2)
+          delZone.setSize(cw, ch).setPosition(cx, cy)
+
+          // Auto-cancel after 3s
+          cancelTimer = this.time.delayedCall(3000, resetDel)
+        } else {
+          // Second click — confirmed
+          SaveManager.deleteSlot(slot)
+          this.scene.restart()
+        }
       })
     }
 
-    // Hover highlight on whole card
-    const cardZone = this.add.zone(x, y, CARD_W, CARD_H).setOrigin(0).setInteractive()
-    cardZone.on('pointerover', () => {
-      bg.clear()
-      bg.fillStyle(0x051414, 1)
-      bg.fillRect(x, y, CARD_W, CARD_H)
-      bg.lineStyle(1.5, isEmpty ? 0x224433 : 0x00ffcc, 1)
-      bg.strokeRect(x, y, CARD_W, CARD_H)
+    // HOST button — bottom centre of every card (empty or filled)
+    const hbw = 100, hbh = 26
+    const hbx = x + (CARD_W - hbw) / 2, hby = y + CARD_H - 34
+    const hostGfx = this.add.graphics()
+    hostGfx.lineStyle(1.5, 0x00aa88, 0.7)
+    hostGfx.strokeRect(hbx, hby, hbw, hbh)
+    hostGfx.fillStyle(0x00aa88, 0.08)
+    hostGfx.fillRect(hbx, hby, hbw, hbh)
+    const hostLabel = this.add.text(hbx + hbw / 2, hby + hbh / 2, '⬡  HOST', {
+      fontSize: '10px', color: '#00aa88', fontFamily: 'monospace', fontStyle: 'bold', letterSpacing: 2,
+    }).setOrigin(0.5)
+
+    let hosting = false
+    const hostZone = this.add.zone(hbx, hby, hbw, hbh).setOrigin(0).setInteractive({ useHandCursor: true }).setDepth(10)
+    hostZone.on('pointerover', () => {
+      hostGfx.clear()
+      hostGfx.lineStyle(2, 0x00ffcc, 1); hostGfx.strokeRect(hbx, hby, hbw, hbh)
+      hostGfx.fillStyle(0x00ffcc, 0.15); hostGfx.fillRect(hbx, hby, hbw, hbh)
+      hostLabel.setColor('#00ffcc')
     })
-    cardZone.on('pointerout', () => {
-      bg.clear()
-      bg.fillStyle(0x030d0d, 1)
-      bg.fillRect(x, y, CARD_W, CARD_H)
-      bg.lineStyle(1, isEmpty ? 0x112233 : 0x004455, 1)
-      bg.strokeRect(x, y, CARD_W, CARD_H)
+    hostZone.on('pointerout', () => {
+      hostGfx.clear()
+      hostGfx.lineStyle(1.5, 0x00aa88, 0.7); hostGfx.strokeRect(hbx, hby, hbw, hbh)
+      hostGfx.fillStyle(0x00aa88, 0.08); hostGfx.fillRect(hbx, hby, hbw, hbh)
+      hostLabel.setColor('#00aa88')
     })
-    cardZone.on('pointerdown', () => {
+    hostZone.on('pointerdown', () => {
+      if (hosting) return
+      hosting = true
       SaveManager.setActiveSlot(slot)
-      this.scene.start('BootScene')
+      hostLabel.setText('…')
+      network.createRoom().then(() => {
+        const config = SaveManager.getSavedConfig()
+        if (config) {
+          // Existing slot — skip selection, go straight to lobby with saved config
+          this.scene.start('LobbyScene', {
+            role: 'host', pilot: config.pilot, shipId: config.shipId, classId: config.classId,
+          })
+        } else {
+          // New slot — go through selection (room code shown as banner)
+          this.scene.start('SelectionScene', { hostLobbyMode: true })
+        }
+      }).catch(() => { hosting = false; hostLabel.setText('⬡  HOST') })
     })
+
   }
 
   private drawBackground(): void {

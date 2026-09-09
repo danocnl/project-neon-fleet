@@ -13,6 +13,7 @@ import { SaveManager } from './systems/SaveManager'
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   backgroundColor: '#000000',
+  disableVisibilityChange: true,   // keep the game loop running when the tab loses focus
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
