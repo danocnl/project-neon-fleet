@@ -2,7 +2,6 @@ import Phaser from 'phaser'
 import { SaveManager } from '../systems/SaveManager'
 import { DataLoader } from '../systems/DataLoader'
 import { CLASS_COLORS } from '../ships/ClassIcons'
-import { addButton } from '../ui/NeonUI'
 
 const W = 1280, H = 720
 const ACCENT = 0x00ffff
@@ -144,14 +143,28 @@ export class BenchmarkScene extends Phaser.Scene {
 
     this.add.graphics().lineStyle(1, 0x002244, 0.8).lineBetween(80, 510, W - 80, 510)
 
-    const relaunch = addButton(this, W / 2 - 230, 546, 210, 50, 'RELAUNCH', ACCENT,
-      () => this.scene.start('SelectionScene')
-    )
-    relaunch.text.setStyle({ fontSize: '14px', fontStyle: 'bold' })
+    // RELAUNCH — Phaser Rectangle with built-in input (more reliable than Zone)
+    const btnCY = 571
+    const btnRect = this.add.rectangle(W / 2 - 125, btnCY, 210, 46, 0x002233)
+      .setOrigin(0, 0.5)
+      .setStrokeStyle(1.5, ACCENT, 1)
+      .setInteractive({ useHandCursor: true })
+    btnRect.on('pointerover',  () => btnRect.setFillStyle(ACCENT, 0.2))
+    btnRect.on('pointerout',   () => btnRect.setFillStyle(0x002233, 1))
+    btnRect.on('pointerdown',  () => this.scene.start('SelectionScene'))
 
-    // Armory — locked for now
-    const armory = addButton(this, W / 2 + 20, 546, 210, 50, 'ARMORY  [SOON]', 0x334455, () => {})
-    armory.text.setStyle({ fontSize: '12px' }).setColor('#445566')
+    this.add.text(W / 2 - 20, btnCY, 'RELAUNCH', {
+      fontSize: '14px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
+    }).setOrigin(0.5)
+
+    // ARMORY — locked
+    const armoryRect = this.add.rectangle(W / 2 + 15, btnCY, 210, 46, 0x111111)
+      .setOrigin(0, 0.5)
+      .setStrokeStyle(1, 0x223322, 0.5)
+    this.add.text(W / 2 + 120, btnCY, 'ARMORY  [SOON]', {
+      fontSize: '11px', color: '#334433', fontFamily: 'monospace',
+    }).setOrigin(0.5)
+    void armoryRect
 
     this.add.text(W / 2, 618, 'Credits carry over between runs. Spend them in the Armory for permanent weapons and modules.', {
       fontSize: '9px', color: '#1a3322', fontFamily: 'monospace',
