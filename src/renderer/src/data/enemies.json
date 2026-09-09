@@ -158,9 +158,9 @@
     "behavior": "CHASE",
     "description": "A lightweight pursuit drone. Very fast, lightly armoured, with a small shield that recharges quickly when not under fire. Fires rapid weak energy pulses. Individually trivial \u2014 dangerous in groups.",
     "stats": {
-      "HULL": 20,
+      "HULL": 30,
       "ARMOR": 0,
-      "SHIELD_MAX": 25,
+      "SHIELD_MAX": 35,
       "SHIELD_REGEN": 20,
       "SHIELD_DELAY": 3.0,
       "SPEED": 85,
@@ -169,8 +169,8 @@
     },
     "weapon": {
       "damageType": "ENERGY",
-      "damage": 8,
-      "rateOfFire": 1.0,
+      "damage": 6,
+      "rateOfFire": 2.0,
       "range": 200,
       "isBeam": false
     },
@@ -195,9 +195,9 @@
     "behavior": "CHASE",
     "description": "A standard combat drone. Slower than the scout but significantly more durable. Fires kinetic rounds that deal moderate damage. Light shielding provides brief protection before armor takes over.",
     "stats": {
-      "HULL": 35,
+      "HULL": 50,
       "ARMOR": 0,
-      "SHIELD_MAX": 40,
+      "SHIELD_MAX": 55,
       "SHIELD_REGEN": 15,
       "SHIELD_DELAY": 4.0,
       "SPEED": 60,
@@ -206,8 +206,8 @@
     },
     "weapon": {
       "damageType": "KINETIC",
-      "damage": 22,
-      "rateOfFire": 0.5,
+      "damage": 35,
+      "rateOfFire": 0.4,
       "range": 280,
       "isBeam": false
     },
