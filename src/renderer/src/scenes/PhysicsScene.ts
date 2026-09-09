@@ -72,10 +72,15 @@ export class PhysicsScene extends Phaser.Scene {
   private readonly mgr = new LoadoutManager()
 
   // Progression
-  private killCount  = 0
-  private level      = 1
-  private drafting   = false
-  private runCredits = 0
+  private killCount       = 0
+  private level           = 1
+  private drafting        = false
+  private pendingUpgrades = 0
+  private runCredits      = 0
+  private upgradeBtnGfx!: Phaser.GameObjects.Graphics
+  private upgradeBtnText!: Phaser.GameObjects.Text
+  private upgradeBtnZone!: Phaser.GameObjects.Zone
+  private upgradePulse    = 0   // phase for sine pulse
   private killCounterText!:  Phaser.GameObjects.Text
   private levelText!:        Phaser.GameObjects.Text
   private modulesContainer!: Phaser.GameObjects.Container
@@ -174,6 +179,7 @@ export class PhysicsScene extends Phaser.Scene {
     this.updateGrid()
     this.updateMinimap(clsColor)
     this.updateHUD()
+    this.pulseUpgradeButton(dt)
   }
 
   // ─── Build ───────────────────────────────────────────────────────────────
@@ -254,14 +260,31 @@ export class PhysicsScene extends Phaser.Scene {
   }
 
   private triggerDraft(): void {
-    this.drafting = true
+    // Don't pause — queue the upgrade and let the player claim it when ready
     this.level++
+    this.pendingUpgrades++
+    this.updateUpgradeButton()
+  }
+
+  private claimUpgrade(): void {
+    if (this.drafting || this.pendingUpgrades <= 0) return
+    this.drafting = true
+
     const offer = this.mgr.getDraftOffer(this.playerState, 4)
     this.scene.launch('DraftScene', {
       cards:       offer,
       rerollsFn:   () => this.mgr.getDraftOffer(this.playerState, 4),
-      onPick:      (card: UpgradeCard) => this.applyDraftedCard(card),
-      onSkip:      () => { this.drafting = false },
+      onPick:      (card: UpgradeCard) => {
+        this.applyDraftedCard(card)
+        this.pendingUpgrades = Math.max(0, this.pendingUpgrades - 1)
+        this.drafting = false
+        this.updateUpgradeButton()
+      },
+      onSkip:      () => {
+        this.pendingUpgrades = Math.max(0, this.pendingUpgrades - 1)
+        this.drafting = false
+        this.updateUpgradeButton()
+      },
       rerollsLeft: 2,
       level:       this.level,
       classId:     this.runData.classId,
@@ -439,6 +462,19 @@ export class PhysicsScene extends Phaser.Scene {
       fontSize: '10px', color: '#335544', fontFamily: 'monospace',
     }).setOrigin(1, 0); add(this.killCounterText)
 
+    // Upgrade ready button — visible only when pendingUpgrades > 0
+    const BW = 210, BH = 32
+    const BX = VIEW_W / 2 - BW / 2
+    const BY = VIEW_H - 54
+    this.upgradeBtnGfx  = this.add.graphics().setScrollFactor(0).setDepth(50)
+    this.upgradeBtnText = this.add.text(VIEW_W / 2, BY + BH / 2, '', {
+      fontSize: '12px', color: '#00ffff', fontFamily: 'monospace', fontStyle: 'bold',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false)
+    this.upgradeBtnZone = this.add.zone(BX, BY, BW, BH).setOrigin(0, 0).setScrollFactor(0).setDepth(52)
+    this.upgradeBtnZone.setInteractive()
+    this.upgradeBtnZone.on('pointerdown', () => this.claimUpgrade())
+    this.upgradeBtnZone.disableInteractive()
+
 
     // Minimap label
     add(this.add.text(MM_X, MM_Y - 14, 'SECTOR MAP', {
@@ -487,6 +523,38 @@ export class PhysicsScene extends Phaser.Scene {
       `${e.type.replace('_', ' ')} ${(e.remainingMs / 1000).toFixed(1)}s`
     )
     this.effectText.setText(effects.join('  '))
+  }
+
+  private pulseUpgradeButton(dt: number): void {
+    if (this.pendingUpgrades <= 0) return
+    this.upgradePulse += dt * 3.5
+    const a = 0.35 + 0.3 * Math.sin(this.upgradePulse)  // oscillates 0.05–0.65
+
+    const BW = 210, BH = 32
+    const BX = VIEW_W / 2 - BW / 2
+    const BY = VIEW_H - 54
+
+    const g = this.upgradeBtnGfx
+    g.clear()
+    g.lineStyle(1.5, 0x00ffff, a)
+    g.strokeRect(BX, BY, BW, BH)
+    g.fillStyle(0x00ffff, a * 0.25)
+    g.fillRect(BX, BY, BW, BH)
+  }
+
+  private updateUpgradeButton(): void {
+    const visible = this.pendingUpgrades > 0
+    this.upgradeBtnText.setVisible(visible)
+    if (visible) {
+      this.upgradeBtnZone.setInteractive()
+      const label = this.pendingUpgrades === 1
+        ? '▸ UPGRADE READY'
+        : `▸ ${this.pendingUpgrades} UPGRADES READY`
+      this.upgradeBtnText.setText(label)
+    } else {
+      this.upgradeBtnZone.disableInteractive()
+      this.upgradeBtnGfx.clear()
+    }
   }
 
   private updateKillCounter(): void {
