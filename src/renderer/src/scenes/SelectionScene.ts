@@ -417,14 +417,14 @@ export class SelectionScene extends Phaser.Scene {
       fontSize: '10px', color: '#335566', fontFamily: 'monospace',
     }), 3) as Phaser.GameObjects.Text
 
-    // Ship list — unlocked + locked
+    // Ship list — unlocked + locked  (LEFT panel, mirrors class list in step 2)
     const groups = [
       { label: 'LIGHT',  ids: ['sidewinder', 'cobra', 'mamba']  },
       { label: 'MEDIUM', ids: ['krait', 'chieftain', 'python']  },
       { label: 'HEAVY',  ids: ['anaconda', 'cutter', 'type_10'] },
     ]
     let y = HDR_H + 32
-    const x = W - L + 4
+    const x = 4
 
     for (const grp of groups) {
       this.reg(this.make.text({ x: x + 10, y, text: grp.label,
@@ -455,7 +455,7 @@ export class SelectionScene extends Phaser.Scene {
         }).setAlpha(locked ? 0.15 : 0.4), 3)
 
         if (!locked) {
-          const zone = this.add.zone(W - L, y, L, 36).setOrigin(0, 0).setInteractive()
+          const zone = this.add.zone(0, y, L, 36).setOrigin(0, 0).setInteractive()
           this.reg(zone, 3); this.regZ(zone, 3)
           zone.on('pointerover', () => { if (this.selectedShipId !== id) this.hoverShipItem(id, true) })
           zone.on('pointerout',  () => { if (this.selectedShipId !== id) this.hoverShipItem(id, false) })
@@ -540,8 +540,8 @@ export class SelectionScene extends Phaser.Scene {
     bg.clear()
     if (hover) {
       const y = (nameT?.y ?? 0) - 5
-      bg.fillStyle(color, 0.06); bg.fillRect(W - L, y, L, 36)
-      bg.lineStyle(1, color, 0.25); bg.strokeRect(W - L, y, L, 36)
+      bg.fillStyle(color, 0.06); bg.fillRect(0, y, L, 36)
+      bg.lineStyle(1, color, 0.25); bg.strokeRect(0, y, L, 36)
     }
   }
 
@@ -563,8 +563,8 @@ export class SelectionScene extends Phaser.Scene {
     nameT.setAlpha(1)
     const bg = this.shipItemBgs.get(id)!
     bg.clear()
-    bg.fillStyle(color, 0.1); bg.fillRect(W - L, nameT.y - 5, L, 36)
-    bg.lineStyle(1.5, color, 0.8); bg.strokeRect(W - L, nameT.y - 5, L, 36)
+    bg.fillStyle(color, 0.1); bg.fillRect(0, nameT.y - 5, L, 36)
+    bg.lineStyle(1.5, color, 0.8); bg.strokeRect(0, nameT.y - 5, L, 36)
 
     this.s_name.setText(ship.name.replace(' Frame', '').toUpperCase()).setColor(hex).setStroke(hex, 1)
     this.s_sub.setText(`${ship.subtitle}  ·  ${ship.weightClass}`)
