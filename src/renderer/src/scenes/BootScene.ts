@@ -33,16 +33,22 @@ export class BootScene extends Phaser.Scene {
     }).setOrigin(0.5)
 
     // Check navigation intent stored before reload
-    const armoryData = SaveManager.getArmoryPending()
-    const lastRun    = SaveManager.getLastRun()
+    const armoryData   = SaveManager.getArmoryPending()
+    const relaunch     = SaveManager.getLastRun()
+    const savedConfig  = SaveManager.getSavedConfig()
 
     if (armoryData) {
       SaveManager.clearArmoryPending()
       this.time.delayedCall(300, () => this.scene.start('ArmoryScene', armoryData))
-    } else if (lastRun) {
+    } else if (relaunch) {
+      // BenchmarkScene quick-relaunch — same pilot, same ship
       SaveManager.clearLastRun()
-      this.time.delayedCall(500, () => this.scene.start('PhysicsScene', lastRun))
+      this.time.delayedCall(500, () => this.scene.start('PhysicsScene', relaunch))
+    } else if (savedConfig) {
+      // Returning player loading an existing save slot — skip SelectionScene
+      this.time.delayedCall(600, () => this.scene.start('PhysicsScene', savedConfig))
     } else {
+      // New slot — go through character selection
       this.time.delayedCall(3000, () => this.scene.start('SelectionScene'))
     }
   }

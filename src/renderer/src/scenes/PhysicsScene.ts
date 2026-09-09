@@ -24,6 +24,10 @@ const WORLD_W  = VIEW_W * 5   // 6400
 const WORLD_H  = VIEW_H * 5   // 3600
 const GRID_SZ  = 60
 
+// ─── Background types ─────────────────────────────────────────────────────────
+interface Star       { nx: number; ny: number; size: number; parallax: number; alpha: number }
+interface NebulaBlob { nx: number; ny: number; radius: number; phase: number; alpha: number }
+
 const KILLS_PER_LEVEL = 3
 const LOG_MAX = 6
 const MODULE_MAX_LEVEL = 20   // passiveBonuses in modules.json = the Lv20 target value
@@ -52,10 +56,13 @@ interface ShipActor {
 
 export class PhysicsScene extends Phaser.Scene {
   private actor!:    ShipActor
+  private bgGfx!:        Phaser.GameObjects.Graphics
   private gridGfx!:      Phaser.GameObjects.Graphics
   private flashGfx!:     Phaser.GameObjects.Graphics
   private damageFlashGfx!: Phaser.GameObjects.Graphics
   private minimapGfx!:   Phaser.GameObjects.Graphics
+  private stars:       Star[]       = []
+  private nebulaBlobs: NebulaBlob[] = []
 
   private shieldFlashTimer = 0   // 0–1, decays to 0
   private hullFlashTimer   = 0
@@ -125,6 +132,10 @@ export class PhysicsScene extends Phaser.Scene {
   }
 
   create(): void {
+    // Background starfield + nebula — screen-space, depth -1
+    this.bgGfx = this.add.graphics().setScrollFactor(0).setDepth(-1)
+    this.buildBackground()
+
     // Virtual grid — screen-space, redrawn each frame
     this.gridGfx = this.add.graphics().setScrollFactor(0).setDepth(0)
 
@@ -197,6 +208,12 @@ export class PhysicsScene extends Phaser.Scene {
         this.runCredits += result.credits
         this.sector.addKill()
         this.dispatcher.emit({ type: 'ON_KILL', sourceId: this.runData.shipId, value: 1, timestamp: performance.now() })
+        // When the last enemy in the sector dies, advance to the next sector
+        if (!this.isDead && !this.sector.atMaxSector && this.enemies.count === 0) {
+          const newSector = this.sector.advance()
+          this.onSectorAdvance(newSector)
+        }
+        this.updateKillCounter()
       }
     )
 
@@ -230,10 +247,48 @@ export class PhysicsScene extends Phaser.Scene {
     this.hullFlashTimer   = Math.max(0, this.hullFlashTimer   - dt / 0.18)
     this.drawDamageFlash()
 
+    this.updateBackground()
     this.updateGrid()
     this.updateMinimap(clsColor)
     this.updateHUD()
     this.pulseUpgradeButton(dt)
+  }
+
+  private onSectorAdvance(sector: number): void {
+    // Spawn a ring of enemies around the player immediately
+    this.enemies.spawnSectorTransitionWave(this.sector, this.actor.body.x, this.actor.body.y)
+
+    // Large announcement text
+    const txt = this.add.text(VIEW_W / 2, VIEW_H / 2 - 40, `SECTOR  ${sector}`, {
+      fontSize: '52px', color: '#ffffff', fontFamily: 'monospace', fontStyle: 'bold',
+      stroke: '#ffffff', strokeThickness: 2,
+      shadow: { offsetX: 0, offsetY: 0, color: '#00ffff', blur: 24, fill: true },
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(200).setAlpha(0)
+
+    this.add.text(VIEW_W / 2, VIEW_H / 2 + 22, 'SECTOR ADVANCE', {
+      fontSize: '12px', color: '#335544', fontFamily: 'monospace', letterSpacing: 6,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(200)
+      .setAlpha(0).setName('sector_sub')
+
+    // Fade in → hold → fade out
+    this.tweens.add({
+      targets: [txt, this.children.getByName('sector_sub')].filter(Boolean),
+      alpha: { from: 0, to: 1 },
+      duration: 400, yoyo: true, hold: 900,
+      onComplete: () => {
+        txt.destroy()
+        this.children.getByName('sector_sub')?.destroy()
+      },
+    })
+
+    // Brief screen flash in the sector colour
+    const flash = this.add.graphics().setScrollFactor(0).setDepth(199)
+    const gridCol = this.sector.getGridColor()
+    flash.fillStyle(gridCol, 0.35).fillRect(0, 0, VIEW_W, VIEW_H)
+    this.tweens.add({
+      targets: flash, alpha: { from: 1, to: 0 }, duration: 600,
+      onComplete: () => flash.destroy(),
+    })
   }
 
   private drawDamageFlash(): void {
@@ -242,21 +297,25 @@ export class PhysicsScene extends Phaser.Scene {
     const { x, y } = this.actor.body
 
     if (this.shieldFlashTimer > 0) {
-      const t = this.shieldFlashTimer
-      const r = 46 + (1 - t) * 22     // ring expands outward as it fades
-      g.lineStyle(3.5, 0x4488ff, t * 0.7)
-      g.strokeCircle(x, y, r)
-      g.fillStyle(0x2255ff, t * 0.12)
-      g.fillCircle(x, y, r)
+      const t  = this.shieldFlashTimer
+      const r  = 44 + (1 - t) * 28
+      // Outer glow ring
+      g.lineStyle(10, 0x4488ff, t * 0.12); g.strokeCircle(x, y, r)
+      // Crisp ring
+      g.lineStyle(2, 0x4488ff, t * 0.9);   g.strokeCircle(x, y, r)
+      // Screen-edge vignette (screen-space graphics still follow world coords — use fill behind)
+      g.fillStyle(0x2255cc, t * 0.10);     g.fillCircle(x, y, r + 8)
     }
 
     if (this.hullFlashTimer > 0) {
-      const t = this.hullFlashTimer
-      const r = 36 + (1 - t) * 18
-      g.lineStyle(3, 0xffffff, t * 0.85)
-      g.strokeCircle(x, y, r)
-      g.fillStyle(0xffffff, t * 0.08)
-      g.fillCircle(x, y, r)
+      const t  = this.hullFlashTimer
+      const r  = 34 + (1 - t) * 22
+      // Outer glow
+      g.lineStyle(14, 0xff2200, t * 0.18); g.strokeCircle(x, y, r)
+      // Crisp ring
+      g.lineStyle(2.5, 0xff8800, t * 0.95); g.strokeCircle(x, y, r)
+      // Inner flash fill
+      g.fillStyle(0xff2200, t * 0.08);     g.fillCircle(x, y, r)
     }
   }
 
@@ -390,7 +449,7 @@ export class PhysicsScene extends Phaser.Scene {
   private buildEnemies(): void {
     this.enemies = new EnemyManager()
     this.enemies.init(this)
-    this.enemies.spawnInitial()
+    this.enemies.spawnSectorWave(this.sector)
 
     const loadout = SaveManager.getLoadout(this.runData.shipId)
               ?? DEFAULT_LOADOUTS[this.runData.shipId]
@@ -476,33 +535,40 @@ export class PhysicsScene extends Phaser.Scene {
       }
 
       case 'HUNTER': {
-        // Head toward nearest drone/turret
-        const targets = entities.filter(e => e.def.behavior !== 'DRIFT' && e.alive)
-        if (targets.length > 0) {
-          const nearest = targets.reduce((a, b) =>
-            Math.hypot(a.x - bx, a.y - by) < Math.hypot(b.x - bx, b.y - by) ? a : b)
-          // Orbit slightly offset so we don't fly straight into the enemy
-          const orbitAngle = Math.atan2(by - nearest.y, bx - nearest.x) + (Math.random() - 0.5) * 1.2
-          const dist = 180 + nearest.def.stats.COLLISION_RADIUS
+        // Primary: strafe around nearest drone/turret. Fallback: orbit nearest asteroid.
+        const drones = entities.filter(e => e.def.behavior !== 'DRIFT' && e.alive)
+        const huntTarget = drones.length > 0
+          ? drones.reduce((a, b) => Math.hypot(a.x - bx, a.y - by) < Math.hypot(b.x - bx, b.y - by) ? a : b)
+          : entities.filter(e => e.def.behavior === 'DRIFT' && e.alive)
+              .reduce<typeof entities[0] | null>((a, b) =>
+                !a || Math.hypot(b.x - bx, b.y - by) < Math.hypot(a.x - bx, a.y - by) ? b : a, null)
+        if (huntTarget) {
+          const angleToTarget = Math.atan2(huntTarget.y - by, huntTarget.x - bx)
+          const side = Math.random() > 0.5 ? 1 : -1
+          const orbitAngle = angleToTarget + side * (Math.PI * 0.5 + (Math.random() - 0.5) * 0.6)
+          const orbitDist = 160 + huntTarget.def.stats.COLLISION_RADIUS
           return {
-            x: ((nearest.x + Math.cos(orbitAngle) * dist) % WORLD_W + WORLD_W) % WORLD_W,
-            y: ((nearest.y + Math.sin(orbitAngle) * dist) % WORLD_H + WORLD_H) % WORLD_H,
+            x: ((huntTarget.x + Math.cos(orbitAngle) * orbitDist) % WORLD_W + WORLD_W) % WORLD_W,
+            y: ((huntTarget.y + Math.sin(orbitAngle) * orbitDist) % WORLD_H + WORLD_H) % WORLD_H,
           }
         }
         return this.randomWaypointFrom(bx, by)
       }
 
       case 'FARMER': {
-        // Head toward the nearest asteroid
+        // Primary: orbit nearest asteroid. Fallback: orbit nearest drone/turret.
         const rocks = entities.filter(e => e.def.behavior === 'DRIFT' && e.alive)
-        if (rocks.length > 0) {
-          const nearest = rocks.reduce((a, b) =>
-            Math.hypot(a.x - bx, a.y - by) < Math.hypot(b.x - bx, b.y - by) ? a : b)
-          const approach = Math.atan2(by - nearest.y, bx - nearest.x) + (Math.random() - 0.5) * 0.6
-          const dist = 120 + nearest.def.stats.COLLISION_RADIUS
+        const farmTarget = rocks.length > 0
+          ? rocks.reduce((a, b) => Math.hypot(a.x - bx, a.y - by) < Math.hypot(b.x - bx, b.y - by) ? a : b)
+          : entities.filter(e => e.def.behavior !== 'DRIFT' && e.alive)
+              .reduce<typeof entities[0] | null>((a, b) =>
+                !a || Math.hypot(b.x - bx, b.y - by) < Math.hypot(a.x - bx, a.y - by) ? b : a, null)
+        if (farmTarget) {
+          const approach = Math.atan2(by - farmTarget.y, bx - farmTarget.x) + (Math.random() - 0.5) * 0.6
+          const dist = 120 + farmTarget.def.stats.COLLISION_RADIUS
           return {
-            x: ((nearest.x + Math.cos(approach) * dist) % WORLD_W + WORLD_W) % WORLD_W,
-            y: ((nearest.y + Math.sin(approach) * dist) % WORLD_H + WORLD_H) % WORLD_H,
+            x: ((farmTarget.x + Math.cos(approach) * dist) % WORLD_W + WORLD_W) % WORLD_W,
+            y: ((farmTarget.y + Math.sin(approach) * dist) % WORLD_H + WORLD_H) % WORLD_H,
           }
         }
         return this.randomWaypointFrom(bx, by)
@@ -521,15 +587,88 @@ export class PhysicsScene extends Phaser.Scene {
     return { x, y }
   }
 
+  // ─── Background ──────────────────────────────────────────────────────────
+
+  private buildBackground(): void {
+    const rng = (lo: number, hi: number) => lo + Math.random() * (hi - lo)
+
+    // Three parallax layers of stars (nx/ny are normalised [0,1] base positions)
+    for (let i = 0; i < 55; i++)
+      this.stars.push({ nx: Math.random(), ny: Math.random(), size: 0.5,  parallax: 0.04, alpha: rng(0.20, 0.45) })
+    for (let i = 0; i < 35; i++)
+      this.stars.push({ nx: Math.random(), ny: Math.random(), size: 1.0,  parallax: 0.10, alpha: rng(0.35, 0.60) })
+    for (let i = 0; i < 18; i++)
+      this.stars.push({ nx: Math.random(), ny: Math.random(), size: 1.6,  parallax: 0.19, alpha: rng(0.55, 0.85) })
+
+    // Nebula blobs — large soft circles spread across the view
+    this.nebulaBlobs = [
+      { nx: 0.22, ny: 0.28, radius: 300, phase: 0.0, alpha: 0.055 },
+      { nx: 0.74, ny: 0.62, radius: 340, phase: 1.9, alpha: 0.065 },
+      { nx: 0.50, ny: 0.12, radius: 240, phase: 3.5, alpha: 0.045 },
+      { nx: 0.12, ny: 0.78, radius: 270, phase: 5.2, alpha: 0.050 },
+      { nx: 0.86, ny: 0.42, radius: 200, phase: 2.4, alpha: 0.040 },
+    ]
+  }
+
+  private updateBackground(): void {
+    const g   = this.bgGfx
+    const cam = this.cameras.main
+    g.clear()
+
+    // Deep-space fill
+    g.fillStyle(0x000008, 1)
+    g.fillRect(0, 0, VIEW_W, VIEW_H)
+
+    // Nebula blobs — soft stacked circles give a gradient-like look
+    const nc = this.getNebulaColor()
+    const t  = this.time.now * 0.00025
+    for (const blob of this.nebulaBlobs) {
+      // Very slow drift: camera parallax (0.012) + gentle oscillation
+      const bx = ((blob.nx * VIEW_W + cam.scrollX * 0.012 + Math.sin(t + blob.phase) * 12) % VIEW_W + VIEW_W) % VIEW_W
+      const by = ((blob.ny * VIEW_H + cam.scrollY * 0.012 + Math.cos(t * 0.7 + blob.phase) * 9) % VIEW_H + VIEW_H) % VIEW_H
+      g.fillStyle(nc, blob.alpha * 0.30); g.fillCircle(bx, by, blob.radius)
+      g.fillStyle(nc, blob.alpha * 0.55); g.fillCircle(bx, by, blob.radius * 0.65)
+      g.fillStyle(nc, blob.alpha * 1.00); g.fillCircle(bx, by, blob.radius * 0.35)
+    }
+
+    // Stars — parallax scrolling, tiled by modulo
+    const sc = this.getStarTint()
+    for (const star of this.stars) {
+      const sx = ((star.nx * VIEW_W - cam.scrollX * star.parallax) % VIEW_W + VIEW_W) % VIEW_W
+      const sy = ((star.ny * VIEW_H - cam.scrollY * star.parallax) % VIEW_H + VIEW_H) % VIEW_H
+      g.fillStyle(sc, star.alpha)
+      g.fillCircle(sx, sy, star.size)
+    }
+  }
+
+  private getNebulaColor(): number {
+    const s = this.sector.sector
+    if (s <= 5)  return 0x002255   // cool blue
+    if (s <= 10) return 0x150030   // deep violet
+    if (s <= 15) return 0x1f1000   // amber
+    if (s <= 20) return 0x200000   // deep red
+    return 0x001418               // void teal
+  }
+
+  private getStarTint(): number {
+    const s = this.sector.sector
+    if (s <= 5)  return 0xaabbff   // blue-white
+    if (s <= 10) return 0xccaaff   // lavender
+    if (s <= 15) return 0xffddaa   // warm amber
+    if (s <= 20) return 0xffaaaa   // reddish
+    return 0xaaffee               // teal-white
+  }
+
   // ─── Grid (virtual, screen-space) ────────────────────────────────────────
 
   private updateGrid(): void {
     const cam     = this.cameras.main
     const offsetX = cam.scrollX % GRID_SZ
     const offsetY = cam.scrollY % GRID_SZ
+    const gridCol = this.sector.getGridColor()
 
     this.gridGfx.clear()
-    this.gridGfx.lineStyle(1, 0x003366, 0.3)
+    this.gridGfx.lineStyle(1, gridCol, 0.35)
 
     for (let x = -offsetX; x <= VIEW_W; x += GRID_SZ) {
       this.gridGfx.lineBetween(x, 0, x, VIEW_H)
@@ -760,6 +899,14 @@ export class PhysicsScene extends Phaser.Scene {
       `${e.type.replace('_', ' ')} ${(e.remainingMs / 1000).toFixed(1)}s`
     )
     this.effectText.setText(effects.join('  '))
+
+    // Live sector / enemy count display
+    const remaining = this.enemies.count
+    this.sectorText?.setText(
+      remaining > 0
+        ? `SECTOR ${this.sector.sector}  ·  ${remaining} LEFT`
+        : `SECTOR ${this.sector.sector}`
+    )
   }
 
   // Steering force that pushes the ship away from nearby asteroids.
@@ -867,8 +1014,6 @@ export class PhysicsScene extends Phaser.Scene {
     const progress = this.killCount % KILLS_PER_LEVEL
     this.killCounterText?.setText(`KILLS  ${progress} / ${KILLS_PER_LEVEL}`)
     this.levelText?.setText(`LV ${this.level}`)
-    const pct = Math.round(this.sector.sectorProgress * 100)
-    this.sectorText?.setText(`SECTOR ${this.sector.sector}  ${pct}%`)
   }
 
   private updateModulesDisplay(): void {

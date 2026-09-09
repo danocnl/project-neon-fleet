@@ -39,43 +39,58 @@ interface EnemyProjectile {
   lifetimeMs: number; color: number; size: number
 }
 
+interface ImpactParticle {
+  x: number; y: number; vx: number; vy: number
+  life: number    // 1.0 → 0.0
+  decay: number   // per-ms rate
+  color: number; size: number
+}
+
+interface DeathRing {
+  x: number; y: number
+  radius: number; maxRadius: number
+  life: number; decay: number
+  color: number
+}
+
 export interface KillResult {
   credits:  number; xp: number; position: { x: number; y: number }
 }
 
 export class EnemyManager {
-  private entities:       EnemyEntity[] = []
-  private defs            = new Map<string, Enemy>()
-  private gfx!:           Phaser.GameObjects.Graphics
-  private projGfx!:       Phaser.GameObjects.Graphics
-  private enemyProjs:     EnemyProjectile[] = []
-  private _currentTarget: EnemyEntity | null = null
+  private entities:         EnemyEntity[] = []
+  private defs              = new Map<string, Enemy>()
+  private gfx!:             Phaser.GameObjects.Graphics
+  private projGfx!:         Phaser.GameObjects.Graphics
+  private fxGfx!:           Phaser.GameObjects.Graphics
+  private enemyProjs:       EnemyProjectile[] = []
+  private impactParticles:  ImpactParticle[]  = []
+  private deathRings:       DeathRing[]       = []
+  private _currentTarget:   EnemyEntity | null = null
 
   get currentTarget(): EnemyEntity | null { return this._currentTarget }
 
   init(scene: Phaser.Scene): void {
     this.gfx     = scene.add.graphics().setDepth(4)
     this.projGfx = scene.add.graphics().setDepth(6)
+    this.fxGfx   = scene.add.graphics().setDepth(7)
     const raw = DataLoader.getAllEnemies()
     for (const e of raw) this.defs.set(e.id, e)
   }
 
-  spawnInitial(): void {
+  /** Spawn the sector's full wave spread across the world (used on scene start and sector advance). */
+  spawnSectorWave(sector: SectorManager): void {
     const cx = WORLD_W / 2, cy = WORLD_H / 2
-    const spawn = (id: string, count: number, minDist = SPAWN_CLEAR_RADIUS) => {
+    const wave = sector.getSpawnWave()
+    for (const { id, count } of wave) {
+      const minDist = id.startsWith('asteroid') ? SPAWN_CLEAR_RADIUS : SPAWN_CLEAR_RADIUS * 0.8
       for (let i = 0; i < count; i++) {
         let x: number, y: number
         do { x = Math.random() * WORLD_W; y = Math.random() * WORLD_H }
         while (Math.hypot(x - cx, y - cy) < minDist)
-        this.spawnEnemy(id, x, y, Math.random() * Math.PI * 2)
+        this.spawnEnemy(id, x, y, Math.random() * Math.PI * 2, sector.hpScale)
       }
     }
-    spawn('asteroid_xl',    12, 800)
-    spawn('asteroid_large',  8, 500)
-    spawn('asteroid_medium', 6, 400)
-    spawn('scout_drone',     3, 500)
-    spawn('attack_drone',    2, 600)
-    spawn('turret',          1, 800)
   }
 
   spawnEnemy(id: string, x: number, y: number, angle: number, sectorScale = 1.0): EnemyEntity | null {
@@ -117,7 +132,10 @@ export class EnemyManager {
     // Player attacks nearest in arc — priority determined by flight mode
     const target = this.nearestAlive(playerX, playerY, playerRange, playerHeading, playerArc, targetPriority)
     this._currentTarget = target
-    if (target) target.takeDamage(playerDps * dt)
+    if (target) {
+      target.takeDamage(playerDps * dt)
+      this.spawnHitSparks(target.x, target.y, target.def.stats.COLLISION_RADIUS)
+    }
 
     // Enemy attacks + spawn visual projectiles (weapon looked up from DataLoader)
     for (const e of this.entities) {
@@ -126,6 +144,17 @@ export class EnemyManager {
       if (!weapon) continue
       const dist = Math.hypot(e.x - playerX, e.y - playerY)
       if (dist > weapon.baseStats.RANGE) continue
+
+      // CHASE drones must be roughly facing the player before they can fire.
+      // Scout: ±50°, Attack: ±38°. Turrets (STATIC) always face the player — no arc check.
+      if (e.def.behavior === 'CHASE') {
+        const facingAngle   = Math.atan2(e.vy, e.vx)
+        const toPlayerAngle = Math.atan2(playerY - e.y, playerX - e.x)
+        let diff = Math.abs(toPlayerAngle - facingAngle)
+        if (diff > Math.PI) diff = Math.PI * 2 - diff
+        const halfArc = (e.def.id === 'scout_drone' ? 50 : 38) * (Math.PI / 180)
+        if (diff > halfArc) continue
+      }
 
       const isBeam = weapon.behaviors?.BEAM === true
       if (isBeam) {
@@ -167,6 +196,7 @@ export class EnemyManager {
           this.spawnEnemy(e.def.breakdown.enemyId, e.x + Math.cos(a) * offset, e.y + Math.sin(a) * offset, a)
         }
       }
+      this.spawnDeathExplosion(e.x, e.y, e.def.stats.COLLISION_RADIUS, ENEMY_COLOR[e.def.id] ?? 0xff3300)
       onKill({
         credits:  Phaser.Math.Between(e.def.drops.creditsMin, e.def.drops.creditsMax),
         xp:       (e.def as any).xpValue ?? 1,
@@ -174,23 +204,9 @@ export class EnemyManager {
       })
     }
 
-    this.respawnIfNeeded(sector, playerX, playerY)
+    this.tickParticles(deltaMs)
     this.draw(playerX, playerY)
-  }
-
-  private respawnIfNeeded(sector: SectorManager, playerX: number, playerY: number): void {
-    if (this.entities.length >= 6) return
-    const wave = sector.getSpawnWave()
-    for (const { id, count } of wave) {
-      for (let i = 0; i < count; i++) {
-        let x: number, y: number
-        do {
-          x = Math.random() * WORLD_W
-          y = Math.random() * WORLD_H
-        } while (Math.hypot(x - playerX, y - playerY) < 800)
-        this.spawnEnemy(id, x, y, Math.random() * Math.PI * 2, sector.hpScale)
-      }
-    }
+    this.drawFX()
   }
 
   // ─── Collision ───────────────────────────────────────────────────────────
@@ -246,21 +262,29 @@ export class EnemyManager {
       case 'CHASE': {
         const dx = px - e.x, dy = py - e.y
         const dist = Math.hypot(dx, dy)
-        const aggroRange = e.def.leash ?? Infinity
 
         if (dist <= (e.def.leash ?? Infinity) && dist > 1) {
-          // Active pursuit — steer toward player (speed scaled by sector)
           const accel    = e.def.stats.ACCELERATION
           const maxSpeed = e.def.stats.SPEED * sector.speedScale
-          e.vx += (dx / dist) * accel * dt
-          e.vy += (dy / dist) * accel * dt
+
+          // Rate-limited steering — drones can't pivot instantly (creates turning circles).
+          // Scout turns faster than the heavier attack drone.
+          const turnRateRad = e.def.id === 'scout_drone' ? 2.2 : 1.2   // rad/s
+          const curAngle     = Math.atan2(e.vy, e.vx)
+          const desiredAngle = Math.atan2(dy, dx)
+          let angleDiff = desiredAngle - curAngle
+          if (angleDiff >  Math.PI) angleDiff -= Math.PI * 2
+          if (angleDiff < -Math.PI) angleDiff += Math.PI * 2
+          const steerAngle = curAngle + Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), turnRateRad * dt)
+
+          e.vx += Math.cos(steerAngle) * accel * dt
+          e.vy += Math.sin(steerAngle) * accel * dt
           const spd = Math.hypot(e.vx, e.vy)
           if (spd > maxSpeed) {
             e.vx = (e.vx / spd) * maxSpeed
             e.vy = (e.vy / spd) * maxSpeed
           }
         } else {
-          // Outside aggro range — coast and decelerate
           e.vx *= Math.pow(0.92, dt * 60)
           e.vy *= Math.pow(0.92, dt * 60)
         }
@@ -319,6 +343,12 @@ export class EnemyManager {
     this.gfx.lineStyle(3, color, 0.25); this.gfx.strokePoints(pts, true)
     this.gfx.lineStyle(1.5, color, 1.0); this.gfx.strokePoints(pts, true)
 
+    // Hit flash — bright white outline when taking damage
+    if (e.hitFlashMs > 0) {
+      const ft = Math.min(e.hitFlashMs / 80, 1)
+      this.gfx.lineStyle(4, 0xffffff, ft * 0.85); this.gfx.strokePoints(pts, true)
+    }
+
     if (e.hullRatio < 1) {
       const bw = e.def.stats.COLLISION_RADIUS * 1.8
       const bx = e.x - bw / 2, by = e.y - e.def.stats.COLLISION_RADIUS - 10
@@ -362,6 +392,114 @@ export class EnemyManager {
     if (priority === 'drones')    return scan(e => e.def.behavior !== 'DRIFT') ?? scan(() => true)
     if (priority === 'asteroids') return scan(e => e.def.behavior === 'DRIFT') ?? scan(() => true)
     return scan(() => true)
+  }
+
+  // Called on sector advance — spawns enemies in a ring around the player for immediate action
+  spawnSectorTransitionWave(sector: SectorManager, playerX: number, playerY: number): void {
+    const wave = sector.getSpawnWave()
+    for (const { id, count } of wave) {
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2
+        const dist  = 500 + Math.random() * 500   // 500-1000u ring around player
+        let x = ((playerX + Math.cos(angle) * dist) % WORLD_W + WORLD_W) % WORLD_W
+        let y = ((playerY + Math.sin(angle) * dist) % WORLD_H + WORLD_H) % WORLD_H
+        this.spawnEnemy(id, x, y, Math.random() * Math.PI * 2, sector.hpScale)
+      }
+    }
+  }
+
+  // ─── Particles & FX ──────────────────────────────────────────────────────
+
+  private spawnHitSparks(x: number, y: number, radius: number): void {
+    if (Math.random() > 0.5) return   // thin out to ~30 sparks/s at 60fps
+    const angle = Math.random() * Math.PI * 2
+    const spd   = 90 + Math.random() * 130
+    const jx    = (Math.random() - 0.5) * radius * 0.8
+    const jy    = (Math.random() - 0.5) * radius * 0.8
+    this.impactParticles.push({
+      x: x + jx, y: y + jy,
+      vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd,
+      life: 1, decay: 1 / (120 + Math.random() * 130),
+      color: Math.random() > 0.4 ? 0xffffff : 0xffcc44,
+      size: 1.2 + Math.random() * 1.8,
+    })
+  }
+
+  private spawnDeathExplosion(x: number, y: number, radius: number, color: number): void {
+    const count = radius > 50 ? 16 : radius > 25 ? 10 : 7
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5
+      const spd   = 70 + Math.random() * 220
+      this.impactParticles.push({
+        x, y,
+        vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd,
+        life: 1, decay: 1 / (280 + Math.random() * 420),
+        color: Math.random() > 0.35 ? color : 0xffffff,
+        size: 2 + Math.random() * (radius > 50 ? 5 : 3),
+      })
+    }
+    // Expanding shockwave ring
+    this.deathRings.push({
+      x, y,
+      radius: radius * 0.3, maxRadius: radius * 2.8,
+      life: 1, decay: 1 / 380,
+      color,
+    })
+    // Bright central flash (second smaller ring)
+    this.deathRings.push({
+      x, y,
+      radius: 0, maxRadius: radius * 1.2,
+      life: 1, decay: 1 / 160,
+      color: 0xffffff,
+    })
+  }
+
+  private tickParticles(deltaMs: number): void {
+    for (const p of this.impactParticles) {
+      p.x += p.vx * (deltaMs / 1000)
+      p.y += p.vy * (deltaMs / 1000)
+      p.vx *= 0.97; p.vy *= 0.97   // drag
+      p.life -= p.decay * deltaMs
+    }
+    this.impactParticles = this.impactParticles.filter(p => p.life > 0)
+
+    for (const r of this.deathRings) {
+      r.radius += (r.maxRadius - r.radius) * 0.12   // eased expansion
+      r.life   -= r.decay * deltaMs
+    }
+    this.deathRings = this.deathRings.filter(r => r.life > 0)
+  }
+
+  private drawFX(): void {
+    const g = this.fxGfx
+    g.clear()
+
+    // Death rings (shockwaves)
+    for (const r of this.deathRings) {
+      const alpha = r.life * 0.8
+      g.lineStyle(2.5, r.color, alpha * 0.7)
+      g.strokeCircle(r.x, r.y, r.radius)
+      g.lineStyle(6, r.color, alpha * 0.15)
+      g.strokeCircle(r.x, r.y, r.radius)
+    }
+
+    // Impact / debris particles
+    for (const p of this.impactParticles) {
+      const alpha = p.life
+      // Draw as a small streak in the direction of travel
+      const spd = Math.hypot(p.vx, p.vy)
+      if (spd > 10) {
+        const trailLen = Math.min(spd * 0.04, p.size * 3)
+        g.lineStyle(p.size * 0.8, p.color, alpha * 0.6)
+        g.lineBetween(
+          p.x, p.y,
+          p.x - (p.vx / spd) * trailLen,
+          p.y - (p.vy / spd) * trailLen
+        )
+      }
+      g.fillStyle(p.color, alpha)
+      g.fillCircle(p.x, p.y, p.size * 0.6)
+    }
   }
 
   get count(): number { return this.entities.length }

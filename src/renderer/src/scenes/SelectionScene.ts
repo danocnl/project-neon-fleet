@@ -691,6 +691,7 @@ export class SelectionScene extends Phaser.Scene {
       targets: ov, alpha: { from: 0, to: 0.15 }, duration: 200, yoyo: true,
       onComplete: () => {
         ov.destroy()
+        SaveManager.savePilotConfig(this.username, this.selectedShipId, this.selectedClassId)
         this.scene.start('PhysicsScene', {
           pilot: this.username, shipId: this.selectedShipId, classId: this.selectedClassId,
         })
