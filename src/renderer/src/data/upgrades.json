@@ -1215,5 +1215,278 @@
     "description": "Deploy a prism network filling the entire arena. All energy attacks bounce indefinitely without damage decay for 8s.",
     "logicTrigger": null,
     "classRestriction": "vector_specialist"
+  },
+
+  { "id": "beam_amplifier",
+    "name": "Beam Amplifier", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["ENERGY", "BEAM"],
+    "prerequisiteTags": {}, "grantedTags": { "BEAM": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "Each BEAM tag: +10% continuous beam DPS and +8% effective beam length.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "scatter_shot",
+    "name": "Scatter Shot", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["PROJECTILE_COUNT", "KINETIC", "EXPLOSIVE"],
+    "prerequisiteTags": {}, "grantedTags": { "PROJECTILE_COUNT": 1 },
+    "statModifiers": [],
+    "tradeOff": "Each additional projectile draws full energy cost.",
+    "description": "+1 simultaneous projectile per shot. Each projectile is independent — pierces, chains, and splits separately.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "fragmenting_round",
+    "name": "Fragmenting Round", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["SPLIT", "KINETIC", "EXPLOSIVE"],
+    "prerequisiteTags": {}, "grantedTags": { "SPLIT": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+1 split copy at 60% parent damage. Copies are independent and inherit all projectile behaviors (PIERCE, CHAIN, RETURN).",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "pulse_emitter_upgrade",
+    "name": "Pulse Emitter", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["PULSE", "PULSE_RADIUS", "KINETIC", "ENERGY"],
+    "prerequisiteTags": {}, "grantedTags": { "PULSE": 1, "PULSE_RADIUS": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+15% pulse base damage and +25u pulse weapon radius.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "collection_net",
+    "name": "Collection Net", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["PICKUP_RADIUS", "SALVAGE", "HARVESTER"],
+    "prerequisiteTags": {}, "grantedTags": { "PICKUP_RADIUS": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+20u item and orb collection radius. HARVESTER drones use this ship's PICKUP_RADIUS as their collection range.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "extended_lifespan",
+    "name": "Extended Lifespan", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["PERSISTENCE", "MINE", "MIRROR", "DEBRIS_FIELD"],
+    "prerequisiteTags": {}, "grantedTags": { "PERSISTENCE": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+4s to the active lifespan of all deployed constructs — mines, prisms, debris fields, and drones.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "drone_shielding",
+    "name": "Drone Shielding", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["DRONE_SHIELD", "SHIELD_DRONE", "DRONE_COUNT"],
+    "prerequisiteTags": {}, "grantedTags": { "DRONE_SHIELD": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+100 shield points to all active drones. Drone shields absorb hits before DRONE_HULL takes damage.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "high_threat_emitter",
+    "name": "High-Threat Emitter", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["THREAT_LEVEL", "DECOY", "DRONE_COUNT"],
+    "prerequisiteTags": {}, "grantedTags": { "THREAT_LEVEL": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+0.5 threat multiplier on all drones. At 5+ stacks most enemies will prioritise drones over the parent ship.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "power_flow",
+    "name": "Power Flow", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["ENERGY_REGEN", "ENERGY_GRID"],
+    "prerequisiteTags": {}, "grantedTags": { "ENERGY_REGEN": 1 },
+    "statModifiers": [{ "stat": "ENERGY_REGEN", "type": "flat", "value": 5 }],
+    "tradeOff": null,
+    "description": "+5 energy regenerated per second. Stacks against passive drain from beam weapons and drone modules.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "thermal_tolerance",
+    "name": "Thermal Tolerance", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["HEAT_CAPACITY", "HEAT_DISSIPATION"],
+    "prerequisiteTags": {}, "grantedTags": { "HEAT_CAPACITY": 1 },
+    "statModifiers": [{ "stat": "HEAT_CAPACITY", "type": "flat", "value": 10 }],
+    "tradeOff": null,
+    "description": "+10 to the overheat threshold. Weapons run hotter before locking out — allows more aggressive heat builds.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "spatial_expansion",
+    "name": "Spatial Expansion", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["GLOBAL_RADIUS", "BLAST_RADIUS", "PULSE_RADIUS", "GRAVITY"],
+    "prerequisiteTags": {}, "grantedTags": { "GLOBAL_RADIUS": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+12% to all radius and area effects: BLAST_RADIUS, PULSE_RADIUS, PICKUP_RADIUS, mine detection, AURA_RADIUS, PULL_FORCE fields.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "load_balancer",
+    "name": "Load Balancer", "tier": 1, "rarity": "Common", "archetype": "StatMutator",
+    "associatedTags": ["WEIGHT_CAPACITY", "CARGO_CAPACITY"],
+    "prerequisiteTags": {}, "grantedTags": { "WEIGHT_CAPACITY": 1 },
+    "statModifiers": [{ "stat": "WEIGHT_CAPACITY", "type": "flat", "value": 20 }],
+    "tradeOff": null,
+    "description": "+20 WEIGHT_CAPACITY. Delays the mobility penalty curve — allows heavier weapon and module loadouts without speed loss.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "rapid_pulse_upgrade",
+    "name": "Rapid Pulse", "tier": 2, "rarity": "Uncommon", "archetype": "StatMutator",
+    "associatedTags": ["PULSE", "PULSE_INTERVAL", "FREQUENCY"],
+    "prerequisiteTags": { "PULSE": 1 }, "grantedTags": { "PULSE_INTERVAL": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "-0.3s between automatic pulse weapon firings. Minimum interval 0.2s. Stacks with FREQUENCY tags.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "boomerang_protocol",
+    "name": "Boomerang Protocol", "tier": 2, "rarity": "Uncommon", "archetype": "StatMutator",
+    "associatedTags": ["RETURN", "KINETIC", "ENERGY"],
+    "prerequisiteTags": {}, "grantedTags": { "RETURN": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "Projectile weapons now return to the source after reaching max range or completing their pierce chain. Return pass deals 80% damage. Source ship immune to own returning projectile.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "arc_extension",
+    "name": "Arc Extension", "tier": 2, "rarity": "Uncommon", "archetype": "StatMutator",
+    "associatedTags": ["CHAIN", "ENERGY", "TETHER"],
+    "prerequisiteTags": { "CHAIN": 1 }, "grantedTags": { "CHAIN": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+1 chain jump on weapon shots. Each jump retains 70% of the previous hit's damage. Also extends tether-link chain propagation.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "fission_core",
+    "name": "Fission Core", "tier": 2, "rarity": "Uncommon", "archetype": "StatMutator",
+    "associatedTags": ["SPLIT", "EXPLOSIVE", "KINETIC"],
+    "prerequisiteTags": { "SPLIT": 1 }, "grantedTags": { "SPLIT": 2 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+2 additional split copies at 60% damage each. Copies inherit all projectile behaviors — pierce, chain, and return independently.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "mine_proximity_upgrade",
+    "name": "Mine Proximity Upgrade", "tier": 2, "rarity": "Uncommon", "archetype": "StatMutator",
+    "associatedTags": ["MINE", "EXPLOSIVE", "BLAST_RADIUS"],
+    "prerequisiteTags": { "MINE": 1 }, "grantedTags": { "MINE": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+15u mine detection radius and +20 detonation damage. Stacks with GLOBAL_RADIUS for compound area growth.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "sacrificial_decoy",
+    "name": "Sacrificial Decoy", "tier": 2, "rarity": "Uncommon", "archetype": "LogicTrigger",
+    "associatedTags": ["DECOY", "KAMIKAZE", "THREAT_LEVEL"],
+    "prerequisiteTags": { "DECOY": 1 }, "grantedTags": { "DECOY": 1, "KAMIKAZE": 1 },
+    "statModifiers": [],
+    "tradeOff": "Drones are consumed on detonation.",
+    "description": "DECOY drones now detonate when destroyed, dealing 200 AoE damage. Combines DECOY threat-generation with KAMIKAZE payload. Enemies that close on the decoy are punished for targeting it.",
+    "logicTrigger": { "condition": "ON_KILL", "action": "Decoy drone detonates for 200 AoE damage when destroyed by an enemy", "cooldown": 0 },
+    "classRestriction": null
+  },
+
+  { "id": "shield_drone_network",
+    "name": "Shield Drone Network", "tier": 2, "rarity": "Uncommon", "archetype": "StatMutator",
+    "associatedTags": ["SHIELD_DRONE", "DRONE_SHIELD", "DRONE_COUNT"],
+    "prerequisiteTags": { "DRONE_SHIELD": 1 }, "grantedTags": { "SHIELD_DRONE": 1, "DRONE_SHIELD": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+150 SP to drone shield pools and extends shield drone projection capacity. Shield drones absorb hits directed at the parent ship before their own hull takes damage.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "continuous_focus",
+    "name": "Continuous Focus", "tier": 2, "rarity": "Uncommon", "archetype": "LogicTrigger",
+    "associatedTags": ["BEAM", "ENERGY", "BURN"],
+    "prerequisiteTags": { "BEAM": 1 }, "grantedTags": { "BEAM": 1, "BURN": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "Beam weapons now apply BURN status on sustained contact (+12 thermal DPS). The longer a beam holds on target the more heat it transfers.",
+    "logicTrigger": { "condition": "ON_HIT", "action": "Beam hits apply BURN: +12 thermal DPS for 2s", "cooldown": 0 },
+    "classRestriction": null
+  },
+
+  { "id": "harvester_efficiency",
+    "name": "Harvester Efficiency", "tier": 2, "rarity": "Uncommon", "archetype": "StatMutator",
+    "associatedTags": ["HARVESTER", "PICKUP_RADIUS", "SALVAGE"],
+    "prerequisiteTags": { "DRONE_COUNT": 1 }, "grantedTags": { "HARVESTER": 1, "PICKUP_RADIUS": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "+1 concurrent harvester collection target and +20u PICKUP_RADIUS. Harvester drones sweep a wider area and process multiple items simultaneously.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "cascade_fragmentation",
+    "name": "Cascade Fragmentation", "tier": 3, "rarity": "Rare", "archetype": "Converter",
+    "associatedTags": ["SPLIT", "PRISM", "EXPLOSIVE"],
+    "prerequisiteTags": { "SPLIT": 2, "PRISM": 1 }, "grantedTags": { "SPLIT": 1, "PRISM": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "Split copies that hit a prism are further split at the prism, creating exponential projectile geometry from a single shot. Each additional prism in the field multiplies the effect.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "chain_mine_field",
+    "name": "Chain Mine Field", "tier": 3, "rarity": "Rare", "archetype": "Converter",
+    "associatedTags": ["MINE", "CHAIN", "EXPLOSIVE"],
+    "prerequisiteTags": { "MINE": 2, "CHAIN": 1 }, "grantedTags": { "MINE": 1, "CHAIN": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "Mine detonations now chain to the nearest additional mine within 150u, triggering it immediately. A dense mine field creates a cascade detonation sequence from a single trigger.",
+    "logicTrigger": { "condition": "ON_KILL", "action": "Mine detonation chains to nearest mine within 150u", "cooldown": 0 },
+    "classRestriction": null
+  },
+
+  { "id": "return_amplifier",
+    "name": "Return Amplifier", "tier": 3, "rarity": "Rare", "archetype": "Converter",
+    "associatedTags": ["RETURN", "PIERCE", "KINETIC", "ENERGY"],
+    "prerequisiteTags": { "RETURN": 1 }, "grantedTags": { "RETURN": 1, "PIERCE": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "Return pass now deals 100% damage (up from 80%) and gains +1 PIERCE. The returning projectile hits harder than the outward pass and punches through additional targets.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "pulse_resonance",
+    "name": "Pulse Resonance", "tier": 4, "rarity": "Epic", "archetype": "Resonance",
+    "associatedTags": ["PULSE", "PULSE_RADIUS", "AURA_RADIUS"],
+    "prerequisiteTags": { "PULSE": 4 }, "grantedTags": { "PULSE": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "For every PULSE tag held, each PULSE tag grants an additional +10% pulse damage and +10u pulse radius.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "beam_resonance",
+    "name": "Beam Resonance", "tier": 4, "rarity": "Epic", "archetype": "Resonance",
+    "associatedTags": ["BEAM", "ENERGY"],
+    "prerequisiteTags": { "BEAM": 4 }, "grantedTags": { "BEAM": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "For every BEAM tag held, each BEAM tag grants an additional +8% continuous DPS and +5% beam length.",
+    "logicTrigger": null, "classRestriction": null
+  },
+
+  { "id": "global_radius_resonance",
+    "name": "Spatial Resonance", "tier": 4, "rarity": "Epic", "archetype": "Resonance",
+    "associatedTags": ["GLOBAL_RADIUS", "BLAST_RADIUS", "GRAVITY"],
+    "prerequisiteTags": { "GLOBAL_RADIUS": 4 }, "grantedTags": { "GLOBAL_RADIUS": 1 },
+    "statModifiers": [],
+    "tradeOff": null,
+    "description": "For every GLOBAL_RADIUS tag held, each GLOBAL_RADIUS tag amplifies all radius effects by an additional +15%. Exponential area control.",
+    "logicTrigger": null, "classRestriction": null
   }
 ]
