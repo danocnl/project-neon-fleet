@@ -333,7 +333,16 @@ export class PhysicsScene extends Phaser.Scene {
     g.lineStyle(1, 0x224433, 0.6)
     g.strokeRect(vx, vy, vw, vh)
 
-    // Player dot
+    // Enemy dots
+    for (const e of this.enemies.getEntities()) {
+      const ex = MM_X + (e.x / WORLD_W) * MM_W
+      const ey = MM_Y + (e.y / WORLD_H) * MM_H
+      const col = e.def.id.startsWith('asteroid') ? 0x667788 : 0xff3322
+      g.fillStyle(col, 0.7)
+      g.fillCircle(ex, ey, e.def.id.startsWith('asteroid') ? 1.5 : 2)
+    }
+
+    // Player dot (drawn on top of enemies)
     const px = MM_X + (this.actor.body.x / WORLD_W) * MM_W
     const py = MM_Y + (this.actor.body.y / WORLD_H) * MM_H
     g.fillStyle(clsColor, 1)

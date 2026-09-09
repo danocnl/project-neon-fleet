@@ -257,6 +257,8 @@ export class EnemyManager {
   }
 
   get count(): number { return this.entities.length }
+
+  getEntities(): readonly EnemyEntity[] { return this.entities }
 }
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
