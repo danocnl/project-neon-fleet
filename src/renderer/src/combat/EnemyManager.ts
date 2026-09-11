@@ -339,20 +339,33 @@ export class EnemyManager {
         const dist = Math.hypot(dx, dy)
 
         if (dist <= leash && dist > 1) {
-          const accel    = e.def.stats.ACCELERATION
-          const maxSpeed = e.def.stats.SPEED * sector.speedScale
+          const accel        = e.def.stats.ACCELERATION
+          const maxSpeed     = e.def.stats.SPEED * sector.speedScale
           const effectiveMax = e.freezeMs > 0 ? maxSpeed * 0.4 : maxSpeed
-          const turnRateRad = e.def.id === 'scout_drone' ? 7.0 : 5.0
-          const curAngle     = Math.atan2(e.vy, e.vx)
+          const turnRateRad  = e.def.id === 'scout_drone' ? 7.0 : 5.0
           const desiredAngle = Math.atan2(dy, dx)
-          let angleDiff = desiredAngle - curAngle
-          if (angleDiff >  Math.PI) angleDiff -= Math.PI * 2
-          if (angleDiff < -Math.PI) angleDiff += Math.PI * 2
-          const steerAngle = curAngle + Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), turnRateRad * dt)
-          e.vx += Math.cos(steerAngle) * accel * dt
-          e.vy += Math.sin(steerAngle) * accel * dt
-          const spd = Math.hypot(e.vx, e.vy)
-          if (spd > effectiveMax) { e.vx = (e.vx / spd) * effectiveMax; e.vy = (e.vy / spd) * effectiveMax }
+          const speed        = Math.hypot(e.vx, e.vy)
+
+          if (speed > 2) {
+            // Rotate the velocity vector directly at the turn rate.
+            // Adding force at an angle then clamping speed barely changes direction
+            // when already at max speed — direct rotation guarantees the drone
+            // actually loops back instead of flying in a straight line.
+            const curAngle = Math.atan2(e.vy, e.vx)
+            let angleDiff  = desiredAngle - curAngle
+            if (angleDiff >  Math.PI) angleDiff -= Math.PI * 2
+            if (angleDiff < -Math.PI) angleDiff += Math.PI * 2
+            const newAngle = curAngle + Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), turnRateRad * dt)
+            const newSpeed = Math.min(speed + accel * dt, effectiveMax)
+            e.vx = Math.cos(newAngle) * newSpeed
+            e.vy = Math.sin(newAngle) * newSpeed
+          } else {
+            // Near-stationary: accelerate directly toward target
+            e.vx += Math.cos(desiredAngle) * accel * dt
+            e.vy += Math.sin(desiredAngle) * accel * dt
+            const spd = Math.hypot(e.vx, e.vy)
+            if (spd > effectiveMax) { e.vx = (e.vx / spd) * effectiveMax; e.vy = (e.vy / spd) * effectiveMax }
+          }
         } else {
           e.vx *= Math.pow(0.92, dt * 60)
           e.vy *= Math.pow(0.92, dt * 60)
