@@ -275,13 +275,18 @@ export class PhysicsScene extends Phaser.Scene {
     // Throttle thrust when a weapon target is close — ship slows to keep target in arc
     const tgt     = this.enemies.currentTarget
     const tgtDist = tgt ? Math.hypot(tgt.x - this.actor.body.x, tgt.y - this.actor.body.y) : Infinity
-    // Near-stop when in weapon range to maximise DPS on target
-    const throttle = (tgt !== null && tgtDist <= 350) ? 0.04 : 1.0
+    const inRange = tgt !== null && tgtDist <= 350
 
-    // Lateral force scaling — ships must arc into turns, not pivot instantly
+    // Active braking when in range: reverse-thrust proportional to current velocity
+    // so the ship dumps speed fast rather than coasting through the target
+    const bx = this.actor.body, spd = Math.hypot(bx.vx, bx.vy)
+    const brakeX = inRange && spd > 6 ? -(bx.vx / spd) * bx.accel * 4.0 : 0
+    const brakeY = inRange && spd > 6 ? -(bx.vy / spd) * bx.accel * 4.0 : 0
+
+    const throttle = inRange ? 0.02 : 1.0
     const { fx, fy } = this.steerForce(
-      (rawF.fx + avoid.x) * throttle,
-      (rawF.fy + avoid.y) * throttle,
+      (rawF.fx + avoid.x) * throttle + brakeX,
+      (rawF.fy + avoid.y) * throttle + brakeY,
       this.actor.body,
       this.getLateralScale(this.runData.shipId)
     )
@@ -1144,7 +1149,11 @@ export class PhysicsScene extends Phaser.Scene {
         return !best || d < Math.hypot(best.x - body.x, best.y - body.y) ? e : best
       }, null)
     const a2TgtDist  = a2WeaponTgt ? Math.hypot(a2WeaponTgt.x - body.x, a2WeaponTgt.y - body.y) : Infinity
-    const a2Throttle = (a2WeaponTgt !== null && a2TgtDist <= 350) ? 0.04 : 1.0
+    const a2InRange  = a2WeaponTgt !== null && a2TgtDist <= 350
+    const a2Spd     = Math.hypot(body.vx, body.vy)
+    const a2BrakeX  = a2InRange && a2Spd > 6 ? -(body.vx / a2Spd) * body.accel * 4.0 : 0
+    const a2BrakeY  = a2InRange && a2Spd > 6 ? -(body.vy / a2Spd) * body.accel * 4.0 : 0
+    const a2Throttle = a2InRange ? 0.02 : 1.0
     // P2 avoids P1
     let a2AvoidX = 0, a2AvoidY = 0
     if (!this.p1Dead) {
@@ -1158,7 +1167,8 @@ export class PhysicsScene extends Phaser.Scene {
       }
     }
     const { fx: fx2, fy: fy2 } = this.steerForce(
-      rawF2.fx * a2Throttle + a2AvoidX, rawF2.fy * a2Throttle + a2AvoidY,
+      rawF2.fx * a2Throttle + a2AvoidX + a2BrakeX,
+      rawF2.fy * a2Throttle + a2AvoidY + a2BrakeY,
       body, this.getLateralScale((this as any)._guestShipId ?? 'sidewinder')
     )
     stepPhysics(body, fx2, fy2, dt)
