@@ -118,20 +118,23 @@ export class ProjectileSystem {
     g.clear()
 
     for (const p of this.projectiles) {
-      // Trail — omitted for small/fast projectiles (they look cleaner without it)
-      if (p.size >= 2.5) {
+      const isSmall = p.size < 2.5   // pulse-type weapons (size 1.6)
+
+      if (isSmall) {
+        // Dash style: elongated bright line, no dot — looks like (- - -)
+        // Trail scale 0.10 → at 700 u/s gives a ~70u dash length
+        g.lineStyle(p.size * 1.2, p.color, 1.0)
+        g.lineBetween(p.x, p.y, p.x - p.vx * 0.10, p.y - p.vy * 0.10)
+        // Soft outer glow along the dash
+        g.lineStyle(p.size * 2.5, p.color, 0.2)
+        g.lineBetween(p.x, p.y, p.x - p.vx * 0.10, p.y - p.vy * 0.10)
+      } else {
+        // Dot style: kinetic / heavy weapons — trail + filled core
         g.lineStyle(p.size * 0.7, p.color, 0.35)
         g.lineBetween(p.x, p.y, p.x - p.vx * 0.055, p.y - p.vy * 0.055)
+        g.fillStyle(p.color, 0.18); g.fillCircle(p.x, p.y, p.size + 2.5)
+        g.fillStyle(p.color, 1.0);  g.fillCircle(p.x, p.y, p.size)
       }
-
-      // Outer glow (tighter for small projectiles)
-      const glowR = p.size < 2.5 ? p.size + 1.2 : p.size + 2.5
-      g.fillStyle(p.color, 0.18)
-      g.fillCircle(p.x, p.y, glowR)
-
-      // Core
-      g.fillStyle(p.color, 1.0)
-      g.fillCircle(p.x, p.y, p.size)
     }
   }
 }

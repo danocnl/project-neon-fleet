@@ -166,9 +166,7 @@
       "PROJECTILE_COUNT": 1,
       "FIRING_ARC": 30
     },
-    "behaviors": {
-      "BEAM": true
-    },
+    "behaviors": {},
     "statusEffects": {},
     "tags": [
       "ENERGY",

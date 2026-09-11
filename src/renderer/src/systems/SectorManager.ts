@@ -45,7 +45,7 @@ export class SectorManager {
     const s = this._sector
 
     if (s === 1) return [
-      { id: 'scout_drone',     count: 3 },
+      { id: 'scout_drone',     count: 100 }, // TEMP: stress test
       { id: 'asteroid_medium', count: 2 },
       { id: 'asteroid_small',  count: 1 },
     ]

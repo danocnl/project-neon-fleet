@@ -108,22 +108,23 @@ Capital-grade rotating barrel array. Extreme rate of fire at XL scale. Only the 
 All beams benefit from: `ENERGY`, `BEAM`, `RANGE` tags. Continuous beam weapons cannot use `RICOCHET` (no surface bounce) but fully interact with `MIRROR`, `PRISM`, and `REFLECTION`.
 
 ### Pulse Laser `SMALL`
-Rapid-pulse energy beam. Infinite ammo, zero spread. Consistent and efficient. Natural fit for Vector Specialist builds — every pulse interacts with placed mirrors and prisms.
+Discrete energy burst weapon. Fires individual pulse bolts — not a continuous beam. Infinite ammo, zero spread. Deliberate cadence rewards the Firing Solutions upgrade. Natural fit for Vector Specialist builds.
 
 | Stat | Value |
 |---|---|
 | DAMAGE | 10 per pulse |
-| RATE_OF_FIRE | 1.5 pulses/s (deliberate cadence — upgrade with Firing Solutions to increase) |
+| RATE_OF_FIRE | 1.5 pulses/s (upgrade with Firing Solutions to increase) |
 | AMMO_CAPACITY | ∞ |
 | RANGE | 460u |
+| FIRING_ARC | 30° |
 | ACCURACY | 0° (perfect) |
-| VELOCITY | instant |
+| VELOCITY | 700 u/s |
 | ENERGY_COST | 8 /pulse |
 | HEAT_GEN | 5 /pulse |
 | PASSIVE_DRAIN | 2 energy/s |
 | PASSIVE_HEAT | 1 heat/s |
 | WEIGHT | 15 |
-| **BEAM** | **true** |
+| BEAM | false (discrete projectile) |
 
 ---
 
@@ -324,7 +325,7 @@ Benefits from: `KINETIC`, `PULSE`, `PULSE_RADIUS`, `AURA_RADIUS`, `GLOBAL_RADIUS
 | Chaingun | MEDIUM | KINETIC | 18/shot | 6.0/s | 90° | FORWARD | 28 | — |
 | Heavy Chaingun | LARGE | KINETIC | 38/shot | 4.0/s | 60° | FORWARD | 65 | — |
 | Rotary Cannon | XL | KINETIC | 28/shot | 12.0/s | 360° | TURRET | 140 | PASSIVE |
-| Pulse Laser | SMALL | ENERGY | 10/pulse | 6.0/s | 90° | FORWARD | 15 | BEAM |
+| Pulse Laser | SMALL | ENERGY | 10/pulse | 1.5/s | 30° | FORWARD | 15 | — |
 | Beam Laser | MEDIUM | ENERGY | 55 DPS | continuous | 45° | FORWARD | 35 | BEAM · PASSIVE |
 | Heavy Beam | LARGE | ENERGY | 130 DPS | continuous | 30° | FORWARD | 75 | BEAM · HIGH PASSIVE |
 | Railgun | MEDIUM | KINETIC | 130/shot | 0.5/s | 15° | FORWARD | 44 | PIERCE×2 · CHARGE 1.5s |

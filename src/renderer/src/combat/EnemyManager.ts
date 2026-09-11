@@ -443,12 +443,19 @@ export class EnemyManager {
 
     // Enemy projectiles
     for (const p of this.enemyProjs) {
-      this.projGfx.lineStyle(p.size * 0.7, p.color, 0.4)
-      this.projGfx.lineBetween(p.x, p.y, p.x - p.vx * 0.05, p.y - p.vy * 0.05)
-      this.projGfx.fillStyle(p.color, 0.2)
-      this.projGfx.fillCircle(p.x, p.y, p.size + 1.5)
-      this.projGfx.fillStyle(p.color, 1.0)
-      this.projGfx.fillCircle(p.x, p.y, p.size)
+      // Dash style for small energy projectiles (size ≤ 2.5 = pulse_laser)
+      // Dot+trail for larger kinetic rounds
+      if (p.size <= 2.5) {
+        this.projGfx.lineStyle(p.size * 1.1, p.color, 0.9)
+        this.projGfx.lineBetween(p.x, p.y, p.x - p.vx * 0.10, p.y - p.vy * 0.10)
+        this.projGfx.lineStyle(p.size * 2.8, p.color, 0.18)
+        this.projGfx.lineBetween(p.x, p.y, p.x - p.vx * 0.10, p.y - p.vy * 0.10)
+      } else {
+        this.projGfx.lineStyle(p.size * 0.7, p.color, 0.4)
+        this.projGfx.lineBetween(p.x, p.y, p.x - p.vx * 0.055, p.y - p.vy * 0.055)
+        this.projGfx.fillStyle(p.color, 0.2);  this.projGfx.fillCircle(p.x, p.y, p.size + 1.5)
+        this.projGfx.fillStyle(p.color, 1.0);  this.projGfx.fillCircle(p.x, p.y, p.size)
+      }
     }
   }
 
