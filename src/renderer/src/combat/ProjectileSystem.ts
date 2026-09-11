@@ -8,9 +8,9 @@ const WEAPON_VISUAL: Record<string, {
   cooldownMs:  number   // 1000 / ROF
   dot?:        boolean  // compact bullet dot — no elongated trail
 }> = {
-  light_chaingun: { color: 0xdddddd, size: 1.2, speed: 420, cooldownMs: 125,  dot: true },
-  chaingun:       { color: 0xcccccc, size: 1.5, speed: 440, cooldownMs: 167,  dot: true },
-  heavy_chaingun: { color: 0xbbbbbb, size: 2.0, speed: 460, cooldownMs: 250,  dot: true },
+  light_chaingun: { color: 0xdddddd, size: 1.2, speed: 420, cooldownMs: 250,  dot: true },
+  chaingun:       { color: 0xcccccc, size: 1.5, speed: 440, cooldownMs: 334,  dot: true },
+  heavy_chaingun: { color: 0xbbbbbb, size: 2.0, speed: 460, cooldownMs: 500,  dot: true },
   pulse_laser:    { color: 0x00ffff, size: 1.6, speed: 700, cooldownMs: 680  },
   beam_laser:     { color: 0x00ccff, size: 2.0, speed: 800, cooldownMs: 100  },
   emp_cannon:     { color: 0x4466ff, size: 5.0, speed: 320, cooldownMs: 1000 },
