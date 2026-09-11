@@ -7,12 +7,12 @@
     "behavior": "DRIFT",
     "description": "A massive rock drifting through the sector. No shields, no targeting, no weapon \u2014 but absorbs enormous punishment before fracturing. Breaking one releases two large asteroids.",
     "stats": {
-      "HULL": 350,
+      "HULL": 500,
       "ARMOR": 0,
       "SHIELD_MAX": 0,
       "SHIELD_REGEN": 0,
       "SHIELD_DELAY": 0,
-      "SPEED": 18,
+      "SPEED": 8,
       "ACCELERATION": 0,
       "COLLISION_RADIUS": 80
     },
@@ -46,12 +46,12 @@
     "behavior": "DRIFT",
     "description": "A large fragment drifting faster than its parent. Still no shields, but takes several hits to destroy. Breaks into two medium asteroids.",
     "stats": {
-      "HULL": 140,
+      "HULL": 200,
       "ARMOR": 0,
       "SHIELD_MAX": 0,
       "SHIELD_REGEN": 0,
       "SHIELD_DELAY": 0,
-      "SPEED": 28,
+      "SPEED": 12,
       "ACCELERATION": 0,
       "COLLISION_RADIUS": 50
     },
@@ -85,12 +85,12 @@
     "behavior": "DRIFT",
     "description": "A tumbling medium fragment. Faster and lighter \u2014 a few shots clear it. Breaks into two small asteroids on destruction.",
     "stats": {
-      "HULL": 55,
+      "HULL": 85,
       "ARMOR": 0,
       "SHIELD_MAX": 0,
       "SHIELD_REGEN": 0,
       "SHIELD_DELAY": 0,
-      "SPEED": 42,
+      "SPEED": 18,
       "ACCELERATION": 0,
       "COLLISION_RADIUS": 30
     },
@@ -123,12 +123,12 @@
     "behavior": "DRIFT",
     "description": "The final fragment. Fast, small, easily destroyed. No further breakdown \u2014 a single hit from most weapons clears it.",
     "stats": {
-      "HULL": 18,
+      "HULL": 28,
       "ARMOR": 0,
       "SHIELD_MAX": 0,
       "SHIELD_REGEN": 0,
       "SHIELD_DELAY": 0,
-      "SPEED": 60,
+      "SPEED": 28,
       "ACCELERATION": 0,
       "COLLISION_RADIUS": 15
     },
@@ -163,8 +163,8 @@
       "SHIELD_MAX": 35,
       "SHIELD_REGEN": 20,
       "SHIELD_DELAY": 3.0,
-      "SPEED": 85,
-      "ACCELERATION": 65,
+      "SPEED": 120,
+      "ACCELERATION": 95,
       "COLLISION_RADIUS": 12
     },
     "drops": {
@@ -194,8 +194,8 @@
       "SHIELD_MAX": 55,
       "SHIELD_REGEN": 15,
       "SHIELD_DELAY": 4.0,
-      "SPEED": 60,
-      "ACCELERATION": 45,
+      "SPEED": 85,
+      "ACCELERATION": 70,
       "COLLISION_RADIUS": 18
     },
     "drops": {

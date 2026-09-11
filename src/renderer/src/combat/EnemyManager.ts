@@ -89,17 +89,43 @@ export class EnemyManager {
     for (const e of raw) this.defs.set(e.id, e)
   }
 
-  /** Spawn the sector's full wave spread across the world (used on scene start and sector advance). */
+  /** Spawn the sector's full wave. Asteroids cluster around 2–3 centres;
+   *  drones spawn within 800–1400u of world centre so they reach players fast. */
   spawnSectorWave(sector: SectorManager): void {
     const cx = WORLD_W / 2, cy = WORLD_H / 2
     const wave = sector.getSpawnWave()
+
+    // Build 2–3 asteroid cluster centres away from world centre
+    const CLUSTER_R = 550
+    const clusterCentres: { x: number; y: number }[] = Array.from({ length: 3 }, () => {
+      const angle = Math.random() * Math.PI * 2
+      const dist  = SPAWN_CLEAR_RADIUS + 200 + Math.random() * 1200
+      return {
+        x: ((cx + Math.cos(angle) * dist) % WORLD_W + WORLD_W) % WORLD_W,
+        y: ((cy + Math.sin(angle) * dist) % WORLD_H + WORLD_H) % WORLD_H,
+      }
+    })
+
     for (const { id, count } of wave) {
-      const minDist = id.startsWith('asteroid') ? SPAWN_CLEAR_RADIUS : SPAWN_CLEAR_RADIUS * 0.8
-      for (let i = 0; i < count; i++) {
-        let x: number, y: number
-        do { x = Math.random() * WORLD_W; y = Math.random() * WORLD_H }
-        while (Math.hypot(x - cx, y - cy) < minDist)
-        this.spawnEnemy(id, x, y, Math.random() * Math.PI * 2, sector.hpScale)
+      if (id.startsWith('asteroid')) {
+        // Cluster asteroids around the pre-chosen centres
+        for (let i = 0; i < count; i++) {
+          const centre = clusterCentres[i % clusterCentres.length]
+          const angle  = Math.random() * Math.PI * 2
+          const dist   = Math.random() * CLUSTER_R
+          const x = ((centre.x + Math.cos(angle) * dist) % WORLD_W + WORLD_W) % WORLD_W
+          const y = ((centre.y + Math.sin(angle) * dist) % WORLD_H + WORLD_H) % WORLD_H
+          this.spawnEnemy(id, x, y, Math.random() * Math.PI * 2, sector.hpScale)
+        }
+      } else {
+        // Drones: spawn within 800–1400u of world centre so they're on you quickly
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2
+          const dist  = 800 + Math.random() * 600
+          const x = ((cx + Math.cos(angle) * dist) % WORLD_W + WORLD_W) % WORLD_W
+          const y = ((cy + Math.sin(angle) * dist) % WORLD_H + WORLD_H) % WORLD_H
+          this.spawnEnemy(id, x, y, Math.random() * Math.PI * 2, sector.hpScale)
+        }
       }
     }
   }
@@ -306,25 +332,9 @@ export class EnemyManager {
         const leash = e.def.leash ?? Infinity
         const d1 = Math.hypot(px - e.x, py - e.y)
         const d2 = p2 ? Math.hypot(p2.x - e.x, p2.y - e.y) : Infinity
-
-        // Co-op: split enemies between players using instance parity so both
-        // players always have threats hunting them rather than all enemies
-        // piling onto whichever player happens to be slightly closer.
-        let tgtX: number, tgtY: number
-        if (p2) {
-          const preferP2 = parseInt(e.instanceId.split('_').pop() ?? '0', 10) % 2 === 1
-          if (preferP2) {
-            // This enemy prefers P2; fall back to P1 only if P2 is out of leash
-            tgtX = d2 <= leash ? p2.x : (d1 <= leash ? px : px)
-            tgtY = d2 <= leash ? p2.y : (d1 <= leash ? py : py)
-          } else {
-            // This enemy prefers P1; fall back to P2 only if P1 is out of leash
-            tgtX = d1 <= leash ? px : (d2 <= leash ? p2.x : px)
-            tgtY = d1 <= leash ? py : (d2 <= leash ? p2.y : py)
-          }
-        } else {
-          tgtX = px; tgtY = py
-        }
+        // Chase the nearest player — simple and aggressive
+        const tgtX = (p2 && d2 < d1) ? p2.x : px
+        const tgtY = (p2 && d2 < d1) ? p2.y : py
         const dx = tgtX - e.x, dy = tgtY - e.y
         const dist = Math.hypot(dx, dy)
 
@@ -332,7 +342,7 @@ export class EnemyManager {
           const accel    = e.def.stats.ACCELERATION
           const maxSpeed = e.def.stats.SPEED * sector.speedScale
           const effectiveMax = e.freezeMs > 0 ? maxSpeed * 0.4 : maxSpeed
-          const turnRateRad = e.def.id === 'scout_drone' ? 4.5 : 3.0
+          const turnRateRad = e.def.id === 'scout_drone' ? 7.0 : 5.0
           const curAngle     = Math.atan2(e.vy, e.vx)
           const desiredAngle = Math.atan2(dy, dx)
           let angleDiff = desiredAngle - curAngle
