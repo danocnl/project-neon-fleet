@@ -242,7 +242,9 @@ export class PhysicsScene extends Phaser.Scene {
   update(_t: number, delta: number): void {
     const dt = Math.min(delta / 1000, 0.05)
 
-    // Waypoint navigation — ASSAULT is per-frame lock-on, others use arrival-based
+    // In guest mode the host fully drives this ship — skip local physics.
+    // actor.body is updated from snap.p2 in setupGuestNet's GAME_STATE handler.
+    if (this.netRole !== 'guest') {
     // Always pursue: lock nearest drone/turret, asteroid fallback
     {
       const pursuitTarget = this.resolveHunterTarget(
@@ -306,6 +308,7 @@ export class PhysicsScene extends Phaser.Scene {
       if (hDiff < -Math.PI) hDiff += 2 * Math.PI
       this.actor.body.heading += Math.sign(hDiff) * Math.min(Math.abs(hDiff), rotRate * dt)
     }
+    } // end if (this.netRole !== 'guest')
 
     // Camera follows ship
     // Spectator mode: follow the live partner's ship
@@ -450,13 +453,7 @@ export class PhysicsScene extends Phaser.Scene {
 
     if (this.netRole === 'guest') {
       this.updateP2HUD()
-      // Report real position to host so it can broadcast authoritative p2 state
-      this.netSendTimer += delta
-      if (this.netSendTimer >= 50) {
-        this.netSendTimer = 0
-        const b = this.actor.body
-        network.sendGuestPosition(b.x, b.y, b.vx, b.vy, b.heading)
-      }
+      // Position is now host-driven — no need to send it back
     }
 
     // Projectiles — only fire visuals when target is within engagement range
@@ -960,14 +957,7 @@ export class PhysicsScene extends Phaser.Scene {
       }
     })
 
-    network.on('GUEST_POSITION', (msg) => {
-      if (!this.actor2) return
-      this.actor2.body.x       = msg.x as number
-      this.actor2.body.y       = msg.y as number
-      this.actor2.body.vx      = msg.vx as number
-      this.actor2.body.vy      = msg.vy as number
-      this.actor2.body.heading = msg.heading as number
-    })
+    // Host drives actor2 fully via pursuit — ignore guest's reported position
     network.on('PEER_DISCONNECTED', () => {
       this.guestFlightMode = 'PATROL'
       this.p2NameText?.setText('CO-PILOT DISCONNECTED')
@@ -1002,6 +992,18 @@ export class PhysicsScene extends Phaser.Scene {
       const snap = msg as unknown as GameStateSnapshot
       this.remoteP1               = snap.p1
       this.remoteEnemies          = snap.enemies
+      // Host drives this ship's position — update actor.body from authoritative snap.p2
+      if (snap.p2) {
+        this.actor.body.x  = snap.p2.x
+        this.actor.body.y  = snap.p2.y
+        this.actor.body.vx = snap.p2.vx
+        this.actor.body.vy = snap.p2.vy
+        // Smooth heading (avoid snap on phase/heading changes)
+        let snapHDiff = snap.p2.heading - this.actor.body.heading
+        if (snapHDiff >  Math.PI) snapHDiff -= 2 * Math.PI
+        if (snapHDiff < -Math.PI) snapHDiff += 2 * Math.PI
+        this.actor.body.heading += snapHDiff * 0.35
+      }
       this._remoteActiveBase      = snap.p1ActiveBase
       this._remoteActiveMs        = snap.p1ActiveMs ?? 0
       this._remoteP1Phased        = snap.p1Phased   ?? false
