@@ -204,12 +204,13 @@ export class EnemyManager {
       // Pick closest player in range
       const d1 = Math.hypot(e.x - playerX, e.y - playerY)
       const d2 = player2 ? Math.hypot(e.x - player2.x, e.y - player2.y) : Infinity
-      const useP2 = player2 && d2 < d1 && d2 <= weapon.baseStats.RANGE
+      const effectiveRange = (e.def.weaponOverrides?.['RANGE'] ?? 1) * weapon.baseStats.RANGE
+      const useP2 = player2 && d2 < d1 && d2 <= effectiveRange
       const tgtX = useP2 ? player2!.x : playerX
       const tgtY = useP2 ? player2!.y : playerY
       const tgtAttack = useP2 ? player2!.onEnemyAttack : onEnemyAttack
       const dist = Math.min(d1, d2)
-      if (dist > weapon.baseStats.RANGE) continue
+      if (dist > effectiveRange) continue
 
       // Firing arc check for CHASE drones
       if (e.def.behavior === 'CHASE') {
@@ -225,13 +226,17 @@ export class EnemyManager {
         if (diff > halfArc) continue
       }
 
+      // Apply per-enemy weapon overrides (multipliers from enemies.json weaponOverrides)
+      const ov = e.def.weaponOverrides
+      const wStat = (key: string, base: number) => ov?.[key] != null ? base * ov[key]! : base
+
       const isBeam = weapon.behaviors?.BEAM === true
       if (isBeam) {
-        tgtAttack(weapon.baseStats.DAMAGE * dt * sector.rofScale)
+        tgtAttack(wStat('DAMAGE', weapon.baseStats.DAMAGE) * dt * sector.rofScale)
       } else {
-        const rof = weapon.baseStats.RATE_OF_FIRE * sector.rofScale
+        const rof = wStat('RATE_OF_FIRE', weapon.baseStats.RATE_OF_FIRE) * sector.rofScale
         if (e.attackCooldownMs <= 0 && rof > 0) {
-          tgtAttack(weapon.baseStats.DAMAGE)
+          tgtAttack(wStat('DAMAGE', weapon.baseStats.DAMAGE))
           e.attackCooldownMs = (1 / rof) * 1000
           const dx = tgtX - e.x, dy = tgtY - e.y
           const d  = Math.hypot(dx, dy)

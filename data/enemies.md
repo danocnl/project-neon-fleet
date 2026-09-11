@@ -17,6 +17,19 @@ Enemies share the same stat vocabulary as ships: HULL, ARMOR, SHIELD_MAX, SHIELD
 
 **Breakdown** — when the enemy is destroyed it spawns child enemies. Used for the asteroid cascade.
 
+**weaponId + weaponOverrides** — enemies reference a weapon from `weapons.json` by ID. The weapon's base stats are used by default. The optional `weaponOverrides` field is a multiplier map that scales individual stats without touching the weapon definition:
+
+```json
+"weaponId": "chaingun",
+"weaponOverrides": {
+  "DAMAGE": 0.6,        // 60% of chaingun base damage
+  "RATE_OF_FIRE": 0.75, // 75% of base rate (fires slower)
+  "RANGE": 1.2          // 120% of base range (shoots a little further)
+}
+```
+
+Keys map directly to `baseStats` field names in `weapons.json`. Any omitted key uses the weapon's base value. `null` overrides = no modifications. Useful for tuning enemy threat level independently from the player-facing weapon balance.
+
 ---
 
 ## Asteroids

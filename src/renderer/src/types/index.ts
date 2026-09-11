@@ -160,7 +160,8 @@ export interface Enemy {
   behavior:    EnemyBehavior
   leash?:      number      // activation distance (u) — outside = idle, inside = active
   stats:       EnemyStats
-  weaponId:    string | null   // references weapons.json by id
+  weaponId:       string | null   // references weapons.json by id
+  weaponOverrides?: Record<string, number> | null  // per-stat multipliers (null = use base stats)
   drops:       EnemyDrops
   breakdown:   EnemyBreakdown | null
   vulnerableTo: string[]

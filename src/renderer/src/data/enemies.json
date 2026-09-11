@@ -36,7 +36,8 @@
       "BIOLOGICAL"
     ],
     "xpValue": 10,
-    "weaponId": null
+    "weaponId": null,
+    "weaponOverrides": null
   },
   {
     "id": "asteroid_large",
@@ -75,7 +76,8 @@
       "BIOLOGICAL"
     ],
     "xpValue": 6,
-    "weaponId": null
+    "weaponId": null,
+    "weaponOverrides": null
   },
   {
     "id": "asteroid_medium",
@@ -113,7 +115,8 @@
       "BIOLOGICAL"
     ],
     "xpValue": 3,
-    "weaponId": null
+    "weaponId": null,
+    "weaponOverrides": null
   },
   {
     "id": "asteroid_small",
@@ -148,7 +151,8 @@
       "BIOLOGICAL"
     ],
     "xpValue": 1,
-    "weaponId": null
+    "weaponId": null,
+    "weaponOverrides": null
   },
   {
     "id": "scout_drone",
@@ -179,7 +183,8 @@
     "immuneTo": [],
     "xpValue": 3,
     "weaponId": "pulse_laser",
-    "leash": null
+    "leash": null,
+    "weaponOverrides": null
   },
   {
     "id": "attack_drone",
@@ -210,7 +215,8 @@
     "immuneTo": [],
     "xpValue": 6,
     "weaponId": "chaingun",
-    "leash": null
+    "leash": null,
+    "weaponOverrides": null
   },
   {
     "id": "turret",
@@ -243,6 +249,7 @@
     ],
     "xpValue": 8,
     "weaponId": "railgun",
-    "leash": 2560
+    "leash": 2560,
+    "weaponOverrides": null
   }
 ]
