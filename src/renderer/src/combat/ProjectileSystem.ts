@@ -6,10 +6,11 @@ const WEAPON_VISUAL: Record<string, {
   size:        number   // core radius px
   speed:       number   // visual travel speed u/s
   cooldownMs:  number   // 1000 / ROF
+  dot?:        boolean  // compact bullet dot — no elongated trail
 }> = {
-  light_chaingun: { color: 0xdddddd, size: 2.5, speed: 420, cooldownMs: 125  },
-  chaingun:       { color: 0xcccccc, size: 3.5, speed: 440, cooldownMs: 167  },
-  heavy_chaingun: { color: 0xbbbbbb, size: 4.5, speed: 460, cooldownMs: 250  },
+  light_chaingun: { color: 0xdddddd, size: 1.2, speed: 420, cooldownMs: 125,  dot: true },
+  chaingun:       { color: 0xcccccc, size: 1.5, speed: 440, cooldownMs: 167,  dot: true },
+  heavy_chaingun: { color: 0xbbbbbb, size: 2.0, speed: 460, cooldownMs: 250,  dot: true },
   pulse_laser:    { color: 0x00ffff, size: 1.6, speed: 700, cooldownMs: 680  },
   beam_laser:     { color: 0x00ccff, size: 2.0, speed: 800, cooldownMs: 100  },
   emp_cannon:     { color: 0x4466ff, size: 5.0, speed: 320, cooldownMs: 1000 },
@@ -23,6 +24,7 @@ interface VisualProjectile {
   vx: number; vy: number
   color: number
   size: number
+  dot?: boolean
   lifetimeMs: number
 }
 
@@ -85,7 +87,7 @@ export class ProjectileSystem {
         // Lifetime long enough to reach target, capped so stray projectiles don't linger
         const lifetime = Math.min((dist / visual.speed) * 1000 + 80, 2000)
 
-        this.projectiles.push({ x: sx, y: sy, vx, vy, color: visual.color, size: visual.size, lifetimeMs: lifetime })
+        this.projectiles.push({ x: sx, y: sy, vx, vy, color: visual.color, size: visual.size, lifetimeMs: lifetime, dot: visual.dot })
         slot.cooldownMs = slot.resetCooldownMs
       }
     } else {
@@ -118,18 +120,18 @@ export class ProjectileSystem {
     g.clear()
 
     for (const p of this.projectiles) {
-      const isSmall = p.size < 2.5   // pulse-type weapons (size 1.6)
-
-      if (isSmall) {
-        // Dash style: elongated bright line, no dot — looks like (- - -)
-        // Trail scale 0.10 → at 700 u/s gives a ~70u dash length
+      if (p.dot) {
+        // Compact bullet: tiny bright core + tight glow — looks like (. . . .)
+        g.fillStyle(p.color, 0.25); g.fillCircle(p.x, p.y, p.size + 1.0)
+        g.fillStyle(p.color, 1.0);  g.fillCircle(p.x, p.y, p.size)
+      } else if (p.size < 2.5) {
+        // Dash style: elongated bright line — looks like (- - -)
         g.lineStyle(p.size * 1.2, p.color, 1.0)
         g.lineBetween(p.x, p.y, p.x - p.vx * 0.10, p.y - p.vy * 0.10)
-        // Soft outer glow along the dash
         g.lineStyle(p.size * 2.5, p.color, 0.2)
         g.lineBetween(p.x, p.y, p.x - p.vx * 0.10, p.y - p.vy * 0.10)
       } else {
-        // Dot style: kinetic / heavy weapons — trail + filled core
+        // Large projectile: trail + filled core (torpedoes, heavy weapons)
         g.lineStyle(p.size * 0.7, p.color, 0.35)
         g.lineBetween(p.x, p.y, p.x - p.vx * 0.055, p.y - p.vy * 0.055)
         g.fillStyle(p.color, 0.18); g.fillCircle(p.x, p.y, p.size + 2.5)
