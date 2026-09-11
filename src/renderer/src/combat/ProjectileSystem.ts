@@ -10,7 +10,7 @@ const WEAPON_VISUAL: Record<string, {
   light_chaingun: { color: 0xdddddd, size: 2.5, speed: 420, cooldownMs: 125  },
   chaingun:       { color: 0xcccccc, size: 3.5, speed: 440, cooldownMs: 167  },
   heavy_chaingun: { color: 0xbbbbbb, size: 4.5, speed: 460, cooldownMs: 250  },
-  pulse_laser:    { color: 0x00ffff, size: 3.0, speed: 640, cooldownMs: 167  },
+  pulse_laser:    { color: 0x00ffff, size: 1.6, speed: 700, cooldownMs: 340  },
   beam_laser:     { color: 0x00ccff, size: 2.0, speed: 800, cooldownMs: 100  },
   emp_cannon:     { color: 0x4466ff, size: 5.0, speed: 320, cooldownMs: 1000 },
   arc_cannon:     { color: 0xff8800, size: 4.5, speed: 380, cooldownMs: 833  },
@@ -109,13 +109,16 @@ export class ProjectileSystem {
     g.clear()
 
     for (const p of this.projectiles) {
-      // Tail (motion trail in direction of travel)
-      g.lineStyle(p.size * 0.7, p.color, 0.35)
-      g.lineBetween(p.x, p.y, p.x - p.vx * 0.055, p.y - p.vy * 0.055)
+      // Trail — omitted for small/fast projectiles (they look cleaner without it)
+      if (p.size >= 2.5) {
+        g.lineStyle(p.size * 0.7, p.color, 0.35)
+        g.lineBetween(p.x, p.y, p.x - p.vx * 0.055, p.y - p.vy * 0.055)
+      }
 
-      // Outer glow
+      // Outer glow (tighter for small projectiles)
+      const glowR = p.size < 2.5 ? p.size + 1.2 : p.size + 2.5
       g.fillStyle(p.color, 0.18)
-      g.fillCircle(p.x, p.y, p.size + 2.5)
+      g.fillCircle(p.x, p.y, glowR)
 
       // Core
       g.fillStyle(p.color, 1.0)

@@ -15,7 +15,7 @@ const WEAPON_STATS: Record<string, { dps: number; range: number; arc: number }> 
   chaingun:       { dps: 108, range:  380, arc: 25 },
   heavy_chaingun: { dps: 160, range:  450, arc: 20 },
   // Energy
-  pulse_laser:    { dps:  60, range:  380, arc: 30 },
+  pulse_laser:    { dps:  60, range:  460, arc: 30 },
   beam_laser:     { dps:  55, range:  520, arc: 15 },
   heavy_beam:     { dps:  90, range:  700, arc: 10 },
   // Precision
