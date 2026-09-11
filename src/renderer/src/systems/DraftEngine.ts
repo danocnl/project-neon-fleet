@@ -30,6 +30,19 @@ export class DraftEngine {
       return true
     })
 
+    // Test mode: if any TEST_UPGRADE cards are eligible, only offer those
+    const testPool = eligible.filter(c => (c.grantedTags['TEST_UPGRADE'] ?? 0) > 0)
+    if (testPool.length > 0) {
+      const selected: UpgradeCard[] = []
+      const pool = testPool.map(c => ({ card: c, weight: 1 }))
+      for (let i = 0; i < Math.min(count, pool.length); i++) {
+        const idx = Math.floor(Math.random() * pool.length)
+        selected.push(pool[idx].card)
+        pool.splice(idx, 1)
+      }
+      return selected
+    }
+
     // Assign weights
     const weighted = eligible.map(card => {
       let tagScore = 0

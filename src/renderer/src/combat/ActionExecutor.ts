@@ -21,6 +21,10 @@ const ACTIONS: Record<string, ActionFn> = {
   team_shield_relay:        () => { /* cross-ship — Phase 6 */ },
   force_tether:             () => { /* tether — Phase 6 */ },
   tether_detonation:        () => { /* tether explode — Phase 6 */ },
+  // ─── Test cards ──────────────────────────────────────────────────────────
+  test_kill_feed:      s => s.restoreHull(s.maxHull * 0.2),
+  test_phase_reaction: s => s.applyEffect('PHASE', 2000, 1),
+  test_cryo_warhead:   () => { /* enemy AoE handled in PhysicsScene */ },
 }
 
 export interface ExecutionResult {

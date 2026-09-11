@@ -330,6 +330,7 @@ export class EnemyManager {
         if (dist <= leash && dist > 1) {
           const accel    = e.def.stats.ACCELERATION
           const maxSpeed = e.def.stats.SPEED * sector.speedScale
+          const effectiveMax = e.freezeMs > 0 ? maxSpeed * 0.4 : maxSpeed
           const turnRateRad = e.def.id === 'scout_drone' ? 2.2 : 1.2
           const curAngle     = Math.atan2(e.vy, e.vx)
           const desiredAngle = Math.atan2(dy, dx)
@@ -340,7 +341,7 @@ export class EnemyManager {
           e.vx += Math.cos(steerAngle) * accel * dt
           e.vy += Math.sin(steerAngle) * accel * dt
           const spd = Math.hypot(e.vx, e.vy)
-          if (spd > maxSpeed) { e.vx = (e.vx / spd) * maxSpeed; e.vy = (e.vy / spd) * maxSpeed }
+          if (spd > effectiveMax) { e.vx = (e.vx / spd) * effectiveMax; e.vy = (e.vy / spd) * effectiveMax }
         } else {
           e.vx *= Math.pow(0.92, dt * 60)
           e.vy *= Math.pow(0.92, dt * 60)
@@ -409,6 +410,11 @@ export class EnemyManager {
     if (e.hitFlashMs > 0) {
       const ft = Math.min(e.hitFlashMs / 80, 1)
       this.gfx.lineStyle(4, 0xffffff, ft * 0.85); this.gfx.strokePoints(pts, true)
+    }
+    // Cryo freeze — blue tint while slowed
+    if (e.freezeMs > 0) {
+      const ft = Math.min(e.freezeMs / 3000, 1)
+      this.gfx.lineStyle(4, 0x44aaff, ft * 0.6); this.gfx.strokePoints(pts, true)
     }
 
     if (e.hullRatio < 1) {
@@ -601,6 +607,17 @@ export class EnemyManager {
 
   getEnemyProjectileStates(): Array<{ x: number; y: number; vx: number; vy: number; color: number; size: number }> {
     return this.enemyProjs.map(p => ({ x: p.x, y: p.y, vx: p.vx, vy: p.vy, color: p.color, size: p.size }))
+  }
+
+  applyCryoPulse(x: number, y: number, radius: number, durationMs: number): void {
+    for (const e of this.entities) {
+      if (!e.alive) continue
+      if (Math.hypot(e.x - x, e.y - y) <= radius) {
+        e.freezeMs = Math.max(e.freezeMs, durationMs)
+      }
+    }
+    // Blue expanding ring
+    this.deathRings.push({ x, y, radius: 30, maxRadius: radius, life: 1, decay: 1 / 600, color: 0x44aaff })
   }
 
   get count(): number { return this.entities.length }

@@ -29,6 +29,8 @@ export interface GameStateSnapshot {
   enemyProjectiles?: RemoteProjectile[]
   p1ActiveBase?:  string   // active class ability in progress
   p1ActiveMs?:    number
+  p1Phased?:      boolean
+  p2Phased?:      boolean
 }
 
 type MsgHandler = (msg: Record<string, unknown>) => void

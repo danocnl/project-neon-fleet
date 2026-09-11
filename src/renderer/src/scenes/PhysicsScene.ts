@@ -390,6 +390,11 @@ export class PhysicsScene extends Phaser.Scene {
             this.onSectorAdvance(newSector)
           }
           this.updateKillCounter()
+          // Cryo Warhead: AoE freeze at kill position
+          if (this.draftedCards.some(c => c.id === 'test_cryo_warhead')) {
+            this.enemies.applyCryoPulse(result.position.x, result.position.y, 400, 3000)
+            if (this.netRole === 'host') network.send({ type: 'CRYO_PULSE', x: result.position.x, y: result.position.y })
+          }
         },
         this.getBaseClass() === 'conductor' && this.activeRemainingMs > 0 ? 1.5 : 1,
         p2,
@@ -780,6 +785,9 @@ export class PhysicsScene extends Phaser.Scene {
       } else if (mod.stat === 'SHIELD_MAX' && mod.type === 'percent' && mod.value === -100) {
         this.combatState.maxShield = 0
         this.combatState.currentShield = 0
+      } else if (mod.stat === 'SHIELD_DELAY' && mod.type === 'flat') {
+        // mod.value in seconds; shieldDelayMs is in ms
+        this.combatState.shieldDelayMs = Math.max(500, this.combatState.shieldDelayMs + mod.value * 1000)
       }
     }
     this.updateModulesDisplay()
@@ -999,6 +1007,8 @@ export class PhysicsScene extends Phaser.Scene {
   private _remoteActiveBase?: string  // guest: received host active state
   private _remoteActiveMs   = 0
   private remoteActiveGfx?: Phaser.GameObjects.Graphics  // draws partner's glow
+  private _remoteP1Phased   = false
+  private _remoteCryoPulses: Array<{x:number;y:number;life:number;decay:number;radius:number;maxRadius:number}> = []
 
   private setupGuestNet(): void {
     this.remoteGfx        = this.add.graphics().setDepth(5)
@@ -1009,6 +1019,7 @@ export class PhysicsScene extends Phaser.Scene {
       this.remoteEnemies          = snap.enemies
       this._remoteActiveBase      = snap.p1ActiveBase
       this._remoteActiveMs        = snap.p1ActiveMs ?? 0
+      this._remoteP1Phased        = snap.p1Phased   ?? false
       this.remoteP1Projectiles    = snap.p1Projectiles    ?? []
       this.remoteP2Projectiles    = snap.p2Projectiles    ?? []
       this.remoteEnemyProjectiles = snap.enemyProjectiles ?? []
@@ -1019,12 +1030,17 @@ export class PhysicsScene extends Phaser.Scene {
         this.combatState.currentHull   = snap.p2.hullRatio   * this.combatState.maxHull
         this.combatState.currentShield = snap.p2.shieldRatio * (this.combatState.maxShield || 1)
       }
-      // Shared kill count — trigger drafts when host's kill threshold is crossed
+      // Shared kill count — trigger drafts and guest trigger cards
       if (snap.kills > this.killCount) {
         const prevLevel = Math.floor(this.killCount / KILLS_PER_LEVEL)
-        const newLevel  = Math.floor(snap.kills    / KILLS_PER_LEVEL)
+        const newKills  = snap.kills - this.killCount
+        // Fire ON_KILL events so guest's trigger cards (Kill Feed, Phase Reaction, etc.) activate
+        for (let k = 0; k < Math.min(newKills, 5); k++) {
+          this.dispatcher.emit({ type: 'ON_KILL', sourceId: this.runData.shipId, value: 1, timestamp: performance.now() })
+        }
         this.killCount = snap.kills
         this.updateKillCounter()
+        const newLevel = Math.floor(this.killCount / KILLS_PER_LEVEL)
         for (let i = prevLevel; i < newLevel; i++) {
           if (!this.drafting) this.triggerDraft()
         }
@@ -1039,6 +1055,12 @@ export class PhysicsScene extends Phaser.Scene {
     network.on('P1_DEAD', () => {
       this._p1Dead = true
       if (this.p2NameText) this.p2NameText.setText('HOST IN SPECTATOR')
+    })
+    network.on('CRYO_PULSE', (msg) => {
+      this._remoteCryoPulses.push({
+        x: msg.x as number, y: msg.y as number,
+        life: 1, decay: 1 / 600, radius: 30, maxRadius: 400,
+      })
     })
     network.on('SECTOR_ADVANCE', (msg) => {
       // Update local sector number and show the same visual effect as host
@@ -1249,6 +1271,8 @@ export class PhysicsScene extends Phaser.Scene {
       enemyProjectiles: this.enemies.getEnemyProjectileStates(),
       p1ActiveBase: this.activeRemainingMs > 0 ? (this.getBaseClass() ?? undefined) : undefined,
       p1ActiveMs:   this.activeRemainingMs > 0 ? this.activeRemainingMs : undefined,
+      p1Phased:     this.combatState.isPhased,
+      p2Phased:     this.combatState2?.isPhased ?? false,
     }
     network.sendState(snap)
   }
@@ -1267,7 +1291,7 @@ export class PhysicsScene extends Phaser.Scene {
           vx: this.remoteP1.vx, vy: this.remoteP1.vy,
           heading: this.remoteP1.heading,
         } as import('../physics/PhysicsBody').PhysicsBody
-        drawNeonShip(g, fakeBody, geo, COPILOT_COLOR, 1)
+        drawNeonShip(g, fakeBody, geo, COPILOT_COLOR, this._remoteP1Phased ? 0.3 : 1)
       } else {
         // Fallback: cyan diamond
         const { x, y, heading } = this.remoteP1
@@ -1320,6 +1344,17 @@ export class PhysicsScene extends Phaser.Scene {
     drawProjs(this.remoteP1Projectiles)
     drawProjs(this.remoteP2Projectiles)
     drawProjs(this.remoteEnemyProjectiles)
+
+    // Remote cryo pulses (host's warhead detonations, guest visual only)
+    for (const p of this._remoteCryoPulses) {
+      p.radius += (p.maxRadius - p.radius) * 0.12
+      p.life   -= p.decay
+      if (p.life > 0) {
+        g.lineStyle(2.5, 0x44aaff, p.life * 0.8);  g.strokeCircle(p.x, p.y, p.radius)
+        g.lineStyle(6,   0x44aaff, p.life * 0.15);  g.strokeCircle(p.x, p.y, p.radius)
+      }
+    }
+    this._remoteCryoPulses = this._remoteCryoPulses.filter(p => p.life > 0)
   }
 
   private buildP2HUD(): void {
