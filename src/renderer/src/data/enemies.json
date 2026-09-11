@@ -179,7 +179,7 @@
     "immuneTo": [],
     "xpValue": 3,
     "weaponId": "pulse_laser",
-    "leash": 1920
+    "leash": null
   },
   {
     "id": "attack_drone",
@@ -210,7 +210,7 @@
     "immuneTo": [],
     "xpValue": 6,
     "weaponId": "chaingun",
-    "leash": 1920
+    "leash": null
   },
   {
     "id": "turret",
