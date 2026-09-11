@@ -150,7 +150,7 @@
     "description": "Rapid-pulse energy beam. Infinite ammo, zero spread. Interacts with mirrors and prisms. Natural fit for Vector Specialist builds.",
     "baseStats": {
       "DAMAGE": 10,
-      "RATE_OF_FIRE": 6.0,
+      "RATE_OF_FIRE": 0.5,
       "RELOAD_SPEED": 0,
       "AMMO_CAPACITY": 0,
       "RANGE": 460,
