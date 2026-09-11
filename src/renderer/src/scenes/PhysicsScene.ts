@@ -144,8 +144,7 @@ export class PhysicsScene extends Phaser.Scene {
   private activeGfx!:       Phaser.GameObjects.Graphics
   private activeCooldownBar!: Phaser.GameObjects.Graphics
   private activeLabel!:     Phaser.GameObjects.Text
-  private flightMode:     FlightMode = 'PATROL'
-  private modeChips:      { mode: FlightMode; gfx: Phaser.GameObjects.Graphics; text: Phaser.GameObjects.Text }[] = []
+  private flightMode:     FlightMode = 'ASSAULT'
   private upgradeBtnGfx!: Phaser.GameObjects.Graphics
   private upgradeBtnText!: Phaser.GameObjects.Text
   private upgradeBtnZone!: Phaser.GameObjects.Zone
@@ -173,7 +172,7 @@ export class PhysicsScene extends Phaser.Scene {
   private actor2?:        ShipActor
   private combatState2?:  CombatState
   private actor2Waypoint:    { x: number; y: number } = { x: 0, y: 0 }
-  private guestFlightMode:  FlightMode = 'PATROL'
+  private guestFlightMode:  FlightMode = 'ASSAULT'
   // SUPPORT orbit angles
   private supportOrbitAngle  = 0
   private actor2OrbitAngle   = 0
@@ -244,40 +243,25 @@ export class PhysicsScene extends Phaser.Scene {
     const dt = Math.min(delta / 1000, 0.05)
 
     // Waypoint navigation — ASSAULT is per-frame lock-on, others use arrival-based
-    if (this.flightMode === 'ASSAULT') {
-      const assaultTarget = this.resolveHunterTarget(
+    // Always pursue: lock nearest drone/turret, asteroid fallback
+    {
+      const pursuitTarget = this.resolveHunterTarget(
         this.actor.body.x, this.actor.body.y,
         this.enemies.getEntities(),
         this.enemies.currentTarget,
         (id) => { this.lockedTargetId = id }
       )
-      if (assaultTarget) {
-        // Lead-point orbit: place waypoint 60° clockwise ahead of the ship's current
-        // angle around the target.  The ship always chases a point 60° ahead, so the
-        // waypoint is never faster than the ship — produces smooth circular orbiting.
-        const dx = this.actor.body.x - assaultTarget.x
-        const dy = this.actor.body.y - assaultTarget.y
-        const dist = Math.hypot(dx, dy) || 1
-        const nx = dx / dist, ny = dy / dist
-        const lead = Math.PI / 3   // 60°
-        const cosL = Math.cos(lead), sinL = Math.sin(lead)
-        const lx = nx * cosL + ny * sinL   // clockwise rotation
-        const ly = -nx * sinL + ny * cosL
+      if (pursuitTarget) {
         this.actor.waypoint = {
-          x: ((assaultTarget.x + lx * 200) % WORLD_W + WORLD_W) % WORLD_W,
-          y: ((assaultTarget.y + ly * 200) % WORLD_H + WORLD_H) % WORLD_H,
+          x: ((pursuitTarget.x % WORLD_W) + WORLD_W) % WORLD_W,
+          y: ((pursuitTarget.y % WORLD_H) + WORLD_H) % WORLD_H,
         }
       } else {
-        // No target — let normal arrival-based waypoint pick a new destination
         const dx = this.actor.waypoint.x - this.actor.body.x
         const dy = this.actor.waypoint.y - this.actor.body.y
-        if (Math.hypot(dx, dy) < this.actor.arrivalR) this.actor.waypoint = this.nextWaypoint()
-      }
-    } else {
-      const dx = this.actor.waypoint.x - this.actor.body.x
-      const dy = this.actor.waypoint.y - this.actor.body.y
-      if (Math.hypot(dx, dy) < this.actor.arrivalR) {
-        this.actor.waypoint = this.nextWaypoint()
+        if (Math.hypot(dx, dy) < this.actor.arrivalR) {
+          this.actor.waypoint = this.randomWaypointFrom(this.actor.body.x, this.actor.body.y)
+        }
       }
     }
 
@@ -289,7 +273,8 @@ export class PhysicsScene extends Phaser.Scene {
     // Throttle thrust when a weapon target is close — ship slows to keep target in arc
     const tgt     = this.enemies.currentTarget
     const tgtDist = tgt ? Math.hypot(tgt.x - this.actor.body.x, tgt.y - this.actor.body.y) : Infinity
-    const throttle = (tgt !== null && tgtDist < 280 && this.flightMode !== 'KITE' && this.flightMode !== 'ASSAULT') ? 0.2 : 1.0
+    // Near-stop when in weapon range to maximise DPS on target
+    const throttle = (tgt !== null && tgtDist <= 350) ? 0.04 : 1.0
 
     // Lateral force scaling — ships must arc into turns, not pivot instantly
     const { fx, fy } = this.steerForce(
@@ -305,17 +290,17 @@ export class PhysicsScene extends Phaser.Scene {
     // This decouples the visual rotation from physics drift so the ship always
     // looks like it's going where it intends, not sliding sideways.
     {
-      let targetHeading = this.actor.body.heading  // default: hold
-      if (this.flightMode === 'ASSAULT' && this.lockedTargetId) {
-        const lt = this.enemies.getEntities().find(e => e.instanceId === this.lockedTargetId && e.alive)
-        if (lt) targetHeading = Math.atan2(lt.x - this.actor.body.x, -(lt.y - this.actor.body.y))
+      // Always face the locked target so weapons fire accurately
+      const lt = this.enemies.getEntities().find(e => e.instanceId === this.lockedTargetId && e.alive)
+      let targetHeading = this.actor.body.heading
+      if (lt) {
+        targetHeading = Math.atan2(lt.x - this.actor.body.x, -(lt.y - this.actor.body.y))
       } else {
         const wp = this.wrappedWaypoint()
         const wdx = wp.x - this.actor.body.x, wdy = wp.y - this.actor.body.y
         if (Math.hypot(wdx, wdy) > 15) targetHeading = Math.atan2(wdx, -wdy)
       }
-      // Smooth rotation — rate scales with ship weight class
-      const rotRate = this.getLateralScale(this.runData.shipId) * 16  // Light≈6.4, Heavy≈2.4 rad/s
+      const rotRate = this.getLateralScale(this.runData.shipId) * 20
       let hDiff = targetHeading - this.actor.body.heading
       if (hDiff >  Math.PI) hDiff -= 2 * Math.PI
       if (hDiff < -Math.PI) hDiff += 2 * Math.PI
@@ -1116,32 +1101,25 @@ export class PhysicsScene extends Phaser.Scene {
     if (!this.actor2) return
     const body = this.actor2.body
 
-    if (this.guestFlightMode === 'ASSAULT') {
-      const assaultTarget = this.resolveHunterTarget(
+    // Actor2 always pursues like P1
+    {
+      const a2Target = this.resolveHunterTarget(
         body.x, body.y,
         this.enemies.getEntities(),
         null,
         (id) => { this.actor2LockedTargetId = id }
       )
-      if (assaultTarget) {
-        const dx2 = body.x - assaultTarget.x
-        const dy2 = body.y - assaultTarget.y
-        const dist2 = Math.hypot(dx2, dy2) || 1
-        const nx2 = dx2 / dist2, ny2 = dy2 / dist2
-        const lead = Math.PI / 3
-        const cosL = Math.cos(lead), sinL = Math.sin(lead)
-        const lx2 = nx2 * cosL + ny2 * sinL
-        const ly2 = -nx2 * sinL + ny2 * cosL
+      if (a2Target) {
         this.actor2Waypoint = {
-          x: ((assaultTarget.x + lx2 * 200) % WORLD_W + WORLD_W) % WORLD_W,
-          y: ((assaultTarget.y + ly2 * 200) % WORLD_H + WORLD_H) % WORLD_H,
+          x: ((a2Target.x % WORLD_W) + WORLD_W) % WORLD_W,
+          y: ((a2Target.y % WORLD_H) + WORLD_H) % WORLD_H,
         }
-      }
-    } else {
-      const dx = this.actor2Waypoint.x - body.x
-      const dy = this.actor2Waypoint.y - body.y
-      if (Math.hypot(dx, dy) < 120) {
-        this.actor2Waypoint = this.nextWaypointFor(body.x, body.y, this.guestFlightMode)
+      } else {
+        const dx = this.actor2Waypoint.x - body.x
+        const dy = this.actor2Waypoint.y - body.y
+        if (Math.hypot(dx, dy) < 120) {
+          this.actor2Waypoint = this.randomWaypointFrom(body.x, body.y)
+        }
       }
     }
     // Wrapped waypoint
@@ -1161,7 +1139,7 @@ export class PhysicsScene extends Phaser.Scene {
         return !best || d < Math.hypot(best.x - body.x, best.y - body.y) ? e : best
       }, null)
     const a2TgtDist  = a2WeaponTgt ? Math.hypot(a2WeaponTgt.x - body.x, a2WeaponTgt.y - body.y) : Infinity
-    const a2Throttle = (a2WeaponTgt && a2TgtDist < 280 && this.guestFlightMode !== 'KITE' && this.guestFlightMode !== 'ASSAULT') ? 0.2 : 1.0
+    const a2Throttle = (a2WeaponTgt !== null && a2TgtDist <= 350) ? 0.04 : 1.0
     const { fx: fx2, fy: fy2 } = this.steerForce(
       rawF2.fx * a2Throttle, rawF2.fy * a2Throttle,
       body, this.getLateralScale((this as any)._guestShipId ?? 'sidewinder')
@@ -1169,16 +1147,15 @@ export class PhysicsScene extends Phaser.Scene {
     stepPhysics(body, fx2, fy2, dt)
     wrapBounds(body, WORLD_W, WORLD_H)
     {
+      const lt2 = this.enemies.getEntities().find(e => e.instanceId === this.actor2LockedTargetId && e.alive)
       let targetH2 = body.heading
-      if (this.guestFlightMode === 'ASSAULT' && this.actor2LockedTargetId) {
-        const lt2 = this.enemies.getEntities().find(e => e.instanceId === this.actor2LockedTargetId && e.alive)
-        if (lt2) targetH2 = Math.atan2(lt2.x - body.x, -(lt2.y - body.y))
+      if (lt2) {
+        targetH2 = Math.atan2(lt2.x - body.x, -(lt2.y - body.y))
       } else {
-        // Face actor2's waypoint (already wrapped)
         const wdx = this.actor2Waypoint.x - body.x, wdy = this.actor2Waypoint.y - body.y
         if (Math.hypot(wdx, wdy) > 15) targetH2 = Math.atan2(wdx, -wdy)
       }
-      const rotRate2 = this.getLateralScale((this as any)._guestShipId ?? 'sidewinder') * 16
+      const rotRate2 = this.getLateralScale((this as any)._guestShipId ?? 'sidewinder') * 20
       let hDiff2 = targetH2 - body.heading
       if (hDiff2 >  Math.PI) hDiff2 -= 2 * Math.PI
       if (hDiff2 < -Math.PI) hDiff2 += 2 * Math.PI
@@ -1521,9 +1498,9 @@ export class PhysicsScene extends Phaser.Scene {
    */
   private getLateralScale(shipId: string): number {
     const wc = DataLoader.getShip(shipId)?.weightClass
-    if (wc === 'Heavy')  return 0.15
-    if (wc === 'Medium') return 0.26
-    return 0.40
+    if (wc === 'Heavy')  return 0.55
+    if (wc === 'Medium') return 0.70
+    return 0.85
   }
 
   /**
@@ -1764,28 +1741,6 @@ export class PhysicsScene extends Phaser.Scene {
 
     this.speedText = this.add.text(14, 172, '', { fontSize: '10px', color: '#224433', fontFamily: 'monospace' }); add(this.speedText)
 
-    // Flight mode chips
-    const MODES: { mode: FlightMode; label: string; key: string }[] = [
-      { mode: 'PATROL',  label: 'PATROL',  key: '1' },
-      { mode: 'KITE',    label: 'KITE',    key: '2' },
-      { mode: 'ASSAULT', label: 'ASSAULT', key: '3' },
-      { mode: 'SUPPORT', label: 'SUPPORT', key: '4' },
-    ]
-    const CW = 74, CH = 18, CG = 4
-    MODES.forEach(({ mode, label }, i) => {
-      const cx = 14 + i * (CW + CG)
-      const cy = 190
-      const gfx = this.add.graphics().setScrollFactor(0).setDepth(50)
-      const text = this.add.text(cx + CW / 2, cy + CH / 2, label, {
-        fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold',
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(51)
-      const zone = this.add.zone(cx, cy, CW, CH).setOrigin(0, 0).setInteractive()
-        .setScrollFactor(0).setDepth(52)
-      zone.on('pointerdown', () => this.setFlightMode(mode))
-      this.modeChips.push({ mode, gfx, text })
-    })
-    this.updateModeChips()
-
     // Keyboard shortcuts
     // God mode toggle — press G
     this.godModeText = this.add.text(VIEW_W / 2, 12, '', {
@@ -1798,10 +1753,6 @@ export class PhysicsScene extends Phaser.Scene {
       this.godModeText.setText(this.godMode ? '◈ INVULNERABLE' : '')
     })
 
-    this.input.keyboard!.on('keydown-ONE',   () => this.setFlightMode('PATROL'))
-    this.input.keyboard!.on('keydown-TWO',   () => this.setFlightMode('KITE'))
-    this.input.keyboard!.on('keydown-THREE', () => this.setFlightMode('ASSAULT'))
-    this.input.keyboard!.on('keydown-FOUR',  () => this.setFlightMode('SUPPORT'))
     this.input.keyboard!.on('keydown-SPACE', () => this.triggerClassActive())
 
     // ─── Active ability HUD ───────────────────────────────────────────────
@@ -1923,10 +1874,8 @@ export class PhysicsScene extends Phaser.Scene {
   }
 
   private asteroidAvoidanceForce(): { x: number; y: number } {
-    // KITE needs strong asteroid avoidance since it's already managing range actively
-    const isKite     = this.flightMode === 'KITE'
-    const avoidRange = isKite ? 400 : 220
-    const strength   = isKite ? 5.0 : 1.8
+    const avoidRange = 220
+    const strength   = 1.8
 
     let fx = 0, fy = 0
     const bx = this.actor.body.x, by = this.actor.body.y
@@ -1950,36 +1899,7 @@ export class PhysicsScene extends Phaser.Scene {
     return { x: fx, y: fy }
   }
 
-  private setFlightMode(mode: FlightMode): void {
-    this.flightMode = mode
-    this.updateModeChips()
-    if (mode !== 'ASSAULT') {
-      this.lockedTargetId = null
-      this.assaultOrbitAngle = 0
-      this.actor.waypoint = this.nextWaypoint()
-    }
-    // Guest: broadcast flight mode to host
-    if (this.netRole === 'guest') network.sendFlightMode(mode)
-  }
-
-  private updateModeChips(): void {
-    const CW = 74, CH = 18, CG = 4
-    this.modeChips.forEach(({ mode, gfx, text }, i) => {
-      const cx = 14 + i * (CW + CG), cy = 190
-      const active = mode === this.flightMode
-      const color  = active ? 0x00ffff : 0x224433
-
-      gfx.clear()
-      if (active) {
-        gfx.fillStyle(0x00ffff, 0.15)
-        gfx.fillRect(cx, cy, CW, CH)
-      }
-      gfx.lineStyle(1, color, active ? 0.9 : 0.35)
-      gfx.strokeRect(cx, cy, CW, CH)
-
-      text.setColor(active ? '#00ffff' : '#335544')
-    })
-  }
+  private setFlightMode(_mode: FlightMode): void { /* no-op: single pursuit mode */ }
 
   private pulseUpgradeButton(dt: number): void {
     if (this.pendingUpgrades <= 0) return

@@ -331,7 +331,7 @@ export class EnemyManager {
           const accel    = e.def.stats.ACCELERATION
           const maxSpeed = e.def.stats.SPEED * sector.speedScale
           const effectiveMax = e.freezeMs > 0 ? maxSpeed * 0.4 : maxSpeed
-          const turnRateRad = e.def.id === 'scout_drone' ? 2.2 : 1.2
+          const turnRateRad = e.def.id === 'scout_drone' ? 4.5 : 3.0
           const curAngle     = Math.atan2(e.vy, e.vx)
           const desiredAngle = Math.atan2(dy, dx)
           let angleDiff = desiredAngle - curAngle
