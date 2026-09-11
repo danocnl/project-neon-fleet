@@ -11,7 +11,7 @@ const WEAPON_VISUAL: Record<string, {
   light_chaingun: { color: 0xdddddd, size: 1.2, speed: 420, cooldownMs: 250,  dot: true },
   chaingun:       { color: 0xcccccc, size: 1.5, speed: 440, cooldownMs: 334,  dot: true },
   heavy_chaingun: { color: 0xbbbbbb, size: 2.0, speed: 460, cooldownMs: 500,  dot: true },
-  pulse_laser:    { color: 0x00ffff, size: 1.6, speed: 700, cooldownMs: 2720 },
+  pulse_laser:    { color: 0x00ffff, size: 1.6, speed: 700, cooldownMs: 5440 },
   beam_laser:     { color: 0x00ccff, size: 2.0, speed: 800, cooldownMs: 100  },
   emp_cannon:     { color: 0x4466ff, size: 5.0, speed: 320, cooldownMs: 1000 },
   arc_cannon:     { color: 0xff8800, size: 4.5, speed: 380, cooldownMs: 833  },
@@ -127,9 +127,9 @@ export class ProjectileSystem {
       } else if (p.size < 2.5) {
         // Dash style: elongated bright line — looks like (- - -)
         g.lineStyle(p.size * 1.2, p.color, 1.0)
-        g.lineBetween(p.x, p.y, p.x - p.vx * 0.10, p.y - p.vy * 0.10)
+        g.lineBetween(p.x, p.y, p.x - p.vx * 0.05, p.y - p.vy * 0.05)
         g.lineStyle(p.size * 2.5, p.color, 0.2)
-        g.lineBetween(p.x, p.y, p.x - p.vx * 0.10, p.y - p.vy * 0.10)
+        g.lineBetween(p.x, p.y, p.x - p.vx * 0.05, p.y - p.vy * 0.05)
       } else {
         // Large projectile: trail + filled core (torpedoes, heavy weapons)
         g.lineStyle(p.size * 0.7, p.color, 0.35)
