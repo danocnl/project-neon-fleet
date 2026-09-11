@@ -19,9 +19,10 @@ export class EnemyEntity {
   readonly shape: [number, number][]
 
   alive = true
-  attackCooldownMs = 0
-  hitFlashMs       = 0   // counts down after taking damage; drives the hit-flash draw
-  freezeMs         = 0   // cryo warhead slow; decays each tick
+  attackCooldownMs    = 0
+  hitFlashMs          = 0   // counts down after taking damage; drives the hit-flash draw
+  freezeMs            = 0   // cryo warhead slow; decays each tick
+  collisionCooldownMs = 0   // prevents repeated damage during prolonged overlap
 
   constructor(def: Enemy, x: number, y: number, driftAngle: number, sectorScale = 1.0) {
     this.def        = def
@@ -62,8 +63,9 @@ export class EnemyEntity {
   }
 
   tick(deltaMs: number): void {
-    if (this.hitFlashMs > 0) this.hitFlashMs = Math.max(0, this.hitFlashMs - deltaMs)
-    if (this.freezeMs  > 0) this.freezeMs   = Math.max(0, this.freezeMs   - deltaMs)
+    if (this.hitFlashMs          > 0) this.hitFlashMs          = Math.max(0, this.hitFlashMs          - deltaMs)
+    if (this.freezeMs            > 0) this.freezeMs            = Math.max(0, this.freezeMs            - deltaMs)
+    if (this.collisionCooldownMs > 0) this.collisionCooldownMs = Math.max(0, this.collisionCooldownMs - deltaMs)
     if (this.maxShield > 0 && this.currentShield < this.maxShield) {
       this.shieldDelayMs += deltaMs
       if (this.shieldDelayMs >= this.def.stats.SHIELD_DELAY * 1000) {

@@ -283,22 +283,37 @@ export class EnemyManager {
     body: PhysicsBody,
     onDamage: (d: number) => void
   ): void {
-    const playerSpeed = Math.hypot(body.vx, body.vy)
-
     for (const e of this.entities) {
       if (!e.alive) continue
       const dx = px - e.x, dy = py - e.y
       const dist = Math.hypot(dx, dy)
       const minDist = playerRadius + e.def.stats.COLLISION_RADIUS
+
+      // Drones keep a combat gap — don't physically ram the player
+      if (e.def.behavior === 'CHASE') {
+        const combatGap = minDist + 30
+        if (dist < combatGap && dist > 0.5) {
+          // Push drone away so it attacks from range, not by ramming
+          const nx = dx / dist, ny = dy / dist
+          const pushMag = (combatGap - dist) / combatGap * e.def.stats.ACCELERATION * 0.5
+          e.vx -= nx * pushMag; e.vy -= ny * pushMag
+        }
+        continue   // drones deal damage via weapons, not collision
+      }
+
       if (dist >= minDist || dist < 0.5) continue
 
       const nx = dx / dist, ny = dy / dist
 
-      // Damage scales with player speed × object size
-      // At full Mamba speed (~150 u/s) hitting an XL asteroid = ~225 damage (lethal)
-      const sizeNorm = e.def.stats.COLLISION_RADIUS / 80  // 1.0 = XL asteroid
-      const damage   = Math.max(5, playerSpeed * sizeNorm * 1.5)
-      onDamage(damage)
+      // Damage = relative approach speed × size — fires once per collision event
+      // (collisionCooldownMs prevents per-frame damage during prolonged overlap)
+      if (e.collisionCooldownMs <= 0) {
+        const relVx = body.vx - e.vx, relVy = body.vy - e.vy
+        const approachSpeed = Math.max(0, relVx * nx + relVy * ny)
+        const damage = Math.max(1, approachSpeed * (e.def.stats.COLLISION_RADIUS / 55))
+        onDamage(damage)
+        e.collisionCooldownMs = 900   // ~1s before this entity can deal collision damage again
+      }
 
       // Physics bounce — reflect velocity component along collision normal
       const dot = body.vx * nx + body.vy * ny
