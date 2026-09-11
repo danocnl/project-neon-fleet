@@ -3163,5 +3163,31 @@
       "cooldown": 2
     },
     "classRestriction": null
+  },
+  {
+    "id": "test_fire_rate",
+    "name": "Firing Solutions",
+    "tier": 1,
+    "rarity": "Common",
+    "archetype": "StatMutator",
+    "associatedTags": [
+      "KINETIC"
+    ],
+    "prerequisiteTags": {},
+    "grantedTags": {
+      "TEST_UPGRADE": 1,
+      "RECURSIVE": 1
+    },
+    "statModifiers": [
+      {
+        "stat": "FIRE_RATE",
+        "type": "percent",
+        "value": 0.1
+      }
+    ],
+    "tradeOff": null,
+    "description": "+10% fire rate. Recursive \u2014 can be drafted every level for compounding effect.",
+    "logicTrigger": null,
+    "classRestriction": null
   }
 ]

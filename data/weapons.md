@@ -113,9 +113,9 @@ Rapid-pulse energy beam. Infinite ammo, zero spread. Consistent and efficient. N
 | Stat | Value |
 |---|---|
 | DAMAGE | 10 per pulse |
-| RATE_OF_FIRE | 6.0 pulses/s |
+| RATE_OF_FIRE | 1.5 pulses/s (deliberate cadence — upgrade with Firing Solutions to increase) |
 | AMMO_CAPACITY | ∞ |
-| RANGE | 380u |
+| RANGE | 460u |
 | ACCURACY | 0° (perfect) |
 | VELOCITY | instant |
 | ENERGY_COST | 8 /pulse |

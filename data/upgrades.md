@@ -506,3 +506,20 @@ Each kill generates 2 permanent orbiting debris pieces. Orbital debris deals col
 **Infinity Mirror** — Vector Specialist only
 Requires: MIRROR×5, PRISM×3, REFLECTION×2
 Deploy a prism network filling the entire arena. All energy attacks bounce indefinitely without damage decay for 8s.
+
+---
+
+## Test Cards (active during development)
+
+Cards tagged `TEST_UPGRADE` replace the normal draft pool entirely when present — only test cards appear in offers.
+
+| Card | Tier | Type | Effect |
+|---|---|---|---|
+| Reinforced Plating | T1 | StatMutator | +350 hull HP |
+| Shield Amplifier | T2 | StatMutator | +300 shield · shield delay −2s |
+| Kill Feed | T2 | LogicTrigger | ON_KILL: restore 20% max hull |
+| Phase Reaction | T3 | LogicTrigger | ON_KILL: 2s PHASE (3s cooldown) |
+| Cryo Warhead | T3 | LogicTrigger | ON_KILL: cryo AoE 400u · slows 60% for 3s (2s cooldown) |
+| **Firing Solutions** | **T1** | **StatMutator** | **+10% fire rate — RECURSIVE, can be drafted every level** |
+
+**Recursive cards** (RECURSIVE tag) are re-offered each draft even after being picked. Firing Solutions stacks multiplicatively: 10 stacks = ~65% faster firing, 20 stacks = ~88% faster.

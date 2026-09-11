@@ -24,7 +24,8 @@ export class DraftEngine {
 
     // Filter to eligible cards
     const eligible = allCards.filter(card => {
-      if (drafted.has(card.id)) return false
+      // Recursive cards (RECURSIVE tag > 0) can be offered multiple times
+      if (drafted.has(card.id) && !(card.grantedTags['RECURSIVE'] > 0)) return false
       if (!aggregator.meetsPrerequisites(card)) return false
       if (card.classRestriction && card.classRestriction !== classSpec.id) return false
       return true

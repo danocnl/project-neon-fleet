@@ -108,78 +108,80 @@ Basic automated combat units. All drones have light shielding that recharges aft
 
 ### Scout Drone  `S` · CHASE · Tier 1
 
-Fast pursuit unit. Individually trivial, dangerous in swarms. Weak energy pulses — shield drops quickly under any sustained fire.
+Fast pursuit unit. Individually trivial, dangerous in swarms. Maintains ~100u engagement distance and fires energy pulses. Retreats automatically when it overruns the target.
 
 | Stat | Value |
 |---|---|
-| HULL | 75 HP |
+| HULL | 30 HP |
 | ARMOR | 0% |
-| SHIELD_MAX | 50 SP |
+| SHIELD_MAX | 35 SP |
 | SHIELD_REGEN | 20 SP/s |
 | SHIELD_DELAY | 3.0s |
-| SPEED | 220 u/s |
-| ACCELERATION | 180 u/s² |
+| SPEED | 120 u/s |
+| ACCELERATION | 95 u/s² |
 | COLLISION_RADIUS | 12px |
 | XP Value | 3 |
 
-**Weapon:** ENERGY · 8 damage · 4.0 shots/s · 200u range
-**Drops:** 5–10 credits
-**Vulnerable:** KINETIC · EMP (disables shields and targeting)
+**Weapon:** `pulse_laser` — ENERGY · 6 dmg/pulse · 2.0 shots/s · 380u range · **30° firing arc**
+Drones can only fire when the target is within ±15° of their facing direction.
+**Drops:** 8–16 credits
+**Vulnerable:** KINETIC · EMP
 **Immune:** —
 
 ---
 
 ### Attack Drone  `M` · CHASE · Tier 1
 
-Standard combat unit. More durable than the scout, fires kinetic rounds that hit harder but slower. Light shielding — strip it with EMP or sustained fire, then armour takes over.
+Heavier combat unit. Slower than the scout but harder to kill. Kinetic chaingun is more damaging per shot and fires in a stricter forward arc — it must face the target to engage.
 
 | Stat | Value |
 |---|---|
-| HULL | 150 HP |
-| ARMOR | 5% |
-| SHIELD_MAX | 80 SP |
+| HULL | 50 HP |
+| ARMOR | 0% |
+| SHIELD_MAX | 55 SP |
 | SHIELD_REGEN | 15 SP/s |
 | SHIELD_DELAY | 4.0s |
-| SPEED | 140 u/s |
-| ACCELERATION | 100 u/s² |
+| SPEED | 85 u/s |
+| ACCELERATION | 70 u/s² |
 | COLLISION_RADIUS | 18px |
 | XP Value | 6 |
 
-**Weapon:** KINETIC · 22 damage · 1.5 shots/s · 280u range
-**Drops:** 10–20 credits
-**Vulnerable:** EMP (disrupts weapon system) · CORROSIVE (strips 5% armor)
+**Weapon:** `chaingun` — KINETIC · 18 dmg/shot · 6.0 shots/s · 380u range · **25° firing arc**
+**Drops:** 16–28 credits
+**Vulnerable:** EMP · CORROSIVE
 **Immune:** —
 
 ---
 
 ### Sector Turret  `S` · STATIC · Tier 1
 
-A hardwired stationary defence platform. No shields — built entirely from reinforced armour plating. Fires a continuous energy beam. Does not move or pursue. EMP has no effect on its hardwired, non-networked systems.
+Hardwired stationary defence platform. No shields — built entirely from reinforced armour plating. Fires a precision railgun burst. Does not pursue. EMP has no effect on its hardwired systems. The narrow 10° firing arc means it must be almost exactly facing the target to fire — but it always rotates to face the nearest player.
 
 | Stat | Value |
 |---|---|
-| HULL | 220 HP |
-| ARMOR | 12% |
+| HULL | 80 HP |
+| ARMOR | 6% |
 | SHIELD_MAX | 0 |
 | SPEED | 0 (stationary) |
 | COLLISION_RADIUS | 22px |
 | XP Value | 8 |
 
-**Weapon:** ENERGY · 25 DPS · continuous beam · 380u range
-**Drops:** 18–30 credits
-**Vulnerable:** EXPLOSIVE (structural) · KINETIC
+**Weapon:** `railgun` — KINETIC · high dmg/shot · slow rate · 1000u range · **10° firing arc**
+Turret always faces nearest player — arc restriction exists but is effectively always met.
+**Drops:** 24–40 credits
+**Vulnerable:** EXPLOSIVE · KINETIC
 **Immune:** EMP
 
 ---
 
 ## Quick Reference
 
-| Enemy | Size | Tier | Behavior | HULL | ARMOR | SHIELD | Speed | XP |
-|---|---|---|---|---|---|---|---|---|
-| Asteroid XL | XL | 1 | DRIFT | 800 | 5% | 0 | 35 | 10 |
-| Asteroid Large | L | 1 | DRIFT | 320 | 5% | 0 | 55 | 6 |
-| Asteroid Medium | M | 1 | DRIFT | 110 | 0% | 0 | 85 | 3 |
-| Asteroid Small | S | 1 | DRIFT | 30 | 0% | 0 | 130 | 1 |
-| Scout Drone | S | 1 | CHASE | 75 | 0% | 50 SP | 220 | 3 |
-| Attack Drone | M | 1 | CHASE | 150 | 5% | 80 SP | 140 | 6 |
-| Sector Turret | S | 1 | STATIC | 220 | 12% | 0 | — | 8 |
+| Enemy | Size | Tier | Behavior | HULL | ARMOR | SHIELD | Speed | Weapon | Arc | XP |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Asteroid XL | XL | 1 | DRIFT | 500 | 0% | 0 | 8 | — | — | 10 |
+| Asteroid Large | L | 1 | DRIFT | 200 | 0% | 0 | 12 | — | — | 6 |
+| Asteroid Medium | M | 1 | DRIFT | 85 | 0% | 0 | 18 | — | — | 3 |
+| Asteroid Small | S | 1 | DRIFT | 28 | 0% | 0 | 28 | — | — | 1 |
+| Scout Drone | S | 1 | CHASE | 30 | 0% | 35 SP | 120 | pulse_laser | 30° | 3 |
+| Attack Drone | M | 1 | CHASE | 50 | 0% | 55 SP | 85 | chaingun | 25° | 6 |
+| Sector Turret | S | 1 | STATIC | 80 | 6% | 0 | — | railgun | 10° | 8 |

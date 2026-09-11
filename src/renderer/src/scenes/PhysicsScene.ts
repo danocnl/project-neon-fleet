@@ -776,8 +776,11 @@ export class PhysicsScene extends Phaser.Scene {
         this.combatState.maxShield = 0
         this.combatState.currentShield = 0
       } else if (mod.stat === 'SHIELD_DELAY' && mod.type === 'flat') {
-        // mod.value in seconds; shieldDelayMs is in ms
         this.combatState.shieldDelayMs = Math.max(500, this.combatState.shieldDelayMs + mod.value * 1000)
+      } else if (mod.stat === 'FIRE_RATE' && mod.type === 'percent') {
+        // Reduce visual projectile cooldown by mod.value fraction (e.g. 0.10 = 10% faster)
+        this.projectiles.applyFireRateBoost(mod.value)
+        this.projectiles2?.applyFireRateBoost(mod.value)
       }
     }
     this.updateModulesDisplay()

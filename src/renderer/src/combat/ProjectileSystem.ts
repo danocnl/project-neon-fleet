@@ -10,7 +10,7 @@ const WEAPON_VISUAL: Record<string, {
   light_chaingun: { color: 0xdddddd, size: 2.5, speed: 420, cooldownMs: 125  },
   chaingun:       { color: 0xcccccc, size: 3.5, speed: 440, cooldownMs: 167  },
   heavy_chaingun: { color: 0xbbbbbb, size: 4.5, speed: 460, cooldownMs: 250  },
-  pulse_laser:    { color: 0x00ffff, size: 1.6, speed: 700, cooldownMs: 340  },
+  pulse_laser:    { color: 0x00ffff, size: 1.6, speed: 700, cooldownMs: 680  },
   beam_laser:     { color: 0x00ccff, size: 2.0, speed: 800, cooldownMs: 100  },
   emp_cannon:     { color: 0x4466ff, size: 5.0, speed: 320, cooldownMs: 1000 },
   arc_cannon:     { color: 0xff8800, size: 4.5, speed: 380, cooldownMs: 833  },
@@ -28,8 +28,9 @@ interface VisualProjectile {
 
 interface WeaponSlot {
   id: string
-  lateralOffset: number   // px perpendicular to heading — separates hardpoints
-  cooldownMs: number
+  lateralOffset: number
+  cooldownMs:      number   // current countdown
+  resetCooldownMs: number   // value to reload after firing (affected by upgrades)
 }
 
 export class ProjectileSystem {
@@ -45,7 +46,8 @@ export class ProjectileSystem {
     this.slots = weaponIds.slice(0, 2).map((id, i) => ({
       id,
       lateralOffset: offsets[i] ?? (i % 2 === 0 ? -9 : 9),
-      cooldownMs: 0,
+      cooldownMs:      0,
+      resetCooldownMs: WEAPON_VISUAL[id]?.cooldownMs ?? 200,
     }))
   }
 
@@ -84,7 +86,7 @@ export class ProjectileSystem {
         const lifetime = Math.min((dist / visual.speed) * 1000 + 80, 2000)
 
         this.projectiles.push({ x: sx, y: sy, vx, vy, color: visual.color, size: visual.size, lifetimeMs: lifetime })
-        slot.cooldownMs = visual.cooldownMs
+        slot.cooldownMs = slot.resetCooldownMs
       }
     } else {
       // Drain cooldowns even when no target so weapons are ready when one appears
@@ -98,6 +100,13 @@ export class ProjectileSystem {
       p.lifetimeMs -= deltaMs
     }
     this.projectiles = this.projectiles.filter(p => p.lifetimeMs > 0)
+  }
+
+  /** Reduce all slot cooldowns by `boostFraction` (e.g. 0.10 = 10% faster). Stackable. */
+  applyFireRateBoost(boostFraction: number): void {
+    for (const slot of this.slots) {
+      slot.resetCooldownMs = Math.max(50, slot.resetCooldownMs * (1 - boostFraction))
+    }
   }
 
   getStates(): Array<{ x: number; y: number; vx: number; vy: number; color: number; size: number }> {

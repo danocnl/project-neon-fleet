@@ -217,7 +217,11 @@ export class EnemyManager {
         const toPlayerAngle = Math.atan2(tgtY - e.y, tgtX - e.x)
         let diff = Math.abs(toPlayerAngle - facingAngle)
         if (diff > Math.PI) diff = Math.PI * 2 - diff
-        const halfArc = (e.def.id === 'scout_drone' ? 50 : 38) * (Math.PI / 180)
+        // Use the actual weapon's FIRING_ARC from weapon data — no more hardcoded overrides
+        const weaponArcDeg = e.def.weaponId
+          ? ((DataLoader.getWeapon(e.def.weaponId)?.baseStats as Record<string, number> | undefined)?.['FIRING_ARC'] ?? 30)
+          : 30
+        const halfArc = (weaponArcDeg / 2) * (Math.PI / 180)
         if (diff > halfArc) continue
       }
 
