@@ -1,113 +1,301 @@
-# **Game Design Document: Project Neon Fleet**
+# Game Design Document — Project Neon Fleet
 
-## **1\. Executive Summary**
+**Version:** September 2026  
+**Status:** In active development — core loop proven, co-op online
 
-* **Working Title:** Project Neon Fleet  
-* **Genre:** 2-Player Co-op Incremental Roguelike Autobattler  
-* **Target Platforms:** PC (Primary / Direct UI), Mobile (Secondary Target / Touch-Optimized UI)  
-* **Visual Style:** High-contrast, *Geometry Wars*\-inspired vector graphics. Dark space grid arena, vibrant neon wireframes, crisp particle physics, and clean numerical overlays.  
-* **Core Philosophy:** A continuous, persistent universe combining the low-friction automation of idle/incremental games (*Melvor Idle*) with the strategic build depth, Nova Drift-style recursive drafting, and cooperative synergy of an automated 2-player fleet.
+---
 
-## **2\. Core Gameplay Loop**
+## 1. Executive Summary
+
+| | |
+|---|---|
+| **Working Title** | Project Neon Fleet |
+| **Genre** | 2-Player Online Co-op Autobattler Roguelike |
+| **Platform** | PC (Electron + browser), Steam target |
+| **Visual Style** | Vector neon wireframes on a dark space grid. *Geometry Wars* meets *Space Invaders Infinity Gene*. |
+| **Engine** | Phaser 3 + TypeScript + Electron (Vite build) |
+
+**Core loop in one sentence:** Two ships autonomously hunt enemies through escalating sectors — players manage class abilities, upgrade cards between waves, and coordinate in real-time co-op without ever touching a movement key.
+
+---
+
+## 2. Core Philosophy
+
+**Autobattler, not idle.** Ships navigate and fight entirely on their own. Players make *strategic* decisions — which upgrade to draft, when to trigger the class active, how to coordinate roles — rather than *mechanical* ones like aiming or dodging.
+
+**Shared jeopardy.** Both players share the same sector, same enemy pool, same kills-to-advance counter. One ship dying enters spectator mode following the survivor; both ships dying ends the run. Co-op creates genuine interdependence, not just parallel play.
+
+**Compounding builds.** The tag+upgrade pipeline means early choices create synergies that become dramatically more powerful by sector 20+. The same ship class played by two different pilots should look completely different by mid-game.
+
+---
+
+## 3. Game Loop
 
 ```
-  +-----------------------------------------------------------------+
-  |                        GALAXY SECTOR MAP                        |
-  |    Continuous background sector traversal & resource mining     |
-  +-----------------------------------------------------------------+
-                                  |
-                                  v
-  +-----------------------------------------------------------------+
-  |                       COMBAT AUTOMATION                         |
-  |     Vector-driven, 2-player automated ship behavior loops       |
-  +-----------------------------------------------------------------+
-                                  |
-            +---------------------+---------------------+
-            |                                           |
-            v                                           v
-  [ACTIVE PLAY SESSIONS]                       [BENCHMARK RETREAT]
-  * Real-time strategic interventions           * Fleet hull drops to 0 HP
-  * High-value anomaly events                  * Auto-warp to safe sector
-  * Co-op sector boss pushes                   * Pay resource repair fee
-  * Tactical logic drafting                     * Insurance policies mitigate
-            |                                           |
-            +---------------------+---------------------+
-                                  |
-                                  v
-  +-----------------------------------------------------------------+
-  |                  INCREMENTAL PROGRESSION & SEASONS              |
-  |    Spend currencies -> Upgrade hull/modules -> Seasonal Resets  |
-  +-----------------------------------------------------------------+
+SESSION START
+  ↓
+[Save Slot / Guest Code]
+  ↓
+[PhysicsScene — The Run]
+  │
+  ├─ Sector N
+  │    ├── Wave 1 spawns (ring around players)
+  │    ├── Both ships hunt and kill
+  │    ├── [Wave clear] → Wave 2 announcement + spawn
+  │    ├── [All waves clear] → Sector advance animation + next sector
+  │    └── [Both ships die] → BenchmarkScene
+  │
+  ├─ Every 3 kills → Draft offer (4 upgrade cards)
+  │    └── Each player picks independently from their class-weighted pool
+  │
+  └─ [Run ends] → BenchmarkScene
+         ├── Credits, kills, sector reached
+         ├── Access Armory (buy/upgrade weapons + modules)
+         └── RELAUNCH or return to save slot
 ```
 
-### **Session Structure & Player Engagement**
+---
 
-* **Idle System:** The 2-ship fleet continuously fights through automated sector waves, gathering base resources offline or in the background.  
-* **Active Interventions:** Players log in to handle strategic bottlenecks:  
-  * **Sector Anomaly Invasions:** Limited-time events requiring live module tweaking.  
-  * **Sector Boss Pushes:** Tactical gates that require active 2-player co-op coordination and precise logic optimization to defeat.  
-  * **Roguelike Draft Choices:** Choosing branch paths and module unlocks that alter the current sector run.  
-* **Seasonal Model:** Worlds, galaxies, and economy reset on a seasonal schedule. Each season introduces unique cosmic modifiers (e.g., *Solar Flares: \+50% Laser Damage, Shield Regen Reduced by 80%*).
+## 4. Combat — How It Works
 
-## **3\. Hardware vs. Software Systems (The 9x9 Matrix)**
+### Ship Behavior
+Ships navigate and engage autonomously. There are no manual controls. Ships:
+- Lock onto the nearest enemy (drones/turrets first, asteroids fallback)
+- Apply active braking when within weapon range to maximise DPS time
+- Maintain engagement distance and loop back when overshooting
+- Avoid each other and obstacles using repulsion forces
 
-Ships are completely decoupled into **Physical Vessels (Hardware Frames)** and **Class Specializations (Software Logic)**, creating an 81-combination matrix before drafting begins.
+### Class Active Abilities (SPACE to activate)
 
-### **9 Ship Chassis Frames (Hardware)**
+Each of the 3 starter classes has a distinct active:
 
-Dictates physical size, weight class, stat baseline, hardpoints, and handling:
+| Class | Active | Effect | Cooldown |
+|---|---|---|---|
+| **Architect** | BULWARK | 3s full damage immunity + white glow | 45s |
+| **Conductor** | OVERCLOCK | 6s zero heat + 1.5× DPS + orange glow | 40s |
+| **Weaver** | PHASE SHIFT | 4s intangible + shields recharge rapidly + purple glow | 35s |
 
-1. **Sidewinder Frame (Agile Scout):** Light | Max Speed, Max Handling, 15% Evasion  
-2. **Cobra Frame (Multi-Role Speedster):** Light | Balanced Speed, High Shields, Versatile Slots  
-3. **Mamba Frame (Dragster Interceptor):** Light | Max Velocity, Heat Dissipation, Energy Efficiency  
-4. **Krait Frame (Strike Carrier):** Medium | Dual Drone Bays, Front Firepower, Med Mobility  
-5. **Chieftain Frame (Kinetic Brawler):** Medium | High Handling, Heavy Armor, Impact Resist  
-6. **Python Frame (Heavy Gunship):** Medium | Max Hardpoints, Max Slots, Thick Shields  
-7. **Anaconda Frame (Flying Fortress):** Heavy | Massive Hull, Massive Shields, Long Range  
-8. **Cutter Frame (Shield Dreadnought):** Heavy | Max Shields, High Momentum, Front Line Presence  
-9. **Type-10 Frame (Heavy Ordnance Array):** Heavy | Max Armor, 360° Turrets, Status Immunity
+Both players see each other's active visually. Coordination matters: Weaver phases to reset after Architect soaks an ambush wave.
 
-### **9 Class Specializations (Software Logic)**
+### Enemy Behaviour
 
-Dictates tag pools, conditional triggers, and 2-player co-op synergies:
+| Enemy | Weapon | Firing Arc | Behaviour |
+|---|---|---|---|
+| Scout Drone | pulse_laser | 30° | CHASE — hunts players from anywhere on map, maintains 100u engagement gap |
+| Attack Drone | chaingun | 25° | CHASE — heavier, slower, hits harder |
+| Sector Turret | railgun | 10° | STATIC — always faces nearest player, extreme range |
+| Asteroids | — | — | DRIFT — slow, high HP, cluster together, cascade into smaller pieces |
 
-1. **Chrono Architect:** Support/Utility | Time distortion, cooldown reduction, faster execution loops.  
-2. **Quantum Entangler:** Control/Debuff | Tethers targets, echoes single-target damage across fleets.  
-3. **Hyper-Conductor:** Offense/Energy | Converts heat to power, triggers high-voltage EMP discharges.  
-4. **Graviton Weaver:** Spatial/Defense | Singularities, pulls enemy waves into dense clusters.  
-5. **Nanite Swarm Controller:** Sustain/Support | Self-replicating swarms, armor stripping, team hull repair.  
-6. **Phase Weaver:** Defense/Mobility | Phase-dashing, temporary invulnerability, shield bypass.  
-7. **Resonance Bard:** Buff/Synergy | Aura stacking, harmonic team stat multipliers, power feeding.  
-8. **Scrap Salvager:** Defense/Kinetic | Converts destroyed enemy debris into physical barriers.  
-9. **Vector Specialist:** Offense/Lasers | Reflective prisms, splitting beams, multi-angle ricochets.
+Drones must face the player to fire. They loop back if they overshoot. All enemies have collision physics with each other and the player ships.
 
-## **4\. Cooperative Synergies & Combat Automation**
+Enemy weapon stats inherit directly from `weapons.json` with optional per-enemy `weaponOverrides` multipliers (DAMAGE, RATE_OF_FIRE, RANGE).
 
-Combat is fully automated based on pre-set logic loops. Strategic depth comes from how 2 players program their ships to trigger off one another:
+---
 
-* **Cross-Fleet Chaining Examples:**  
-  * **P1 Heat-Generator \+ P2 Hyper-Conductor:** Player 1’s Mamba generates extreme internal heat $\\rightarrow$ Player 2’s Hyper-Conductor siphons Player 1’s heat to charge map-wide EMP lightning pulses.  
-  * **P1 Graviton Weaver \+ P2 Heavy DPS:** Player 1 pulls an entire wave into a micro-singularity $\\rightarrow$ Player 2’s Python fires piercing heavy line beams through 100% of the compressed wave.  
-  * **P1 Laser Build \+ P2 Vector Specialist:** Player 1 fires heavy beam weapons $\\rightarrow$ Player 2 deploys reflective prisms that split Player 1's lasers into an auto-aiming screen-clearing matrix.
+## 5. Sector Progression
 
-## **5\. Tag System & Progression Architecture**
+### Structure
 
-Upgrades drop via a *Nova Drift*\-style tag-based drafting engine. Player choices are categorized across 5 Tag Buckets: \[SHIP\], \[WEAPON\], \[CONSTRUCT\], \[SPECIALIZATION\], and \[LOGIC\].
+Sectors run from 1 to 50, scaling in enemy count, HP, speed, and fire rate each tier.
 
-### **3 Upgrade Archetypes**
+Each sector has **multiple waves**:
+- Sectors 1–2: 2 waves (intro)
+- Sectors 3–10: 2–3 waves
+- Sectors 11+: 3 waves (heavier per wave)
 
-1. **Stat Modifiers (Common / Tier 1):** Baseline stat trade-offs (e.g., *\+35% Armor, \-15% Turn Speed*).  
-2. **Logic & Trigger Modules (Uncommon / Tier 2):** Automated IF/THEN routines (e.g., *IF Ally HP \< 25% THEN Deploy Shield-Tether*).  
-3. **Converters & Apex Keystones (Rare / Tier 3+):** Requires prerequisite tag counts to unlock game-changing mechanical shifts (e.g., *Singularity Detonation Matrix*).
+Clearing a wave triggers:
+1. Brief pause + "WAVE X OF Y" announcement
+2. Next wave spawns in a tight ring around the players (500–900u radius) — combat resumes immediately
 
-## **6\. Defeat, Failure & Economy Mechanics**
+When the final wave is cleared:
+- Large "SECTOR N" announcement + coloured screen flash
+- Background grid and nebula shift to new sector colour theme
+- New wave ring spawns immediately
 
-* **Benchmark Warp System:** When the fleet's hull hits 0 HP, emergency nav-computers warp both ships back to the nearest safe Galaxy Benchmark.  
-* **Repair Costs:** Restoring hull and system integrity costs collected sector currency.  
-* **Insurance Policies:** Players can allocate idle currency toward customizable Insurance Policies to mitigate repair costs, hedge against high-tier boss pushes, or auto-repair over time.
+### Sector Colour Themes
 
-## **7\. Meta-Progression & Analytics**
+| Sector | Grid colour | Mood |
+|---|---|---|
+| 1–5 | Deep blue | Starting zone |
+| 6–10 | Dark purple | Mid zone |
+| 11–15 | Dark amber | Danger zone |
+| 16–20 | Deep red | Hazard zone |
+| 21+ | Void teal | Deep space |
 
-* **Fleet Analytics:** Permanent tracking of total lifetime damage, shield absorption, mob kills, and sector milestones.  
-* **Framework Upgrades:** Permanent blueprint unlocks for ship frames, base energy grid capacity, and specialized logic slots.
+---
 
+## 6. The Tag & Upgrade System
+
+### Tag Pipeline
+
+Every ship and class starts with hardware tags (from `ships.json → hardwareTags`). Tags accumulate through the run via drafted upgrade cards.
+
+The `StatCalculator` converts the tag pool into `computedStats` each draft:
+- Each HULL tag → +500 hull HP
+- Each SHIELD_MAX tag → +300 shield
+- Each TOP_SPEED tag → +30 u/s max speed
+- Each ACCELERATION tag → +25 u/s² acceleration
+- etc. (full list in `StatCalculator.ts → PER_TAG_BONUS`)
+
+These computed stats are applied to the live `CombatState` and `PhysicsBody` immediately — tags have real, visible effects on the ship.
+
+### Draft System
+
+Every 3 kills, both players receive a 4-card draft offer. Cards are weighted by the ship+class tag profile — builds with a KINETIC focus see more kinetic upgrade cards.
+
+Cards have three archetypes:
+1. **StatMutator** — direct stat bonuses (`+350 hull`, `shield delay −2s`)
+2. **LogicTrigger** — fire on events (`ON_KILL: restore 20% hull`, `ON_KILL: 2s PHASE`)
+3. **Converter/Keystone** — powerful unlocks gated behind prerequisite tag counts
+
+**Recursive cards** (RECURSIVE tag in grantedTags) can be drafted every level for compounding effect. *Firing Solutions* (+10% fire rate, stacks multiplicatively) is the first example.
+
+### Test Card Set (active during development)
+
+Six `TEST_UPGRADE` cards replace the normal pool when present:
+
+| Card | Effect |
+|---|---|
+| Reinforced Plating | +350 hull HP |
+| Shield Amplifier | +300 shield · shield delay −2s |
+| Kill Feed | ON_KILL: restore 20% max hull |
+| Phase Reaction | ON_KILL: 2s PHASE (3s cooldown) |
+| Cryo Warhead | ON_KILL: cryo AoE 400u · slows 60% for 3s |
+| **Firing Solutions** | **+10% fire rate · recursive** |
+
+---
+
+## 7. The 9×9 Matrix
+
+**9 Ship Frames × 9 Class Specializations = 81 starting configurations**
+
+### Ship Frames
+
+| Ship | Class | Role |
+|---|---|---|
+| Sidewinder | Light | Agile scout, high evasion, 2× small weapon slots |
+| Cobra | Light | Multi-role, balanced shields, versatile slots |
+| Mamba | Light | Dragster, heat dissipation, beam specialist |
+| Krait | Medium | Strike carrier, dual drone bays |
+| Chieftain | Medium | Kinetic brawler, high armour, impact resist |
+| Python | Medium | Heavy gunship, max hardpoints and slots |
+| Anaconda | Heavy | Flying fortress, massive hull and shields |
+| Cutter | Heavy | Shield dreadnought, front-line presence |
+| Type-10 | Heavy | Ordnance array, 360° turrets, status immune |
+
+**Currently unlocked:** Sidewinder, Cobra, Mamba. Ships 4–9 unlock via sector milestones (planned).
+
+### Class Specializations (9 total, 3 starter)
+
+**Starter classes:**
+- **Architect** — Hull & structure. BULWARK active. Tanky, face-forward.
+- **Conductor** — Energy & weapons. OVERCLOCK active. Burst DPS, heat management.
+- **Weaver** — Shields & phase. PHASE SHIFT active. Shield-gated, evasive.
+
+**Advanced classes** (unlock with sector progression, planned):
+- Chrono Architect, Hyper-Conductor, Graviton Weaver, Nanite Swarm Controller, Phase Weaver, Resonance Bard, Scrap Salvager, Vector Specialist
+
+---
+
+## 8. Online Co-op
+
+Co-op is online-first via a WebSocket relay server. Both players run the game in any browser — no download needed for the guest.
+
+**Session flow:**
+1. Host loads their save slot → clicks HOST → goes through ship/class selection → LobbyScene shows room code
+2. Guest enters code → goes through their own ship/class selection → clicks READY
+3. Host sees START button → both enter PhysicsScene simultaneously
+
+**Architecture:**
+- **Host-authoritative** — host simulates both ships, all enemies, all physics
+- **Guest is a thin renderer** — receives authoritative state via GAME_STATE snapshot every 50ms
+- Both ships run identical pursuit AI on the host; guest sees their ship's position from the snapshot
+- Active abilities, class actives, upgrade drafts all work for both players independently
+
+**Both ships are equal.** The "guest" label is purely about network topology — it has no effect on ship behavior, upgrade access, or gameplay.
+
+---
+
+## 9. Armory & Persistence
+
+**Per-slot save data (host only):**
+- Credits, total kills, highest sector, run count
+- Weapon inventory (unlocked weapons)
+- Module inventory with levels (1–20, escalating cost)
+- Equipped loadout per ship
+
+**Guest identity:**
+- Stored as `neon_guest_profile` in localStorage (not tied to a save slot)
+- Pilot name, ship, class — auto-loaded next session
+
+**Armory tabs:**
+- **WEAPONS** — buy permanent weapon unlocks
+- **MODULES** — upgrade passive modules (each has a Lv20 target bonus)
+- **LOADOUT** — equip weapons/modules per ship slot
+
+---
+
+## 10. Weapons Reference
+
+| Tier | Weapon | Type | Range | Arc | Style |
+|---|---|---|---|---|---|
+| Short | Light Chaingun | KINETIC | 300u | 25° | Rapid dots |
+| Short-Med | Chaingun | KINETIC | 380u | 25° | Dots |
+| Short-Med | Pulse Laser | ENERGY | 460u | 30° | Dashes |
+| Short-Med | Arc Cannon | ENERGY | 380u | 25° | Heavy |
+| Medium | Heavy Chaingun | KINETIC | 450u | 20° | Heavy dots |
+| Medium | Beam Laser | ENERGY | 520u | 15° | Continuous |
+| Long | Heavy Beam | ENERGY | 700u | 10° | Long beam |
+| Long | Torpedo | EXPLOSIVE | 700u | 60° | Seeker |
+| Extreme | Railgun | KINETIC | 1000u | 10° | Sniper |
+| Ultra | Gauss Cannon | KINETIC | 1300u | 8° | Railgun++ |
+
+Full stats in `data/weapons.md`.
+
+---
+
+## 11. Roadmap
+
+### Done ✓
+- Full run loop (selection → combat → benchmark → armory)
+- Online co-op (host-authoritative relay, lobby, shared sector)
+- Save slots with Electron file persistence + guest profile
+- 9×9 ship/class matrix (3 ships + 3 classes unlocked)
+- Tag pipeline → computedStats → CombatState + PhysicsBody wired
+- Draft system with recursive cards
+- 3 class active abilities
+- Armory (weapons, modules 1–20, loadout)
+- Sector progression (1–50, kill-all-to-advance)
+- Visual polish: parallax stars, nebula, death explosions, hit particles, sector colour themes
+- Projectile system with weapon-accurate visuals (dots vs dashes)
+- Enemy weapon data reference with per-enemy override support
+- Collision physics for all objects
+
+### Active / Next
+- **Wave progression** — multi-wave sectors with announcements and flanking spawns
+- **Audio** — SFX for fire, hit, kill, ability, sector advance
+- **Ship unlocks** — tie ships 4–9 to sector milestones
+- **Production upgrade card set** — replace test cards with ~30 cards spanning all 5 tag buckets
+- **Relay server deployed** — Render/Railway so remote co-op works without local server
+
+### Future
+- More enemy types (flanker, carrier, shielded juggernaut)
+- Advanced class unlocks (sector milestones)
+- Sector boss at milestones (10, 20, 30, 40, 50)
+- BenchmarkScene polish — co-op side-by-side stat breakdown
+- Steam integration
+
+---
+
+## 12. Technical Stack
+
+| Layer | Technology |
+|---|---|
+| Renderer | Phaser 3 (canvas/WebGL) |
+| Language | TypeScript |
+| Build | Vite + electron-vite |
+| Desktop | Electron (Malwarebytes safe with `npm run dev:web`) |
+| Save | Electron IPC → fs (Electron) / localStorage (browser dev) |
+| Co-op | WebSocket relay (Node.js `ws`) |
+| Dev server | `npm run dev:web` → localhost:5173 |
+| Repo | github.com/danocnl/project-neon-fleet |
