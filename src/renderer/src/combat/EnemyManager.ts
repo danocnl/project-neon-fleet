@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { EnemyEntity } from './EnemyEntity'
 import { DataLoader } from '../systems/DataLoader'
 import { SectorManager } from '../systems/SectorManager'
+import { WEAPON_VISUAL } from './ProjectileSystem'
 import type { Enemy } from '../types'
 import type { PhysicsBody } from '../physics/PhysicsBody'
 
@@ -240,13 +241,15 @@ export class EnemyManager {
           e.attackCooldownMs = (1 / rof) * 1000
           const dx = tgtX - e.x, dy = tgtY - e.y
           const d  = Math.hypot(dx, dy)
-          const spd = weapon.behaviors?.BEAM ? 0 : 280
+          // Use shared WEAPON_VISUAL so enemy projectiles match player visuals (same size/speed)
+          const vis = WEAPON_VISUAL[e.def.weaponId ?? '']
+          const spd = weapon.behaviors?.BEAM ? 0 : (vis?.speed ?? 400)
           this.enemyProjs.push({
             x: e.x, y: e.y,
             vx: (dx / d) * spd, vy: (dy / d) * spd,
             lifetimeMs: Math.min((d / spd) * 1000 + 80, 2500),
             color: PROJ_COLOR[weapon.damageType] ?? 0xff3300,
-            size: weapon.size === 'LARGE' ? 4 : weapon.size === 'MEDIUM' ? 3 : 2.5,
+            size: vis?.size ?? (weapon.size === 'LARGE' ? 4 : weapon.size === 'MEDIUM' ? 3 : 2.5),
           })
         }
       }

@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 
-// Visual config per weapon id
-const WEAPON_VISUAL: Record<string, {
+// Visual config per weapon id — shared with EnemyManager for consistent projectile appearance
+export const WEAPON_VISUAL: Record<string, {
   color:       number
   size:        number   // core radius px
   speed:       number   // visual travel speed u/s
