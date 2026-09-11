@@ -1,4 +1,4 @@
-import type { ShipFrame } from '../types'
+import type { ShipFrame, ComputedStats } from '../types'
 
 export interface ActiveEffect {
   type: 'PHASE' | 'SPEED_BOOST' | 'FIRE_RATE_BOOST' | 'ARMOR_BOOST'
@@ -35,19 +35,20 @@ export class CombatState {
   get isOverheated(): boolean { return this.currentHeat >= this.maxHeat }
   get energyRatio():  number  { return this.maxEnergy > 0 ? this.currentEnergy / this.maxEnergy : 0 }
 
-  constructor(ship: ShipFrame, classId: string) {
+  /** Pass `computedStats` to initialise from the full tag+upgrade pipeline
+   *  rather than raw ship base stats. */
+  constructor(ship: ShipFrame, classId: string, computedStats?: ComputedStats) {
     this.shipId  = ship.id
     this.classId = classId
 
-    this.maxHull      = ship.baseStats.HULL
-    this.maxShield    = ship.baseStats.SHIELD_MAX
-    this.maxHeat      = ship.baseStats.HEAT_CAPACITY
-    this.shieldDelayMs = ship.baseStats.SHIELD_DELAY * 1000
-
-    this.maxEnergy     = ship.baseStats.ENERGY_GRID
-    this.energyRegen   = ship.baseStats.ENERGY_REGEN
+    const s = computedStats ?? ship.baseStats
+    this.maxHull       = Math.round(s.HULL)
+    this.maxShield     = Math.round(s.SHIELD_MAX)
+    this.maxHeat       = Math.round(s.HEAT_CAPACITY)
+    this.shieldDelayMs = s.SHIELD_DELAY * 1000
+    this.maxEnergy     = Math.round(s.ENERGY_GRID)
+    this.energyRegen   = s.ENERGY_REGEN
     this.currentEnergy = this.maxEnergy
-
     this.currentHull   = this.maxHull
     this.currentShield = this.maxShield
   }

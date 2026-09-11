@@ -229,8 +229,8 @@ export class PhysicsScene extends Phaser.Scene {
     // Minimap — screen-space overlay
     this.minimapGfx = this.add.graphics().setScrollFactor(0).setDepth(100)
 
+    this.buildCombatSystems()   // must run first — builds playerState for buildActor
     this.buildActor()
-    this.buildCombatSystems()
     this.buildEnemies()
     this.buildHUD()
 
@@ -591,8 +591,10 @@ export class PhysicsScene extends Phaser.Scene {
     const ship = DataLoader.getShip(shipId)
     if (!geo || !ship) return
 
-    const maxSpeed = remap(ship.baseStats.TOP_SPEED,    150, 620, 35, 150)
-    const accel    = remap(ship.baseStats.ACCELERATION, 100, 600, 25,  90)
+    // Use computedStats (tag pipeline applied) rather than raw ship.baseStats
+    const cs       = this.playerState?.computedStats ?? ship.baseStats
+    const maxSpeed = remap(cs.TOP_SPEED,    150, 620, 35, 150)
+    const accel    = remap(cs.ACCELERATION, 100, 600, 25,  90)
     const mass     = ship.baseStats.MASS
     const drag     = remap(mass, 1, 12, 0.82, 0.94)
 
@@ -617,7 +619,8 @@ export class PhysicsScene extends Phaser.Scene {
 
     this.playerState  = this.mgr.build(this.runData.shipId, this.runData.classId)!
     this.draftedCards = this.playerState.draftedCards
-    this.combatState  = new CombatState(ship, this.runData.classId)
+    // Pass the full computed stats so tag bonuses apply from the start
+    this.combatState  = new CombatState(ship, this.runData.classId, this.playerState.computedStats)
 
     // Apply equipped module bonuses (level-stacked)
     const equippedMods = SaveManager.getEquippedModules(this.runData.shipId)
@@ -763,29 +766,80 @@ export class PhysicsScene extends Phaser.Scene {
   }
 
   private applyDraftedCard(card: UpgradeCard): void {
+    // Snapshot computed stats BEFORE the upgrade so we can diff afterwards.
+    // This handles BOTH statModifiers AND grantedTag PER_TAG_BONUS effects,
+    // without needing to manually enumerate each stat case.
+    const prev = this.playerState.computedStats
+
     this.playerState  = this.mgr.applyUpgrade(this.playerState, card)
     this.draftedCards = this.playerState.draftedCards
+
+    // Apply the delta to CombatState and PhysicsBody.
+    // Deltas preserve module bonuses (we add the difference, not replace).
+    this.applyComputedStatsDelta(prev, this.playerState.computedStats)
+
+    // FIRE_RATE is special — not modelled in StatCalculator, handled separately
     for (const mod of card.statModifiers) {
-      if (mod.stat === 'HULL' && mod.type === 'flat') {
-        this.combatState.maxHull += mod.value
-        this.combatState.restoreHull(mod.value)
-      } else if (mod.stat === 'SHIELD_MAX' && mod.type === 'flat') {
-        this.combatState.maxShield += mod.value
-        this.combatState.restoreShield(mod.value)
-      } else if (mod.stat === 'SHIELD_MAX' && mod.type === 'percent' && mod.value === -100) {
-        this.combatState.maxShield = 0
-        this.combatState.currentShield = 0
-      } else if (mod.stat === 'SHIELD_DELAY' && mod.type === 'flat') {
-        this.combatState.shieldDelayMs = Math.max(500, this.combatState.shieldDelayMs + mod.value * 1000)
-      } else if (mod.stat === 'FIRE_RATE' && mod.type === 'percent') {
-        // Reduce visual projectile cooldown by mod.value fraction (e.g. 0.10 = 10% faster)
+      if (mod.stat === 'FIRE_RATE' && mod.type === 'percent') {
         this.projectiles.applyFireRateBoost(mod.value)
         this.projectiles2?.applyFireRateBoost(mod.value)
       }
+      // SHIELD_MAX percent -100 (negate shields entirely) is a one-time structural change
+      if (mod.stat === 'SHIELD_MAX' && mod.type === 'percent' && mod.value === -100) {
+        this.combatState.maxShield = 0
+        this.combatState.currentShield = 0
+      }
     }
+
     this.updateModulesDisplay()
     this.logTrigger(`Drafted: ${card.name}`, 'UPGRADE')
     this.drafting = false
+  }
+
+  /** Apply the difference between two ComputedStats snapshots to live combat state
+   *  and physics body.  Using deltas preserves module bonuses applied on top. */
+  private applyComputedStatsDelta(
+    prev: import('../systems/StatCalculator').ComputedStats,
+    next: import('../systems/StatCalculator').ComputedStats
+  ): void {
+    const d = (key: string) => Math.round((next as Record<string,number>)[key] ?? 0)
+                             - Math.round((prev as Record<string,number>)[key] ?? 0)
+
+    const hullDelta   = d('HULL')
+    const shieldDelta = d('SHIELD_MAX')
+    const heatDelta   = d('HEAT_CAPACITY')
+    const energyDelta = d('ENERGY_GRID')
+
+    if (hullDelta !== 0) {
+      this.combatState.maxHull += hullDelta
+      if (hullDelta > 0) this.combatState.restoreHull(hullDelta)
+    }
+    if (shieldDelta !== 0) {
+      this.combatState.maxShield += shieldDelta
+      if (shieldDelta > 0) this.combatState.restoreShield(shieldDelta)
+    }
+    if (heatDelta !== 0) {
+      this.combatState.maxHeat += heatDelta
+    }
+    if (energyDelta !== 0) {
+      this.combatState.maxEnergy += energyDelta
+      if (energyDelta > 0) {
+        this.combatState.currentEnergy = Math.min(this.combatState.maxEnergy,
+          this.combatState.currentEnergy + energyDelta)
+      }
+    }
+
+    // Absolute stats (recomputed fully)
+    this.combatState.energyRegen   = next.ENERGY_REGEN
+    this.combatState.shieldDelayMs = Math.max(500, next.SHIELD_DELAY * 1000)
+
+    // Physics body speed/accel from tag bonuses
+    const newMaxSpeed = remap(next.TOP_SPEED,    150, 620, 35, 150)
+    const newAccel    = remap(next.ACCELERATION, 100, 600, 25,  90)
+    if (this.actor?.body) {
+      this.actor.body.maxSpeed = newMaxSpeed
+      this.actor.body.accel    = newAccel
+    }
   }
 
   // ─── Waypoint helpers ────────────────────────────────────────────────────
