@@ -358,7 +358,16 @@ export class EnemyManager {
           const maxSpeed     = e.def.stats.SPEED * sector.speedScale
           const effectiveMax = e.freezeMs > 0 ? maxSpeed * 0.4 : maxSpeed
           const turnRateRad  = e.def.id === 'scout_drone' ? 7.0 : 5.0
-          const desiredAngle = Math.atan2(dy, dx)
+
+          // Drones maintain an engagement distance — they target a point at
+          // ENGAGE_DIST from the player rather than the player directly.
+          // When too close (inside ENGAGE_DIST), the target flips behind the
+          // drone so it naturally backs away rather than ramming.
+          const ENGAGE_DIST  = 100   // u from player centre
+          const engX = dist > 0 ? tgtX - (dx / dist) * ENGAGE_DIST : tgtX
+          const engY = dist > 0 ? tgtY - (dy / dist) * ENGAGE_DIST : tgtY
+          const edx  = engX - e.x, edy = engY - e.y
+          const desiredAngle = Math.atan2(edy, edx)
           const speed        = Math.hypot(e.vx, e.vy)
 
           if (speed > 2) {
