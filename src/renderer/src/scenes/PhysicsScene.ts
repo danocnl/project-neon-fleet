@@ -396,6 +396,7 @@ export class PhysicsScene extends Phaser.Scene {
     // Host: update P2 ship and broadcast state
     if (this.netRole === 'host' && this.actor2) {
       this.updateActor2(dt)
+      this.handleShipCollision()   // resolve P1↔P2 overlap after both physics steps
       if (this.combatState2) {
         const ship2 = DataLoader.getShip((this as any)._guestShipId ?? 'sidewinder')
         if (ship2) this.combatState2.tick(delta, ship2.baseStats.SHIELD_REGEN / 1000)
@@ -658,7 +659,9 @@ export class PhysicsScene extends Phaser.Scene {
           const result = this.executor.execute(trigger, this.combatState)
           if (result.applied) this.logTrigger(trigger.cardName, event.type)
         }
-        if (event.type === 'ON_KILL') {
+        if (event.type === 'ON_KILL' && this.netRole !== 'guest') {
+          // Guest kill count and level-up are managed by the GAME_STATE sync handler
+          // to avoid double-triggering (dispatcher fires + explicit level loop both fire)
           this.killCount++
           this.updateKillCounter()
           if (this.killCount % KILLS_PER_LEVEL === 0 && !this.drafting) {
@@ -1142,8 +1145,20 @@ export class PhysicsScene extends Phaser.Scene {
       }, null)
     const a2TgtDist  = a2WeaponTgt ? Math.hypot(a2WeaponTgt.x - body.x, a2WeaponTgt.y - body.y) : Infinity
     const a2Throttle = (a2WeaponTgt !== null && a2TgtDist <= 350) ? 0.04 : 1.0
+    // P2 avoids P1
+    let a2AvoidX = 0, a2AvoidY = 0
+    if (!this.p1Dead) {
+      const aaDx = body.x - this.actor.body.x, aaDy = body.y - this.actor.body.y
+      const aaDist = Math.hypot(aaDx, aaDy)
+      if (aaDist < 200 && aaDist > 0.5) {
+        const t = 1 - aaDist / 200
+        const push = t * t * body.accel * 3.0
+        a2AvoidX = (aaDx / aaDist) * push
+        a2AvoidY = (aaDy / aaDist) * push
+      }
+    }
     const { fx: fx2, fy: fy2 } = this.steerForce(
-      rawF2.fx * a2Throttle, rawF2.fy * a2Throttle,
+      rawF2.fx * a2Throttle + a2AvoidX, rawF2.fy * a2Throttle + a2AvoidY,
       body, this.getLateralScale((this as any)._guestShipId ?? 'sidewinder')
     )
     stepPhysics(body, fx2, fy2, dt)
@@ -1898,7 +1913,43 @@ export class PhysicsScene extends Phaser.Scene {
       fx += (dx / dist) * push
       fy += (dy / dist) * push
     }
+    // P1 avoids P2 (host only — same avoid range as asteroids)
+    if (this.netRole === 'host' && this.actor2 && !this.p2Dead) {
+      const dx = bx - this.actor2.body.x, dy = by - this.actor2.body.y
+      const dist = Math.hypot(dx, dy)
+      if (dist < 200 && dist > 0.5) {
+        const t = 1 - dist / 200
+        const push = t * t * accel * 3.0
+        fx += (dx / dist) * push
+        fy += (dy / dist) * push
+      }
+    }
     return { x: fx, y: fy }
+  }
+
+  /** Hard collision resolution between the two player ships (host only). */
+  private handleShipCollision(): void {
+    if (this.netRole !== 'host' || !this.actor2 || this.p2Dead || this.p1Dead) return
+    const b1 = this.actor.body, b2 = this.actor2.body
+    const dx = b2.x - b1.x, dy = b2.y - b1.y
+    const dist = Math.hypot(dx, dy)
+    const r1 = this.getPlayerCollisionRadius()
+    const r2 = this.getPlayerCollisionRadius()   // both same for simplicity
+    const minDist = r1 + r2 + 8                  // small gap buffer
+
+    if (dist >= minDist || dist < 0.5) return
+    const nx = dx / dist, ny = dy / dist
+    const overlap = (minDist - dist) * 0.5
+
+    // Separate
+    b1.x -= nx * overlap;  b1.y -= ny * overlap
+    b2.x += nx * overlap;  b2.y += ny * overlap
+
+    // Reflect velocity components along collision normal
+    const dot1 = b1.vx * nx + b1.vy * ny
+    const dot2 = b2.vx * nx + b2.vy * ny
+    b1.vx -= dot1 * nx * 1.3;  b1.vy -= dot1 * ny * 1.3
+    b2.vx -= dot2 * nx * 1.3;  b2.vy -= dot2 * ny * 1.3
   }
 
   private setFlightMode(_mode: FlightMode): void { /* no-op: single pursuit mode */ }

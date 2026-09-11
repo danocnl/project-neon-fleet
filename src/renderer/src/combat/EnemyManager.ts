@@ -243,6 +243,7 @@ export class EnemyManager {
       })
     }
 
+    this.resolveEnemyCollisions()
     this.tickParticles(deltaMs)
     this.draw(playerX, playerY)
     this.drawFX()
@@ -618,6 +619,41 @@ export class EnemyManager {
     }
     // Blue expanding ring
     this.deathRings.push({ x, y, radius: 30, maxRadius: radius, life: 1, decay: 1 / 600, color: 0x44aaff })
+  }
+
+  /** Separate all overlapping enemy pairs so entities don't stack. */
+  private resolveEnemyCollisions(): void {
+    for (let i = 0; i < this.entities.length; i++) {
+      const a = this.entities[i]
+      if (!a.alive) continue
+      for (let j = i + 1; j < this.entities.length; j++) {
+        const b = this.entities[j]
+        if (!b.alive) continue
+        const dx = b.x - a.x, dy = b.y - a.y
+        const dist = Math.hypot(dx, dy)
+        const minDist = a.def.stats.COLLISION_RADIUS + b.def.stats.COLLISION_RADIUS
+        if (dist >= minDist || dist < 0.5) continue
+
+        const nx = dx / dist, ny = dy / dist
+        const overlap = (minDist - dist) * 0.5
+
+        const aMovable = a.def.behavior !== 'STATIC'
+        const bMovable = b.def.behavior !== 'STATIC'
+
+        if (aMovable) { a.x -= nx * overlap; a.y -= ny * overlap }
+        if (bMovable) { b.x += nx * overlap; b.y += ny * overlap }
+
+        // Bounce velocity component along normal
+        if (aMovable) {
+          const dot = a.vx * nx + a.vy * ny
+          if (dot < 0) { a.vx -= dot * nx * 0.7; a.vy -= dot * ny * 0.7 }
+        }
+        if (bMovable) {
+          const dot = b.vx * nx + b.vy * ny
+          if (dot > 0) { b.vx -= dot * nx * 0.7; b.vy -= dot * ny * 0.7 }
+        }
+      }
+    }
   }
 
   get count(): number { return this.entities.length }
